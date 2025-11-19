@@ -10,7 +10,9 @@
       "Bash(npm run test:api:*)",
       "WebFetch(domain:github.com)",
       "WebSearch",
-      "Bash(dir /B)"
+      "Bash(dir /B)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

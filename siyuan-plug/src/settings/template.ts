@@ -202,7 +202,19 @@ export function renderMergeFolderPath(
         };
 
         const template = settings.mergeFolder || '笔记同步助手/企微消息/{{{date}}}';
-        return Mustache.render(template, viewWithDate);
+        let path = Mustache.render(template, viewWithDate);
+
+        // 规范化路径：
+        // 1. 将反斜杠替换为正斜杠（Windows兼容）
+        // 2. 移除重复的斜杠
+        // 3. 移除开头和结尾的斜杠
+        path = path
+            .replace(/\\/g, '/')    // Windows路径兼容
+            .replace(/\/+/g, '/')   // 移除重复斜杠
+            .replace(/^\//, '')     // 移除开头斜杠
+            .replace(/\/$/, '');    // 移除结尾斜杠
+
+        return path;
     } catch (error) {
         logger.error('Merge folder path rendering error:', error);
         return '笔记同步助手/企微消息';
@@ -219,7 +231,16 @@ export function renderSingleFilename(
     try {
         const formattedDate = formatDate(date, settings.singleFileDateFormat);
         const template = settings.singleFileName || '同步助手_{{{date}}}';
-        return Mustache.render(template, { date: formattedDate });
+        let filename = Mustache.render(template, { date: formattedDate });
+
+        // 确保文件名不包含路径分隔符或其他不合法字符
+        // 1. 移除路径分隔符
+        // 2. 移除 .md 扩展名（如果有的话，后面会统一添加）
+        filename = filename
+            .replace(/[\/\\]/g, '_')  // 路径分隔符替换为下划线
+            .replace(/\.md$/i, '');    // 移除可能存在的 .md 扩展名
+
+        return filename;
     } catch (error) {
         logger.error('Single filename rendering error:', error);
         return '同步助手';

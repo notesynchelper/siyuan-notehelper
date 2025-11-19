@@ -33,7 +33,8 @@ export default class NoteHelperPlugin extends Plugin {
     private dockElement: HTMLElement;
 
     async onload() {
-        logger.setLevel(LogLevel.INFO);
+        // 先设置默认日志级别
+        logger.setLevel(LogLevel.DEBUG);
         logger.info('Loading Note Sync Helper plugin...');
 
         // 注册自定义图标
@@ -45,6 +46,9 @@ export default class NoteHelperPlugin extends Plugin {
 
         // 加载设置
         await this.loadSettings();
+
+        // 根据设置更新日志级别
+        this.updateLogLevel();
 
         // 初始化管理器
         this.syncManager = new SyncManager(this, this.settings);
@@ -545,5 +549,23 @@ export default class NoteHelperPlugin extends Plugin {
     async saveSettings() {
         await this.saveData(SETTINGS_KEY, this.settings);
         logger.info('Settings saved');
+        // 更新日志级别
+        this.updateLogLevel();
+    }
+
+    /**
+     * 根据设置更新日志级别
+     */
+    private updateLogLevel() {
+        const levelMap: { [key: string]: LogLevel } = {
+            'DEBUG': LogLevel.DEBUG,
+            'INFO': LogLevel.INFO,
+            'WARN': LogLevel.WARN,
+            'ERROR': LogLevel.ERROR,
+        };
+
+        const level = levelMap[this.settings.logLevel] || LogLevel.INFO;
+        logger.setLevel(level);
+        logger.info(`Log level set to: ${this.settings.logLevel}`);
     }
 }

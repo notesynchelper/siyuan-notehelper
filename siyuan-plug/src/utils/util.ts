@@ -124,3 +124,29 @@ export function stripMarkdown(text: string): string {
         .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
         .trim();
 }
+
+/**
+ * 规范化文件路径
+ * - 将反斜杠替换为正斜杠（Windows兼容）
+ * - 移除重复的斜杠
+ * - 移除开头和结尾的斜杠
+ */
+export function normalizePath(path: string): string {
+    if (!path) return '';
+
+    return path
+        .replace(/\\/g, '/')    // Windows路径兼容
+        .replace(/\/+/g, '/')   // 移除重复斜杠
+        .replace(/^\//, '')     // 移除开头斜杠
+        .replace(/\/$/, '');    // 移除结尾斜杠
+}
+
+/**
+ * 连接路径片段并规范化
+ */
+export function joinPath(...parts: string[]): string {
+    const joined = parts
+        .filter(Boolean)  // 移除空字符串
+        .join('/');
+    return normalizePath(joined);
+}

@@ -17,6 +17,9 @@
 ## 本地测试
 复制插件文件到思源目录 cp -r siyuan-plug/dist/* "/c/Users/laizeyang/SiYuan/data/plugins/notehelper/"
 
+## 发布用插件
+打包时需要修改 logLevel
+
 # 修改代码
 
 - 修改代码前需要先检查目录是否已经git commit 如果没有需要先commit 再进行修改

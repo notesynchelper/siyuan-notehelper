@@ -87,6 +87,7 @@ export interface PluginSettings {
 
     // 其他
     version: string;  // 插件版本
+    logLevel: string;  // 日志级别（DEBUG, INFO, WARN, ERROR）
 }
 
 // 默认设置
@@ -148,4 +149,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 
     // 其他
     version: '0.1.0',
+    logLevel: 'DEBUG',  // 默认开启DEBUG级别以便调试
 };
