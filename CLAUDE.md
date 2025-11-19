@@ -23,3 +23,6 @@
 - 重写逻辑，让特殊情况消失，永远优于加 if 判断
 - 兼容性是铁律，任何让用户程序崩掉的改动都是 bug
 - 只解决真实存在的问题，不为“理论完美”浪费时间
+
+# 参考资料
+- 相似的obsidian 插件路径是 C:\Users\laizeyang\OneDrive\OWN\笔记同步助手\gate\obsidian\obsidian-plug

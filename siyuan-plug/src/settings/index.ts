@@ -50,10 +50,12 @@ export interface PluginSettings {
     intervalId: number;  // 定时器 ID
 
     // 文件夹和文件名
-    folder: string;  // 目标文件夹
+    folder: string;  // 目标文件夹（普通文章）
     folderDateFormat: string;  // 文件夹日期格式
     filename: string;  // 文件名模板
     filenameDateFormat: string;  // 文件名日期格式
+    mergeFolder: string;  // 合并模式的目标文件夹（独立于普通文章）
+    mergeFolderDateFormat: string;  // 合并模式的文件夹日期格式
     singleFileName: string;  // 单文件模式文件名
     singleFileDateFormat: string;  // 单文件日期格式
     attachmentFolder: string;  // 附件文件夹
@@ -108,6 +110,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     folderDateFormat: 'yyyy-MM-dd',
     filename: '{{{title}}}',
     filenameDateFormat: 'yyyy-MM-dd',
+    mergeFolder: '笔记同步助手/企微消息/{{{date}}}',  // 合并文件单独存放
+    mergeFolderDateFormat: 'yyyy-MM',  // 按月分组
     singleFileName: '同步助手_{{{date}}}',
     singleFileDateFormat: 'yyyy-MM-dd',
     attachmentFolder: '笔记同步助手/attachments',

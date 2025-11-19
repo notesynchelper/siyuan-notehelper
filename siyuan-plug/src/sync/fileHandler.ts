@@ -11,11 +11,18 @@ import {
     renderWeChatMessage,
     renderFilename,
     renderFolderPath,
+    renderMergeFolderPath,
     renderSingleFilename,
     renderFrontMatter,
+    renderWeChatMessageSimple,
 } from '../settings/template';
 import { MergeMode } from '../utils/types';
-import { isWeChatMessage, extractDateFromWeChatTitle, sanitizeFileName } from '../utils/util';
+import {
+    isWeChatMessage,
+    extractDateFromWeChatTitle,
+    sanitizeFileName,
+    formatDate,
+} from '../utils/util';
 
 /**
  * 文件处理器类
@@ -105,24 +112,18 @@ export class FileHandler {
     }
 
     /**
-     * 合并文章到单个文件
+     * 合并文章到单个文件（使用块属性去重）
      * @returns 返回 { docId: string, skipped: boolean }
      */
     private async mergeArticleToFile(article: Article, notebookId: string): Promise<{ docId: string, skipped: boolean }> {
-        // 检查文章是否已存在（通过服务端 ID 去重）
-        const existingArticleDocId = await this.checkDocumentBySourceId(article.id);
-        if (existingArticleDocId) {
-            logger.info(`Article ${article.id} already exists in merge mode, skipping`);
-            return { docId: existingArticleDocId, skipped: true };
-        }
-
         // 确定合并文件的名称
         const mergeDate = isWeChatMessage(article.title)
             ? extractDateFromWeChatTitle(article.title) || article.savedAt.split('T')[0]
             : article.savedAt.split('T')[0];
 
         const filename = renderSingleFilename(mergeDate, this.settings);
-        const folderPath = renderFolderPath(article, this.settings);
+        // 使用合并模式专用的文件夹配置
+        const folderPath = renderMergeFolderPath(article, this.settings);
 
         // 确保文件夹存在
         await this.ensureFolder(notebookId, folderPath);
@@ -132,27 +133,104 @@ export class FileHandler {
         // 检查合并目标文档是否已存在
         const existingDocId = await this.getDocumentByPath(notebookId, docPath);
 
-        // 生成新内容
-        const newContent = isWeChatMessage(article.title)
-            ? renderWeChatMessage(article, this.settings)
-            : renderArticleContent(article, this.settings);
-
         if (existingDocId) {
-            // 文档存在，追加内容
-            await this.appendToDocument(existingDocId, newContent);
-            // 在追加的内容块上设置自定义属性标记
-            await this.setBlockAttributes(existingDocId, article.id);
-            logger.info(`Appended to document: ${docPath}`);
-            return { docId: existingDocId, skipped: false };
+            // 文档存在，使用块属性去重
+            return await this.mergeToExistingDocument(existingDocId, article, docPath);
         } else {
             // 文档不存在，创建新文档
-            const frontMatter = renderFrontMatter(article, this.settings);
-            const fullContent = frontMatter + newContent;
-            const docId = await this.createDocument(notebookId, docPath, fullContent);
-            // 设置自定义属性标记
-            await this.setBlockAttributes(docId, article.id);
-            logger.info(`Created merged document: ${docPath}`);
-            return { docId, skipped: false };
+            return await this.createMergedDocument(notebookId, docPath, article);
+        }
+    }
+
+    /**
+     * 合并到已存在的文档（使用块属性去重）
+     */
+    private async mergeToExistingDocument(
+        docId: string,
+        article: Article,
+        docPath: string
+    ): Promise<{ docId: string, skipped: boolean }> {
+        // 获取已合并的消息ID列表（从块属性读取）
+        const mergedIds = await this.getMergedIds(docId);
+
+        // 检查文章是否已存在
+        if (mergedIds.includes(article.id)) {
+            logger.info(`Article ${article.id} already exists in ${docPath}, skipping`);
+            return { docId, skipped: true };
+        }
+
+        // 新文章，追加内容
+        logger.info(`Adding new article ${article.id} to ${docPath}`);
+
+        // 获取现有文档内容
+        const existingContent = await this.getDocumentContent(docId);
+
+        // 生成新内容（根据消息类型使用不同渲染）
+        const newContentPart = isWeChatMessage(article.title)
+            ? renderWeChatMessageSimple(article, this.settings)
+            : renderArticleContent(article, this.settings);
+
+        // 添加分隔符
+        const separator = existingContent.trim() ? '\n\n---\n\n' : '';
+
+        // 拼接完整内容（无Front Matter）
+        const newFullContent = `${existingContent}${separator}${newContentPart}`;
+
+        // 更新文档
+        await this.updateDocument(docId, newFullContent);
+
+        // 添加消息ID到块属性列表
+        await this.addMergedId(docId, article.id);
+
+        return { docId, skipped: false };
+    }
+
+    /**
+     * 创建新的合并文档
+     */
+    private async createMergedDocument(
+        notebookId: string,
+        docPath: string,
+        article: Article
+    ): Promise<{ docId: string, skipped: boolean }> {
+        // 生成内容（根据消息类型使用不同渲染）
+        const contentPart = isWeChatMessage(article.title)
+            ? renderWeChatMessageSimple(article, this.settings)
+            : renderArticleContent(article, this.settings);
+
+        // 创建文档（无Front Matter）
+        const docId = await this.createDocument(notebookId, docPath, contentPart);
+
+        // 初始化块属性：添加第一个消息ID
+        await this.addMergedId(docId, article.id);
+
+        logger.info(`Created merged document: ${docPath}`);
+        return { docId, skipped: false };
+    }
+
+    /**
+     * 更新文档内容
+     */
+    private async updateDocument(docId: string, content: string): Promise<void> {
+        try {
+            const response = await fetch('/api/block/updateBlock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    dataType: 'markdown',
+                    data: content,
+                    id: docId,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.code !== 0) {
+                throw new Error(`Failed to update document: ${data.msg}`);
+            }
+        } catch (error) {
+            logger.error('Failed to update document:', error);
+            throw error;
         }
     }
 
@@ -205,12 +283,15 @@ export class FileHandler {
         docPath: string
     ): Promise<string | null> {
         try {
+            // 确保路径以 .md 结尾（思源API查询要求）
+            const normalizedPath = docPath.endsWith('.md') ? docPath : `${docPath}.md`;
+
             const response = await fetch('/api/filetree/getIDsByHPath', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     notebook: notebookId,
-                    path: docPath,
+                    path: normalizedPath,
                 }),
             });
 
@@ -315,18 +396,27 @@ export class FileHandler {
     /**
      * 设置块的自定义属性
      * @param blockId 块 ID
-     * @param sourceId 服务端文章 ID
+     * @param sourceId 服务端文章 ID（可选，用于向后兼容）
      */
-    private async setBlockAttributes(blockId: string, sourceId: string): Promise<void> {
+    private async setBlockAttributes(blockId: string, sourceId?: string): Promise<void> {
         try {
+            const attrs: Record<string, string> = {};
+
+            // 向后兼容：如果提供了sourceId，设置custom-source-id
+            if (sourceId) {
+                attrs['custom-source-id'] = sourceId;
+            }
+
+            if (Object.keys(attrs).length === 0) {
+                return;  // 没有要设置的属性
+            }
+
             const response = await fetch('/api/attr/setBlockAttrs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id: blockId,
-                    attrs: {
-                        'custom-source-id': sourceId,
-                    },
+                    attrs,
                 }),
             });
 
@@ -336,9 +426,100 @@ export class FileHandler {
                 throw new Error(`Failed to set block attributes: ${data.msg}`);
             }
 
-            logger.debug(`Set custom-source-id attribute for block ${blockId}`);
+            logger.debug(`Set block attributes for block ${blockId}`);
         } catch (error) {
             logger.error('Failed to set block attributes:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 获取块的单个属性值
+     * @param blockId 块 ID
+     * @param attrName 属性名
+     * @returns 属性值，如果不存在返回 null
+     */
+    private async getBlockAttribute(blockId: string, attrName: string): Promise<string | null> {
+        try {
+            const response = await fetch('/api/attr/getBlockAttrs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: blockId }),
+            });
+
+            const data = await response.json();
+
+            if (data.code !== 0) {
+                return null;
+            }
+
+            return data.data?.[attrName] || null;
+        } catch (error) {
+            logger.error('Failed to get block attribute:', error);
+            return null;
+        }
+    }
+
+    /**
+     * 获取已合并的消息ID列表
+     * @param docId 文档 ID
+     * @returns 消息ID数组
+     */
+    private async getMergedIds(docId: string): Promise<string[]> {
+        try {
+            const idsJson = await this.getBlockAttribute(docId, 'custom-merged-ids');
+            if (!idsJson) {
+                return [];
+            }
+
+            const ids = JSON.parse(idsJson);
+            return Array.isArray(ids) ? ids : [];
+        } catch (error) {
+            logger.error('Failed to parse merged IDs:', error);
+            return [];
+        }
+    }
+
+    /**
+     * 添加消息ID到已合并列表
+     * @param docId 文档 ID
+     * @param articleId 文章 ID
+     */
+    private async addMergedId(docId: string, articleId: string): Promise<void> {
+        try {
+            // 获取现有ID列表
+            const mergedIds = await this.getMergedIds(docId);
+
+            // 检查是否已存在
+            if (mergedIds.includes(articleId)) {
+                logger.debug(`Article ${articleId} already in merged list`);
+                return;
+            }
+
+            // 添加新ID
+            mergedIds.push(articleId);
+
+            // 保存更新后的列表
+            const response = await fetch('/api/attr/setBlockAttrs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: docId,
+                    attrs: {
+                        'custom-merged-ids': JSON.stringify(mergedIds),
+                    },
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.code !== 0) {
+                throw new Error(`Failed to add merged ID: ${data.msg}`);
+            }
+
+            logger.debug(`Added article ${articleId} to merged list (total: ${mergedIds.length})`);
+        } catch (error) {
+            logger.error('Failed to add merged ID:', error);
             throw error;
         }
     }

@@ -162,7 +162,7 @@ export function renderFilename(
 }
 
 /**
- * 渲染文件夹路径
+ * 渲染文件夹路径（普通文章）
  */
 export function renderFolderPath(
     article: Article,
@@ -182,6 +182,30 @@ export function renderFolderPath(
     } catch (error) {
         logger.error('Folder path rendering error:', error);
         return '笔记同步助手';
+    }
+}
+
+/**
+ * 渲染合并模式的文件夹路径
+ */
+export function renderMergeFolderPath(
+    article: Article,
+    settings: PluginSettings
+): string {
+    try {
+        const view = articleToView(article, settings);
+
+        // 添加 date 变量用于文件夹模板（使用合并模式的日期格式）
+        const viewWithDate = {
+            ...view,
+            date: formatDate(article.savedAt, settings.mergeFolderDateFormat),
+        };
+
+        const template = settings.mergeFolder || '笔记同步助手/企微消息/{{{date}}}';
+        return Mustache.render(template, viewWithDate);
+    } catch (error) {
+        logger.error('Merge folder path rendering error:', error);
+        return '笔记同步助手/企微消息';
     }
 }
 
@@ -261,4 +285,47 @@ export function templateNeedsContent(template: string): boolean {
         template.includes('{{{highlights}}}') ||
         template.includes('{{highlights}}')
     );
+}
+
+/**
+ * 弱化聊天记录中的时间戳显示
+ * 将 **yyyy/MM/dd HH:mm:ss** 格式的时间戳转为灰色小字体
+ */
+export function processContentTimestamps(content: string): string {
+    // 匹配格式：**2025/01/15 10:30:00**
+    return content.replace(
+        /\*\*(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})\*\*/g,
+        '<small style="color: #999;">$1</small>'
+    );
+}
+
+/**
+ * 渲染企微消息简洁内容（用于合并模式）
+ * 与 renderWeChatMessage 不同，这个函数专门用于合并文件中的追加内容
+ * 使用简洁样式，不包含 Front Matter，只渲染核心内容
+ */
+export function renderWeChatMessageSimple(
+    article: Article,
+    settings: PluginSettings
+): string {
+    try {
+        const dateSaved = formatDate(article.savedAt, settings.dateSavedFormat);
+
+        // 处理内容中的时间戳（弱化显示）
+        const processedContent = processContentTimestamps(article.content || '');
+
+        const articleView = {
+            id: article.id,
+            title: article.title,
+            content: processedContent,
+            dateSaved,
+        };
+
+        // 使用企微消息模板
+        const template = settings.wechatMessageTemplate || '---\n## 📅 {{{dateSaved}}}\n{{{content}}}';
+        return Mustache.render(template, articleView);
+    } catch (error) {
+        logger.error('WeChat message simple rendering error:', error);
+        return `## 📅 ${formatDate(article.savedAt, settings.dateSavedFormat)}\n${article.content}`;
+    }
 }
