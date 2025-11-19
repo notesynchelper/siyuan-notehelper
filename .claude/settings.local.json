@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/laizeyang/OneDrive/OWN/笔记同步助手/gate/obsidian/obsidian-plug/**)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(dir /b:*)",
+      "Bash(npm run test:api:*)",
+      "WebFetch(domain:github.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

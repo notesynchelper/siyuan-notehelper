@@ -1,0 +1,267 @@
+plugin:notehelper:24 [NoteHelper] Loading Note Sync Helper plugin...
+plugin:notehelper:24 [NoteHelper] Settings loaded
+plugin:notehelper:24 [NoteHelper] Note Sync Helper plugin loaded successfully
+plugin:notehelper:24 [NoteHelper] Layout ready
+plugin:notehelper:24 [NoteHelper] Starting sync...
+plugin:notehelper:24 [NoteHelper] Fetching batch 1...
+plugin:notehelper:24 [NoteHelper] getItems called with params: {endpoint: 'https://siyuan.notebooksyncer.com/api/graphql', after: 0, first: 15, updatedAt: undefined, customQuery: undefined, …}
+plugin:notehelper:24 [NoteHelper] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
+plugin:notehelper:24 [NoteHelper] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
+plugin:notehelper:24 [NoteHelper] Variables: {"after":0,"first":15,"query":""}
+plugin:notehelper:24 [NoteHelper] API Key: o56...bIuqq4
+plugin:notehelper:24 [NoteHelper] Response received: 200  (3593ms)
+plugin:notehelper:24 [NoteHelper] Response size: 31586 bytes
+plugin:notehelper:24 [NoteHelper] Non-standard GraphQL response: data field is missing, using result directly
+warn @ plugin:notehelper:24
+eval @ plugin:notehelper:49
+i @ plugin:notehelper:49
+Promise.then
+o @ plugin:notehelper:49
+i @ plugin:notehelper:49
+Promise.then
+o @ plugin:notehelper:49
+eval @ plugin:notehelper:49
+se @ plugin:notehelper:49
+xr @ plugin:notehelper:49
+eval @ plugin:notehelper:98
+eval @ plugin:notehelper:49
+se @ plugin:notehelper:49
+Cr @ plugin:notehelper:49
+eval @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+Fr @ plugin:notehelper:108
+sync @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+B @ plugin:notehelper:108
+performSync @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+setTimeout
+eval @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+B @ plugin:notehelper:108
+onload @ plugin:notehelper:108
+ES @ main.cf2b524d9ddff2a34bd3.js:7762
+(anonymous) @ main.cf2b524d9ddff2a34bd3.js:7762
+by @ main.cf2b524d9ddff2a34bd3.js:7762
+plugin:notehelper:24 [NoteHelper] GraphQL request successful
+plugin:notehelper:24 [NoteHelper] getItems result: {itemsCount: 15, hasNextPage: true, totalCount: 15, startCursor: '0', endCursor: '14', …}
+plugin:notehelper:24 [NoteHelper] Fetching batch 2...
+plugin:notehelper:24 [NoteHelper] getItems called with params: {endpoint: 'https://siyuan.notebooksyncer.com/api/graphql', after: 15, first: 15, updatedAt: undefined, customQuery: undefined, …}
+plugin:notehelper:24 [NoteHelper] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
+plugin:notehelper:24 [NoteHelper] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
+plugin:notehelper:24 [NoteHelper] Variables: {"after":15,"first":15,"query":""}
+plugin:notehelper:24 [NoteHelper] API Key: o56...bIuqq4
+plugin:notehelper:24 [NoteHelper] Response received: 200  (1355ms)
+plugin:notehelper:24 [NoteHelper] Response size: 16518 bytes
+plugin:notehelper:24 [NoteHelper] Non-standard GraphQL response: data field is missing, using result directly
+warn @ plugin:notehelper:24
+eval @ plugin:notehelper:49
+i @ plugin:notehelper:49
+Promise.then
+o @ plugin:notehelper:49
+i @ plugin:notehelper:49
+Promise.then
+o @ plugin:notehelper:49
+eval @ plugin:notehelper:49
+se @ plugin:notehelper:49
+xr @ plugin:notehelper:49
+eval @ plugin:notehelper:98
+eval @ plugin:notehelper:49
+se @ plugin:notehelper:49
+Cr @ plugin:notehelper:49
+eval @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+Fr @ plugin:notehelper:108
+sync @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+B @ plugin:notehelper:108
+performSync @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+setTimeout
+eval @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+B @ plugin:notehelper:108
+onload @ plugin:notehelper:108
+ES @ main.cf2b524d9ddff2a34bd3.js:7762
+(anonymous) @ main.cf2b524d9ddff2a34bd3.js:7762
+by @ main.cf2b524d9ddff2a34bd3.js:7762
+plugin:notehelper:24 [NoteHelper] GraphQL request successful
+plugin:notehelper:24 [NoteHelper] getItems result: {itemsCount: 15, hasNextPage: true, totalCount: 15, startCursor: '15', endCursor: '29', …}
+plugin:notehelper:24 [NoteHelper] Fetching batch 3...
+plugin:notehelper:24 [NoteHelper] getItems called with params: {endpoint: 'https://siyuan.notebooksyncer.com/api/graphql', after: 30, first: 15, updatedAt: undefined, customQuery: undefined, …}
+plugin:notehelper:24 [NoteHelper] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
+plugin:notehelper:24 [NoteHelper] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
+plugin:notehelper:24 [NoteHelper] Variables: {"after":30,"first":15,"query":""}
+plugin:notehelper:24 [NoteHelper] API Key: o56...bIuqq4
+plugin:notehelper:24 [NoteHelper] Response received: 200  (1351ms)
+plugin:notehelper:24 [NoteHelper] Response size: 12898 bytes
+plugin:notehelper:24 [NoteHelper] Non-standard GraphQL response: data field is missing, using result directly
+warn @ plugin:notehelper:24
+eval @ plugin:notehelper:49
+i @ plugin:notehelper:49
+Promise.then
+o @ plugin:notehelper:49
+i @ plugin:notehelper:49
+Promise.then
+o @ plugin:notehelper:49
+eval @ plugin:notehelper:49
+se @ plugin:notehelper:49
+xr @ plugin:notehelper:49
+eval @ plugin:notehelper:98
+eval @ plugin:notehelper:49
+se @ plugin:notehelper:49
+Cr @ plugin:notehelper:49
+eval @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+Fr @ plugin:notehelper:108
+sync @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+B @ plugin:notehelper:108
+performSync @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+setTimeout
+eval @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+B @ plugin:notehelper:108
+onload @ plugin:notehelper:108
+ES @ main.cf2b524d9ddff2a34bd3.js:7762
+(anonymous) @ main.cf2b524d9ddff2a34bd3.js:7762
+by @ main.cf2b524d9ddff2a34bd3.js:7762
+plugin:notehelper:24 [NoteHelper] GraphQL request successful
+plugin:notehelper:24 [NoteHelper] getItems result: {itemsCount: 15, hasNextPage: true, totalCount: 15, startCursor: '30', endCursor: '44', …}
+plugin:notehelper:24 [NoteHelper] Fetching batch 4...
+plugin:notehelper:24 [NoteHelper] getItems called with params: {endpoint: 'https://siyuan.notebooksyncer.com/api/graphql', after: 45, first: 15, updatedAt: undefined, customQuery: undefined, …}
+plugin:notehelper:24 [NoteHelper] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
+plugin:notehelper:24 [NoteHelper] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
+plugin:notehelper:24 [NoteHelper] Variables: {"after":45,"first":15,"query":""}
+plugin:notehelper:24 [NoteHelper] API Key: o56...bIuqq4
+plugin:notehelper:24 [NoteHelper] Response received: 200  (1298ms)
+plugin:notehelper:24 [NoteHelper] Response size: 1019 bytes
+plugin:notehelper:24 [NoteHelper] Non-standard GraphQL response: data field is missing, using result directly
+warn @ plugin:notehelper:24
+eval @ plugin:notehelper:49
+i @ plugin:notehelper:49
+Promise.then
+o @ plugin:notehelper:49
+i @ plugin:notehelper:49
+Promise.then
+o @ plugin:notehelper:49
+eval @ plugin:notehelper:49
+se @ plugin:notehelper:49
+xr @ plugin:notehelper:49
+eval @ plugin:notehelper:98
+eval @ plugin:notehelper:49
+se @ plugin:notehelper:49
+Cr @ plugin:notehelper:49
+eval @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+Fr @ plugin:notehelper:108
+sync @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+B @ plugin:notehelper:108
+performSync @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+setTimeout
+eval @ plugin:notehelper:108
+i @ plugin:notehelper:108
+Promise.then
+o @ plugin:notehelper:108
+eval @ plugin:notehelper:108
+B @ plugin:notehelper:108
+onload @ plugin:notehelper:108
+ES @ main.cf2b524d9ddff2a34bd3.js:7762
+(anonymous) @ main.cf2b524d9ddff2a34bd3.js:7762
+by @ main.cf2b524d9ddff2a34bd3.js:7762
+plugin:notehelper:24 [NoteHelper] GraphQL request successful
+plugin:notehelper:24 [NoteHelper] getItems result: {itemsCount: 1, hasNextPage: false, totalCount: 1, startCursor: '45', endCursor: '45', …}
+plugin:notehelper:24 [NoteHelper] Total articles to process: 46
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-11-04/同步助手_2025-11-04
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-11-04/同步助手_2025-11-04
+plugin:notehelper:24 [NoteHelper] Document already exists for article 0e923e70-6f06-4ecf-903d-3ce6669c53dc, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article f5368e0f-df9c-450c-b7b4-df75d731c3d2, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article bbc9f4ac-7352-4902-b4c4-54cf04a14a2a, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article 03c7668e-c691-4f47-b2b1-1b4ea1722aa2, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article 5efd6788-cf11-4e24-b3ac-2ebeba407e25, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article c9d03b5c-073a-45e5-9cd2-42cd5f360a4e, skipping
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-31/同步助手_2025-10-31
+plugin:notehelper:24 [NoteHelper] Document already exists for article 26704c6f-ddac-405b-8d90-eea07a43d660, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article a0f9374e-341c-4bcc-b89d-8db880385856, skipping
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-31/同步助手_2025-10-31
+plugin:notehelper:24 [NoteHelper] Document already exists for article 34334d65-560c-402e-bcd5-05fa08c07aa8, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article c45671b9-22ad-4344-b1a6-9cb5824c4e83, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article 59996603-e2f5-4258-ab5c-78d21d118838, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article 93b1df53-100b-48c0-8335-4de191a57419, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article 67cff05f-4232-4734-a111-151aff6513ff, skipping
+plugin:notehelper:24 [NoteHelper] Document already exists for article 01f2b981-144f-4457-bbb1-e06facc13ae6, skipping
+plugin:notehelper:24 [NoteHelper] Created document: 笔记同步助手/2025-10-24/职场里回报率很高的小事 - 小
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-24/同步助手_2025-10-24
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-23/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-23/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-23/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-23/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-23/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-23/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-23/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-23/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] Created document: 笔记同步助手/2025-10-21/最近，图哥想通了一件事：甲骨文
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-20
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-20
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-20
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-20
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-20
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] Created merged document: 笔记同步助手/2025-10-21/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] Created document: 笔记同步助手/2025-10-21/聊天记录
+plugin:notehelper:24 [NoteHelper] Created document: 笔记同步助手/2025-10-21/图片消息
+plugin:notehelper:24 [NoteHelper] Created document: 笔记同步助手/2025-10-21/皮爷咖啡豆
+plugin:notehelper:24 [NoteHelper] Created document: 笔记同步助手/2025-10-20/聊天记录
+plugin:notehelper:24 [NoteHelper] Created document: 笔记同步助手/2025-10-20/聊天记录
+plugin:notehelper:24 [NoteHelper] Sync completed. Created: 32, Skipped: 14, Errors: 0
