@@ -27,7 +27,7 @@
   },
   "description": {
     "default": "Sync notes and articles from cloud to SiYuan, with support for images, WeChat messages, and custom templates",
-    "zh_CN": "从云端同步笔记和文章到思源笔记，支持图片处理、企微消息、自定义模板等功能"
+    "zh_CN": "从微信同步到思源笔记，支持文字、图片、聊天记录、文章"
   },
   "readme": {
     "default": "README.md",

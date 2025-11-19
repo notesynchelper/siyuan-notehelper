@@ -1,6 +1,6 @@
 {
   "pluginName": "笔记同步助手",
-  "pluginDescription": "从云端同步笔记和文章到思源笔记",
+  "pluginDescription": "从微信同步到思源笔记,支持文字、图片、聊天记录、文章",
 
   "sync": "同步",
   "syncing": "同步中...",
@@ -29,6 +29,8 @@
   "customQueryDesc": "高级用户可以自定义 GraphQL 查询",
 
   "syncSettings": "同步设置",
+  "lastSyncTimeEdit": "最后同步时间",
+  "lastSyncTimeEditDesc": "手动设置最后同步时间，影响增量同步起点",
   "frequency": "定时同步频率",
   "frequencyDesc": "自动同步间隔（分钟），0 表示禁用",
   "syncOnStart": "启动时同步",
@@ -108,6 +110,12 @@
     "sync": "同步笔记",
     "resetSync": "重置同步时间",
     "openSettings": "打开设置"
+  },
+
+  "dock": {
+    "title": "同步",
+    "status": "状态",
+    "quickSync": "立即同步"
   },
 
   "tips": {

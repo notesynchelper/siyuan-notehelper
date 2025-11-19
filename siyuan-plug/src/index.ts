@@ -19,8 +19,10 @@ import { SyncManager } from './sync/syncManager';
 import { ImageLocalizer } from './imageLocalizer/imageLocalizer';
 import { getArticleCount, clearAllArticles } from './api';
 import { formatDate } from './utils/util';
+import { SettingsForm } from './ui/SettingsForm';
 
 const SETTINGS_KEY = 'notehelper-settings';
+const DOCK_TYPE = 'notehelper_sync_dock';
 
 export default class NoteHelperPlugin extends Plugin {
 
@@ -28,10 +30,18 @@ export default class NoteHelperPlugin extends Plugin {
     private syncManager: SyncManager;
     private imageLocalizer: ImageLocalizer;
     private statusBarElement: HTMLElement;
+    private dockElement: HTMLElement;
 
     async onload() {
         logger.setLevel(LogLevel.INFO);
         logger.info('Loading Note Sync Helper plugin...');
+
+        // 注册自定义图标
+        this.addIcons(`
+<symbol id="iconNoteSync" viewBox="0 0 32 32">
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="30" font-weight="bold" fill="currentColor">同</text>
+</symbol>
+`);
 
         // 加载设置
         await this.loadSettings();
@@ -66,6 +76,9 @@ export default class NoteHelperPlugin extends Plugin {
 
         // 添加状态栏
         this.addStatusBarIcon();
+
+        // 添加左侧栏同步dock
+        this.addSyncDock();
     }
 
     async onunload() {
@@ -133,6 +146,112 @@ export default class NoteHelperPlugin extends Plugin {
         } else {
             this.statusBarElement.textContent = this.i18n.noSyncYet;
             this.statusBarElement.setAttribute('aria-label', this.i18n.noSyncYet);
+        }
+
+        // 同时更新dock状态
+        this.updateDockStatus();
+    }
+
+    /**
+     * 添加左侧栏同步dock
+     */
+    private addSyncDock() {
+        this.addDock({
+            config: {
+                position: "LeftTop",
+                size: { width: 300, height: 0 },
+                icon: "iconNoteSync",
+                title: "笔记同步助手",
+            },
+            data: {},
+            type: DOCK_TYPE,
+            init: (dock) => {
+                this.dockElement = dock.element;
+
+                // 渲染dock面板，包含同步状态和设置表单
+                dock.element.innerHTML = `
+                    <div class="fn__flex-1 fn__flex-column" style="padding: 8px; overflow-y: auto;">
+                        <div class="block__icons">
+                            <div class="block__logo">
+                                <svg class="block__logoicon"><use xlink:href="#iconNoteSync"></use></svg>
+                                笔记同步助手
+                            </div>
+                        </div>
+
+                        <!-- 同步状态和操作区域 -->
+                        <div style="padding: 12px 8px; border-bottom: 1px solid var(--b3-border-color);">
+                            <div style="margin-bottom: 12px;">
+                                <div style="color: var(--b3-theme-on-surface); margin-bottom: 4px; font-size: 12px;">
+                                    ${this.i18n.dock?.status || "状态"}:
+                                </div>
+                                <div id="dockSyncStatus" style="font-size: 12px; color: var(--b3-theme-on-background);">
+                                    ${this.i18n.noSyncYet}
+                                </div>
+                            </div>
+                            <button class="b3-button b3-button--outline fn__block" id="dockQuickSync">
+                                <svg class="b3-button__icon"><use xlink:href="#iconNoteSync"></use></svg>
+                                ${this.i18n.dock?.quickSync || "立即同步"}
+                            </button>
+                        </div>
+
+                        <!-- 设置表单区域 -->
+                        <div style="padding: 12px 8px;">
+                            <div style="margin-bottom: 8px; font-weight: bold; color: var(--b3-theme-on-surface);">
+                                ${this.i18n.settings}
+                            </div>
+                            ${SettingsForm.renderSettingsForm(this.settings, this.i18n, () => this.formatSyncTimeForInput())}
+
+                            <!-- 保存按钮 -->
+                            <div style="margin-top: 16px;">
+                                <button class="b3-button b3-button--outline fn__block" id="dockSaveSettings">
+                                    ${this.i18n.save}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 绑定快速同步按钮
+                const quickSyncBtn = dock.element.querySelector('#dockQuickSync') as HTMLButtonElement;
+                quickSyncBtn?.addEventListener('click', () => {
+                    this.performSync();
+                });
+
+                // 绑定保存设置按钮
+                const saveBtn = dock.element.querySelector('#dockSaveSettings') as HTMLButtonElement;
+                saveBtn?.addEventListener('click', async () => {
+                    await this.saveSettingsFromContainer(dock.element);
+                    showMessage(this.i18n.success?.settingsSaved || 'Settings saved', 3000, 'info');
+
+                    // 重启定时同步
+                    this.syncManager.stopScheduledSync();
+                    if (this.settings.frequency > 0) {
+                        this.syncManager.startScheduledSync();
+                    }
+                });
+
+                // 初始化状态显示
+                this.updateDockStatus();
+            },
+        });
+    }
+
+    /**
+     * 更新dock状态显示
+     */
+    private updateDockStatus() {
+        if (!this.dockElement) return;
+
+        const statusElement = this.dockElement.querySelector('#dockSyncStatus');
+        if (!statusElement) return;
+
+        if (this.settings.syncing) {
+            statusElement.textContent = this.i18n.syncing;
+        } else if (this.settings.syncAt) {
+            const lastSync = formatDate(this.settings.syncAt, 'yyyy-MM-dd HH:mm');
+            statusElement.textContent = `${this.i18n.lastSyncAt}: ${lastSync}`;
+        } else {
+            statusElement.textContent = this.i18n.noSyncYet;
         }
     }
 
@@ -339,208 +458,73 @@ export default class NoteHelperPlugin extends Plugin {
     }
 
     /**
-     * 打开设置
+     * 格式化同步时间为datetime-local输入框格式
      */
-    private openSettings() {
-        const dialog = new Dialog({
-            title: this.i18n.settings,
-            content: '<div id="noteHelperSettings" class="b3-dialog__content" style="padding: 20px;"></div>',
-            width: '800px',
-            height: '600px',
-        });
-
-        const container = dialog.element.querySelector('#noteHelperSettings');
-        if (container) {
-            this.createSettingsPanel(container as HTMLElement, dialog);
+    private formatSyncTimeForInput(): string {
+        if (!this.settings.syncAt) {
+            return '';
+        }
+        try {
+            const date = new Date(this.settings.syncAt);
+            // 转换为本地时间的datetime-local格式: YYYY-MM-DDTHH:mm
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        } catch (e) {
+            logger.error('Failed to format sync time:', e);
+            return '';
         }
     }
 
     /**
-     * 创建设置面板
+     * 打开设置
+     * 提示用户设置已移到dock面板
+     */
+    private openSettings() {
+        showMessage(
+            '设置已移到左侧栏的「笔记同步助手」面板中，请点击左侧栏的"同"字图标打开。\n\nSettings have been moved to the "Note Sync Helper" panel in the left sidebar. Please click the "同" icon in the left sidebar to open it.',
+            7000,
+            'info'
+        );
+    }
+
+    /**
+     * 创建设置面板（已废弃，保留用于兼容性）
+     * @deprecated 设置已移到dock面板
      */
     private createSettingsPanel(container: HTMLElement, dialog: Dialog) {
-        container.innerHTML = '';
-
-        // 创建表单容器
-        const formHTML = `
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <div class="fn__flex-1">
-                        ${this.i18n.basicSettings}
-                    </div>
-                </div>
-            </div>
-
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <span class="fn__flex-1">${this.i18n.apiKey}</span>
-                </div>
-                <div class="fn__flex">
-                    <input class="b3-text-field fn__flex-1" id="apiKey" type="password" value="${this.settings.apiKey}" />
-                </div>
-                <div class="b3-label__text">${this.i18n.apiKeyDesc}</div>
-            </div>
-
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <span class="fn__flex-1">${this.i18n.endpoint}</span>
-                </div>
-                <div class="fn__flex">
-                    <input class="b3-text-field fn__flex-1" id="endpoint" value="${this.settings.endpoint}" />
-                </div>
-                <div class="b3-label__text">${this.i18n.endpointDesc}</div>
-            </div>
-
-            <div class="fn__hr"></div>
-
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <div class="fn__flex-1">
-                        ${this.i18n.syncSettings}
-                    </div>
-                </div>
-            </div>
-
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <span class="fn__flex-1">${this.i18n.frequency}</span>
-                </div>
-                <div class="fn__flex">
-                    <input class="b3-text-field fn__flex-1" type="number" id="frequency" value="${this.settings.frequency}" min="0" />
-                </div>
-                <div class="b3-label__text">${this.i18n.frequencyDesc}</div>
-            </div>
-
-            <div class="b3-label">
-                <label class="fn__flex">
-                    <input type="checkbox" id="syncOnStart" ${this.settings.syncOnStart ? 'checked' : ''} />
-                    <span class="fn__space"></span>
-                    <span>${this.i18n.syncOnStart}</span>
-                </label>
-                <div class="b3-label__text">${this.i18n.syncOnStartDesc}</div>
-            </div>
-
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <span class="fn__flex-1">${this.i18n.mergeMode}</span>
-                </div>
-                <div class="fn__flex">
-                    <select class="b3-select fn__flex-1" id="mergeMode">
-                        <option value="none" ${this.settings.mergeMode === 'none' ? 'selected' : ''}>${this.i18n.mergeModeNone}</option>
-                        <option value="messages" ${this.settings.mergeMode === 'messages' ? 'selected' : ''}>${this.i18n.mergeModeMessages}</option>
-                        <option value="all" ${this.settings.mergeMode === 'all' ? 'selected' : ''}>${this.i18n.mergeModeAll}</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="fn__hr"></div>
-
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <div class="fn__flex-1">
-                        ${this.i18n.folderSettings}
-                    </div>
-                </div>
-            </div>
-
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <span class="fn__flex-1">${this.i18n.folder}</span>
-                </div>
-                <div class="fn__flex">
-                    <input class="b3-text-field fn__flex-1" id="folder" value="${this.settings.folder}" />
-                </div>
-                <div class="b3-label__text">${this.i18n.folderDesc}</div>
-            </div>
-
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <span class="fn__flex-1">${this.i18n.filename}</span>
-                </div>
-                <div class="fn__flex">
-                    <input class="b3-text-field fn__flex-1" id="filename" value="${this.settings.filename}" />
-                </div>
-                <div class="b3-label__text">${this.i18n.filenameDesc}</div>
-            </div>
-
-            <div class="fn__hr"></div>
-
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <div class="fn__flex-1">
-                        ${this.i18n.imageSettings}
-                    </div>
-                </div>
-            </div>
-
-            <div class="b3-label">
-                <div class="fn__flex">
-                    <span class="fn__flex-1">${this.i18n.imageMode}</span>
-                </div>
-                <div class="fn__flex">
-                    <select class="b3-select fn__flex-1" id="imageMode">
-                        <option value="local" ${this.settings.imageMode === 'local' ? 'selected' : ''}>${this.i18n.imageModeLocal}</option>
-                        <option value="remote" ${this.settings.imageMode === 'remote' ? 'selected' : ''}>${this.i18n.imageModeRemote}</option>
-                        <option value="disabled" ${this.settings.imageMode === 'disabled' ? 'selected' : ''}>${this.i18n.imageModeDisabled}</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="fn__hr"></div>
-
-            <div class="b3-dialog__action">
-                <button class="b3-button b3-button--cancel">${this.i18n.cancel}</button>
-                <div class="fn__space"></div>
-                <button class="b3-button b3-button--text" id="saveSettings">${this.i18n.save}</button>
-            </div>
-        `;
-
-        container.innerHTML = formHTML;
-
-        // 绑定保存按钮
-        const saveBtn = container.querySelector('#saveSettings') as HTMLButtonElement;
-        const cancelBtn = container.querySelector('.b3-button--cancel') as HTMLButtonElement;
-
-        saveBtn?.addEventListener('click', async () => {
-            await this.saveSettingsFromDialog(container);
-            dialog.destroy();
-            showMessage(this.i18n.success?.settingsSaved || 'Settings saved', 3000, 'info');
-
-            // 重启定时同步
-            this.syncManager.stopScheduledSync();
-            if (this.settings.frequency > 0) {
-                this.syncManager.startScheduledSync();
-            }
-        });
-
-        cancelBtn?.addEventListener('click', () => {
-            dialog.destroy();
-        });
+        // 此方法已废弃，设置已移到dock面板
+        // 保留此方法只为向后兼容
     }
 
     /**
      * 从对话框保存设置
      */
-    private async saveSettingsFromDialog(container: HTMLElement) {
-        const apiKeyInput = container.querySelector('#apiKey') as HTMLInputElement;
-        const endpointInput = container.querySelector('#endpoint') as HTMLInputElement;
-        const frequencyInput = container.querySelector('#frequency') as HTMLInputElement;
-        const syncOnStartInput = container.querySelector('#syncOnStart') as HTMLInputElement;
-        const mergeModeSelect = container.querySelector('#mergeMode') as HTMLSelectElement;
-        const folderInput = container.querySelector('#folder') as HTMLInputElement;
-        const filenameInput = container.querySelector('#filename') as HTMLInputElement;
-        const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
+    /**
+     * 从容器中保存设置（通用方法，可用于对话框或dock面板）
+     */
+    private async saveSettingsFromContainer(container: HTMLElement) {
+        // 使用SettingsForm提取表单值
+        const values = SettingsForm.extractFormValues(container);
 
-        if (apiKeyInput) this.settings.apiKey = apiKeyInput.value;
-        if (endpointInput) this.settings.endpoint = endpointInput.value;
-        if (frequencyInput) this.settings.frequency = parseInt(frequencyInput.value) || 0;
-        if (syncOnStartInput) this.settings.syncOnStart = syncOnStartInput.checked;
-        if (mergeModeSelect) this.settings.mergeMode = mergeModeSelect.value as any;
-        if (folderInput) this.settings.folder = folderInput.value;
-        if (filenameInput) this.settings.filename = filenameInput.value;
-        if (imageModeSelect) this.settings.imageMode = imageModeSelect.value as any;
+        // 更新设置对象
+        Object.assign(this.settings, values);
 
+        // 保存到存储
         await this.saveSettings();
+
+        // 更新状态栏显示
+        this.updateStatusBar();
+    }
+
+    /**
+     * @deprecated 使用 saveSettingsFromContainer 代替
+     */
+    private async saveSettingsFromDialog(container: HTMLElement) {
+        await this.saveSettingsFromContainer(container);
     }
 
     /**

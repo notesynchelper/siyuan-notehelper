@@ -29,6 +29,8 @@
   "customQueryDesc": "Advanced users can customize GraphQL query",
 
   "syncSettings": "Sync Settings",
+  "lastSyncTimeEdit": "Last Sync Time",
+  "lastSyncTimeEditDesc": "Manually set the last sync time, affects incremental sync starting point",
   "frequency": "Auto Sync Frequency",
   "frequencyDesc": "Auto sync interval (minutes), 0 to disable",
   "syncOnStart": "Sync on Start",
@@ -108,6 +110,12 @@
     "sync": "Sync Notes",
     "resetSync": "Reset Sync Time",
     "openSettings": "Open Settings"
+  },
+
+  "dock": {
+    "title": "Sync",
+    "status": "Status",
+    "quickSync": "Sync Now"
   },
 
   "tips": {

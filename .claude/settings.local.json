@@ -8,7 +8,9 @@
       "Bash(npm run build:*)",
       "Bash(dir /b:*)",
       "Bash(npm run test:api:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "Bash(dir /B)"
     ],
     "deny": [],
     "ask": []
