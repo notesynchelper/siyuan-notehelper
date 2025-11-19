@@ -44,6 +44,9 @@ export class SyncManager {
         try {
             logger.info('Starting sync...');
 
+            // 清除文档缓存，确保每次同步都是新的开始
+            this.fileHandler.clearDocumentCache();
+
             // 检查 API 密钥
             if (!this.settings.apiKey) {
                 throw new Error('API key is not configured');

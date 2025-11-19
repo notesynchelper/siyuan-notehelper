@@ -32,10 +32,20 @@ import {
 export class FileHandler {
     private plugin: any;  // SiYuan Plugin instance
     private settings: PluginSettings;
+    private documentCache: Map<string, string>;  // 缓存文档路径到ID的映射
 
     constructor(plugin: any, settings: PluginSettings) {
         this.plugin = plugin;
         this.settings = settings;
+        this.documentCache = new Map();
+    }
+
+    /**
+     * 清除文档缓存（在每次同步开始时调用）
+     */
+    public clearDocumentCache(): void {
+        this.documentCache.clear();
+        logger.debug('[FileHandler] Document cache cleared');
     }
 
     /**
@@ -150,8 +160,8 @@ export class FileHandler {
             // 文档存在，使用块属性去重
             return await this.mergeToExistingDocument(existingDocId, article, docPath);
         } else {
-            // 文档不存在，创建新文档
-            return await this.createMergedDocument(notebookId, docPath, article);
+            // 文档不存在，创建新文档（传递mergeDate确保一致性）
+            return await this.createMergedDocument(notebookId, docPath, article, mergeDate);
         }
     }
 
@@ -223,13 +233,15 @@ export class FileHandler {
     private async createMergedDocument(
         notebookId: string,
         docPath: string,
-        article: Article
+        article: Article,
+        mergeDate: string
     ): Promise<{ docId: string, skipped: boolean }> {
         logger.info(`[createMergedDocument] Creating new merged document:`, {
             notebookId,
             docPath,
             articleId: article.id,
-            articleTitle: article.title
+            articleTitle: article.title,
+            mergeDate: mergeDate
         });
 
         try {
@@ -249,11 +261,20 @@ export class FileHandler {
 
             logger.info(`[createMergedDocument] Document created with ID: ${docId}`);
 
+            // 将新创建的文档添加到缓存
+            const normalizedPath = docPath
+                .replace(/\\/g, '/')
+                .replace(/\/+/g, '/')
+                .replace(/^\//, '');
+            const cacheKey = `${notebookId}:${normalizedPath}`;
+            this.documentCache.set(cacheKey, docId);
+            logger.debug(`[createMergedDocument] Added to cache: ${cacheKey} => ${docId}`);
+
             // 初始化块属性：添加第一个消息ID
             // 这非常重要，必须在文档创建后立即执行
             await this.addMergedId(docId, article.id);
 
-            // 设置额外的元数据属性
+            // 设置额外的元数据属性（使用传入的mergeDate确保一致性）
             await fetch('/api/attr/setBlockAttrs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -262,7 +283,8 @@ export class FileHandler {
                     attrs: {
                         'custom-merge-doc': 'true',
                         'custom-creation-time': new Date().toISOString(),
-                        'custom-merge-date': article.savedAt.split('T')[0],
+                        'custom-merge-date': mergeDate,  // 使用传入的mergeDate
+                        'custom-merge-path': docPath,    // 添加路径属性便于调试
                     },
                 }),
             });
@@ -354,47 +376,123 @@ export class FileHandler {
             // 1. 将反斜杠替换为正斜杠（Windows兼容性）
             // 2. 移除开头的斜杠
             // 3. 移除重复的斜杠
-            // 4. 确保以 .md 结尾
             let normalizedPath = docPath
                 .replace(/\\/g, '/')  // Windows路径兼容
                 .replace(/\/+/g, '/')  // 移除重复斜杠
                 .replace(/^\//, '');   // 移除开头斜杠
 
-            // 确保路径以 .md 结尾（思源API查询要求）
-            if (!normalizedPath.endsWith('.md')) {
-                normalizedPath = `${normalizedPath}.md`;
+            // 先检查缓存
+            const cacheKey = `${notebookId}:${normalizedPath}`;
+            if (this.documentCache.has(cacheKey)) {
+                const cachedId = this.documentCache.get(cacheKey);
+                logger.info(`[getDocumentByPath] Found in cache: ${cachedId} for path: ${normalizedPath}`);
+                return cachedId;
             }
+
+            // 从路径提取文件名（不带.md扩展名）
+            const filename = normalizedPath.split('/').pop() || '';
+            const filenameWithoutExt = filename.replace(/\.md$/i, '');
 
             logger.info(`[getDocumentByPath] Searching for document:`, {
                 notebookId,
                 originalPath: docPath,
-                normalizedPath: normalizedPath
+                normalizedPath: normalizedPath,
+                filename: filenameWithoutExt
             });
 
-            const response = await fetch('/api/filetree/getIDsByHPath', {
+            // 方法1：使用SQL查询，通过自定义属性查找合并文档
+            // 先尝试通过 custom-merge-date 属性查找（更可靠）
+            const mergeDate = filenameWithoutExt.match(/\d{4}-\d{2}-\d{2}/)?.[0];
+            let sql = '';
+
+            if (mergeDate) {
+                // 如果能提取日期，使用日期属性查询（最可靠）
+                sql = `
+                    SELECT DISTINCT b.id, b.content, b.hpath
+                    FROM blocks b
+                    JOIN attributes a ON b.id = a.block_id
+                    WHERE b.type = 'd'
+                    AND b.box = '${notebookId}'
+                    AND a.name = 'custom-merge-date'
+                    AND a.value = '${mergeDate}'
+                    ORDER BY b.created DESC
+                    LIMIT 1
+                `;
+            } else {
+                // 否则使用文档标题匹配
+                sql = `
+                    SELECT id, content, hpath
+                    FROM blocks
+                    WHERE type = 'd'
+                    AND box = '${notebookId}'
+                    AND content = '${filenameWithoutExt}'
+                    ORDER BY created DESC
+                    LIMIT 1
+                `;
+            }
+
+            logger.debug(`[getDocumentByPath] SQL query: ${sql}`);
+
+            const response = await fetch('/api/query/sql', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    notebook: notebookId,
-                    path: normalizedPath,
-                }),
+                body: JSON.stringify({ stmt: sql }),
             });
 
             const data = await response.json();
 
-            logger.info(`[getDocumentByPath] API response:`, {
+            logger.info(`[getDocumentByPath] SQL response:`, {
                 code: data.code,
-                dataLength: data.data ? data.data.length : 0,
-                data: data.data
+                dataLength: data.data ? data.data.length : 0
             });
 
             if (data.code !== 0 || !data.data || data.data.length === 0) {
-                logger.info(`[getDocumentByPath] Document not found: ${normalizedPath}`);
-                return null;
+                // 方法2：如果精确匹配失败，尝试使用原API
+                logger.info(`[getDocumentByPath] SQL query found no results, trying filetree API`);
+
+                // 确保路径以 .md 结尾（思源API查询要求）
+                if (!normalizedPath.endsWith('.md')) {
+                    normalizedPath = `${normalizedPath}.md`;
+                }
+
+                const apiResponse = await fetch('/api/filetree/getIDsByHPath', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        notebook: notebookId,
+                        path: normalizedPath,
+                    }),
+                });
+
+                const apiData = await apiResponse.json();
+
+                logger.info(`[getDocumentByPath] Filetree API response:`, {
+                    code: apiData.code,
+                    dataLength: apiData.data ? apiData.data.length : 0,
+                    data: apiData.data
+                });
+
+                if (apiData.code !== 0 || !apiData.data || apiData.data.length === 0) {
+                    logger.info(`[getDocumentByPath] Document not found: ${normalizedPath}`);
+                    return null;
+                }
+
+                const apiDocId = apiData.data[0];
+                logger.info(`[getDocumentByPath] Document found via API with ID: ${apiDocId}`);
+                // 缓存结果
+                this.documentCache.set(cacheKey, apiDocId);
+                return apiDocId;
             }
 
-            logger.info(`[getDocumentByPath] Document found with ID: ${data.data[0]}`);
-            return data.data[0];  // 返回第一个匹配的文档 ID
+            // SQL查询成功
+            const docId = data.data[0].id;
+            logger.info(`[getDocumentByPath] Document found via SQL with ID: ${docId}`, {
+                hpath: data.data[0].hpath,
+                content: data.data[0].content
+            });
+            // 缓存结果
+            this.documentCache.set(cacheKey, docId);
+            return docId;
         } catch (error) {
             logger.error('[getDocumentByPath] Failed to get document by path:', error);
             return null;
