@@ -12,7 +12,8 @@
       "WebSearch",
       "Bash(dir /B)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

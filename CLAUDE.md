@@ -14,6 +14,9 @@
 禁止运行 Bash(tasklist | findstr node)
 
 # 开发流程
+## 服务端测试
+可以使用api key  o56E7690LHHXd5zvCAqoPobIuqq4 来测试服务端返回
+
 ## 本地测试
 复制插件文件到思源目录 cp -r siyuan-plug/dist/* "/c/Users/laizeyang/SiYuan/data/plugins/notehelper/"
 
@@ -29,3 +32,8 @@
 
 # 参考资料
 - 相似的obsidian 插件路径是 C:\Users\laizeyang\OneDrive\OWN\笔记同步助手\gate\obsidian\obsidian-plug
+- 服务端返回的不是标准GraphQL格式，服务端直接返回了搜索结果，跳过了data和search两层包装，实际返回的是：
+  {
+    "edges": [...],
+    "pageInfo": {...}
+  }

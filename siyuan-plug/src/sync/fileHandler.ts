@@ -156,7 +156,20 @@ export class FileHandler {
         // 检查合并目标文档是否已存在
         const existingDocId = await this.getDocumentByPath(notebookId, docPath);
 
+        logger.info(`[processMergedArticle] getDocumentByPath result:`, {
+            existingDocId,
+            existingDocIdType: typeof existingDocId,
+            looksLikeTimestamp: typeof existingDocId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(existingDocId)
+        });
+
         if (existingDocId) {
+            // 再次检查ID的有效性
+            if (typeof existingDocId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(existingDocId)) {
+                logger.error(`[processMergedArticle] Invalid document ID detected (timestamp): ${existingDocId}`);
+                logger.error(`[processMergedArticle] Creating new document instead of merging`);
+                return await this.createMergedDocument(notebookId, docPath, article, mergeDate);
+            }
+
             // 文档存在，使用块属性去重
             return await this.mergeToExistingDocument(existingDocId, article, docPath);
         } else {
@@ -478,6 +491,24 @@ export class FileHandler {
                 }
 
                 const apiDocId = apiData.data[0];
+
+                // 添加详细日志以诊断问题
+                logger.info(`[getDocumentByPath] API data array:`, {
+                    dataType: typeof apiData.data,
+                    isArray: Array.isArray(apiData.data),
+                    dataLength: apiData.data.length,
+                    firstItem: apiDocId,
+                    firstItemType: typeof apiDocId,
+                    looksLikeTimestamp: typeof apiDocId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(apiDocId)
+                });
+
+                // 检查是否返回了时间戳而不是ID
+                if (typeof apiDocId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(apiDocId)) {
+                    logger.error(`[getDocumentByPath] WARNING: API returned timestamp instead of document ID: ${apiDocId}`);
+                    logger.error(`[getDocumentByPath] Full API response:`, apiData);
+                    return null; // 返回null表示文档不存在，避免使用错误的ID
+                }
+
                 logger.info(`[getDocumentByPath] Document found via API with ID: ${apiDocId}`);
                 // 缓存结果
                 this.documentCache.set(cacheKey, apiDocId);

@@ -114,23 +114,36 @@ async function fetchGraphQL<T>(
             throw new Error(result.errors.map(e => e.message).join(', '));
         }
 
-        // 检查响应是否有data字段（标准GraphQL）或者直接返回数据（非标准）
+        // 检查响应格式
         let responseData: T;
         if (result.data !== undefined) {
-            // 标准 GraphQL 响应：{data: {...}}
-            responseData = result.data;
-        } else if (result.edges !== undefined || result.search !== undefined) {
-            // 非标准响应：直接返回数据，没有 data 包裹层
+            // 标准 GraphQL 响应：{data: {search: {...}}}
+            // 需要进一步检查是否有 search 包装
+            if (result.data.search !== undefined) {
+                // 完整的标准格式：data.search 包含实际数据
+                responseData = result.data.search as T;
+                logger.info('Standard GraphQL response with search wrapper');
+            } else {
+                // 标准格式但没有 search 包装：data 直接包含实际数据
+                responseData = result.data;
+                logger.info('Standard GraphQL response without search wrapper');
+            }
+        } else if (result.edges !== undefined && result.pageInfo !== undefined) {
+            // 非标准响应：服务端直接返回 search 的内容（edges + pageInfo）
             responseData = result as unknown as T;
-            logger.warn('Non-standard GraphQL response: data field is missing, using result directly');
+            logger.warn('Non-standard GraphQL response: server returns search content directly');
         } else {
-            logger.error('Response data is empty:', {
+            logger.error('Unexpected response structure:', {
                 endpoint,
                 query: queryPreview,
                 variables,
-                fullResponse: JSON.stringify(result)
+                hasData: result.data !== undefined,
+                hasEdges: result.edges !== undefined,
+                hasPageInfo: result.pageInfo !== undefined,
+                responseKeys: Object.keys(result),
+                fullResponse: JSON.stringify(result).substring(0, 1000)
             });
-            throw new Error('Response data is empty');
+            throw new Error('Unexpected response structure');
         }
 
         logger.info(`GraphQL request successful`);
