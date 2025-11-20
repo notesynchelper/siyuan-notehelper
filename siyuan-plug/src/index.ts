@@ -374,7 +374,7 @@ export default class NoteHelperPlugin extends Plugin {
 
                 // 添加跳过数量信息
                 if (result.skipped && result.skipped > 0) {
-                    message += `, skipped ${result.skipped} duplicate${result.skipped > 1 ? 's' : ''}`;
+                    message += `，跳过 ${result.skipped} 个重复`;
                 }
 
                 showMessage(message, 5000, 'info');
