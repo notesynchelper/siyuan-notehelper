@@ -197,11 +197,13 @@ export class SettingsForm {
 
         if (apiKeyInput) values.apiKey = apiKeyInput.value;
 
-        // 处理最后同步时间
+        // 处理最后同步时间（转换为服务端支持的格式：去掉毫秒）
         if (syncAtInput) {
             if (syncAtInput.value) {
                 try {
-                    values.syncAt = new Date(syncAtInput.value).toISOString();
+                    const date = new Date(syncAtInput.value);
+                    // 转换为 ISO 格式并去掉毫秒，匹配服务端格式
+                    values.syncAt = date.toISOString().replace(/\.\d{3}Z$/, 'Z');
                 } catch (e) {
                     console.error('Failed to parse sync time:', e);
                 }

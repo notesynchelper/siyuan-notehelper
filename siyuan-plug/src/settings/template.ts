@@ -314,9 +314,10 @@ export function templateNeedsContent(template: string): boolean {
  */
 export function processContentTimestamps(content: string): string {
     // 匹配格式：**2025/01/15 10:30:00**
+    // 使用斜体格式替代粗体，视觉上弱化时间戳
     return content.replace(
         /\*\*(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})\*\*/g,
-        '<small style="color: #999;">$1</small>'
+        '*$1*'
     );
 }
 

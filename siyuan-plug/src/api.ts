@@ -181,7 +181,7 @@ export async function getItems(
     // 构建查询字符串
     let searchQuery = query || '';
     if (updatedAt) {
-        searchQuery += ` updated:>${updatedAt}`;
+        searchQuery += ` updated:${updatedAt}`;
     }
 
     logger.info(`getItems called with params:`, {

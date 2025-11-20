@@ -113,8 +113,9 @@ export class SyncManager {
                 }
             }
 
-            // 更新同步时间
-            this.settings.syncAt = new Date().toISOString();
+            // 更新同步时间（去掉毫秒以匹配服务端格式）
+            const now = new Date();
+            this.settings.syncAt = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
             await this.plugin.saveData(this.settings);
 
             logger.info(`Sync completed. Created: ${createdCount}, Skipped: ${skippedCount}, Errors: ${errors.length}`);
