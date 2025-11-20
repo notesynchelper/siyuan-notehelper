@@ -1,8 +1,8 @@
 {
   "name": "notehelper",
-  "author": "laizeyang",
-  "url": "https://github.com/laizeyang/siyuan-notehelper",
-  "version": "0.1.0",
+  "author": "notesynchelper",
+  "url": "https://github.com/notesynchelper/siyuan-notehelper",
+  "version": "1.0.0",
   "minAppVersion": "3.3.0",
   "backends": [
     "windows",
