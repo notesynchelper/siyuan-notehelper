@@ -251,6 +251,12 @@ export default class NoteHelperPlugin extends Plugin {
         } else {
             statusElement.textContent = this.i18n.noSyncYet;
         }
+
+        // 同时更新设置表单中的同步时间输入框
+        const syncAtInput = this.dockElement.querySelector('#syncAt') as HTMLInputElement;
+        if (syncAtInput) {
+            syncAtInput.value = this.formatSyncTimeForInput();
+        }
     }
 
     /**
