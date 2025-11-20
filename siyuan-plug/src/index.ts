@@ -204,13 +204,6 @@ export default class NoteHelperPlugin extends Plugin {
                                 ${this.i18n.settings}
                             </div>
                             ${SettingsForm.renderSettingsForm(this.settings, this.i18n, () => this.formatSyncTimeForInput())}
-
-                            <!-- 保存按钮 -->
-                            <div style="margin-top: 16px;">
-                                <button class="b3-button b3-button--outline fn__block" id="dockSaveSettings">
-                                    ${this.i18n.save}
-                                </button>
-                            </div>
                         </div>
                     </div>
                 `;
@@ -221,17 +214,18 @@ export default class NoteHelperPlugin extends Plugin {
                     this.performSync();
                 });
 
-                // 绑定保存设置按钮
-                const saveBtn = dock.element.querySelector('#dockSaveSettings') as HTMLButtonElement;
-                saveBtn?.addEventListener('click', async () => {
-                    await this.saveSettingsFromContainer(dock.element);
-                    showMessage(this.i18n.success?.settingsSaved || 'Settings saved', 3000, 'info');
+                // 为所有输入框添加自动保存功能（失去焦点时保存）
+                const formInputs = dock.element.querySelectorAll('input, select, textarea');
+                formInputs.forEach((input) => {
+                    input.addEventListener('blur', async () => {
+                        await this.saveSettingsFromContainer(dock.element);
 
-                    // 重启定时同步
-                    this.syncManager.stopScheduledSync();
-                    if (this.settings.frequency > 0) {
-                        this.syncManager.startScheduledSync();
-                    }
+                        // 重启定时同步
+                        this.syncManager.stopScheduledSync();
+                        if (this.settings.frequency > 0) {
+                            this.syncManager.startScheduledSync();
+                        }
+                    });
                 });
 
                 // 初始化状态显示

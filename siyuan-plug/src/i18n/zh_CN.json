@@ -51,6 +51,12 @@
   "singleFileDateFormat": "单文件日期格式",
   "attachmentFolder": "附件文件夹",
 
+  "mergeSettings": "合并消息设置",
+  "mergeFolderTemplate": "合并消息路径模板",
+  "mergeFolderTemplateDesc": "支持 {{{date}}} 占位符，日期格式根据 mergeFolderDateFormat 设置",
+  "mergeMessageTemplate": "合并消息格式模板",
+  "mergeMessageTemplateDesc": "支持 Mustache 变量：{{{dateSaved}}}, {{{content}}}。使用 --- 作为消息分隔符",
+
   "templateSettings": "模板设置",
   "template": "内容模板",
   "templateDesc": "使用 Mustache 语法自定义文章渲染模板",

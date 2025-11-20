@@ -201,7 +201,7 @@ export function renderMergeFolderPath(
             date: formatDate(article.savedAt, settings.mergeFolderDateFormat),
         };
 
-        const template = settings.mergeFolder || '笔记同步助手/企微消息/{{{date}}}';
+        const template = settings.mergeFolderTemplate || settings.mergeFolder || '笔记同步助手/微信消息/{{{date}}}';
         let path = Mustache.render(template, viewWithDate);
 
         // 规范化路径：
@@ -217,7 +217,7 @@ export function renderMergeFolderPath(
         return path;
     } catch (error) {
         logger.error('Merge folder path rendering error:', error);
-        return '笔记同步助手/企微消息';
+        return '笔记同步助手/微信消息';
     }
 }
 
@@ -342,8 +342,8 @@ export function renderWeChatMessageSimple(
             dateSaved,
         };
 
-        // 使用企微消息模板
-        const template = settings.wechatMessageTemplate || '---\n## 📅 {{{dateSaved}}}\n{{{content}}}';
+        // 使用用户自定义的合并消息模板，如果没有则使用企微消息模板
+        const template = settings.mergeMessageTemplate || settings.wechatMessageTemplate || '---\n## 📅 {{{dateSaved}}}\n{{{content}}}';
         return Mustache.render(template, articleView);
     } catch (error) {
         logger.error('WeChat message simple rendering error:', error);

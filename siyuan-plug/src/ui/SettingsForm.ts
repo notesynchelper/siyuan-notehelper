@@ -125,6 +125,36 @@ export class SettingsForm {
                 <div class="b3-label">
                     <div class="fn__flex">
                         <div class="fn__flex-1">
+                            ${i18n.mergeSettings || '合并消息设置'}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="b3-label">
+                    <div class="fn__flex">
+                        <span class="fn__flex-1">${i18n.mergeFolderTemplate || '合并消息路径模板'}</span>
+                    </div>
+                    <div class="fn__flex">
+                        <input class="b3-text-field fn__flex-1" id="mergeFolderTemplate" value="${settings.mergeFolderTemplate}" />
+                    </div>
+                    <div class="b3-label__text">${i18n.mergeFolderTemplateDesc || '支持 {{{date}}} 占位符，日期格式根据 mergeFolderDateFormat 设置'}</div>
+                </div>
+
+                <div class="b3-label">
+                    <div class="fn__flex">
+                        <span class="fn__flex-1">${i18n.mergeMessageTemplate || '合并消息格式模板'}</span>
+                    </div>
+                    <div class="fn__flex">
+                        <textarea class="b3-text-field fn__flex-1" id="mergeMessageTemplate" rows="4" style="resize: vertical;">${settings.mergeMessageTemplate}</textarea>
+                    </div>
+                    <div class="b3-label__text">${i18n.mergeMessageTemplateDesc || '支持 Mustache 变量：{{{dateSaved}}}, {{{content}}}。使用 --- 作为消息分隔符'}</div>
+                </div>
+
+                <div class="fn__hr"></div>
+
+                <div class="b3-label">
+                    <div class="fn__flex">
+                        <div class="fn__flex-1">
                             ${i18n.imageSettings}
                         </div>
                     </div>
@@ -159,6 +189,8 @@ export class SettingsForm {
         const mergeModeSelect = container.querySelector('#mergeMode') as HTMLSelectElement;
         const folderInput = container.querySelector('#folder') as HTMLInputElement;
         const filenameInput = container.querySelector('#filename') as HTMLInputElement;
+        const mergeFolderTemplateInput = container.querySelector('#mergeFolderTemplate') as HTMLInputElement;
+        const mergeMessageTemplateInput = container.querySelector('#mergeMessageTemplate') as HTMLTextAreaElement;
         const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
 
         const values: Partial<PluginSettings> = {};
@@ -183,6 +215,8 @@ export class SettingsForm {
         if (mergeModeSelect) values.mergeMode = mergeModeSelect.value as any;
         if (folderInput) values.folder = folderInput.value;
         if (filenameInput) values.filename = filenameInput.value;
+        if (mergeFolderTemplateInput) values.mergeFolderTemplate = mergeFolderTemplateInput.value;
+        if (mergeMessageTemplateInput) values.mergeMessageTemplate = mergeMessageTemplateInput.value;
         if (imageModeSelect) values.imageMode = imageModeSelect.value as any;
 
         return values;
