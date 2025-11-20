@@ -1,25 +1,6 @@
-plugin:notehelper:24 [NoteHelper] [10:58:53.533] [INFO] Loading Note Sync Helper plugin...
-plugin:notehelper:24 [NoteHelper] [10:58:53.540] [INFO] Settings loaded
-plugin:notehelper:24 [NoteHelper] [10:58:53.540] [INFO] Log level set to: DEBUG
-plugin:notehelper:24 [NoteHelper] [10:58:53.540] [INFO] Note Sync Helper plugin loaded successfully
-plugin:notehelper:24 [NoteHelper] [10:58:53.718] [INFO] Layout ready
-plugin:notehelper:24 [NoteHelper] [10:58:57.466] [INFO] Starting sync...
-plugin:notehelper:24 [NoteHelper] [10:58:57.471] [INFO] Fetching batch 1...
-plugin:notehelper:24 [NoteHelper] [10:58:57.472] [INFO] getItems called with params: {
-  "endpoint": "https://siyuan.notebooksyncer.com/api/graphql",
-  "after": 0,
-  "first": 15,
-  "updatedAt": "2025-11-19T08:19:00.000Z",
-  "includeContent": true,
-  "finalSearchQuery": " updated:>2025-11-19T08:19:00.000Z"
-}
-plugin:notehelper:24 [NoteHelper] [10:58:57.472] [INFO] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
-plugin:notehelper:24 [NoteHelper] [10:58:57.472] [INFO] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
-plugin:notehelper:24 [NoteHelper] [10:58:57.472] [INFO] Variables: {"after":0,"first":15,"query":" updated:>2025-11-19T08:19:00.000Z"}
-plugin:notehelper:24 [NoteHelper] [10:58:57.472] [INFO] API Key: o56...bIuqq4
-plugin:notehelper:24 [NoteHelper] [10:59:01.628] [INFO] Response received: 200  (4156ms)
-plugin:notehelper:24 [NoteHelper] [10:59:01.728] [INFO] Response size: 31586 bytes
-plugin:notehelper:24 [NoteHelper] [10:59:01.728] [WARN] Non-standard GraphQL response: server returns search content directly
+plugin:notehelper:24 [NoteHelper] [11:07:03.725] [INFO] Response received: 200  (2674ms)
+plugin:notehelper:24 [NoteHelper] [11:07:03.834] [INFO] Response size: 31586 bytes
+plugin:notehelper:24 [NoteHelper] [11:07:03.834] [WARN] Non-standard GraphQL response: server returns search content directly
 warn @ plugin:notehelper:24
 eval @ plugin:notehelper:52
 i @ plugin:notehelper:52
@@ -47,8 +28,8 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
-plugin:notehelper:24 [NoteHelper] [10:59:01.728] [INFO] GraphQL request successful
-plugin:notehelper:24 [NoteHelper] [10:59:01.728] [INFO] getItems result: {
+plugin:notehelper:24 [NoteHelper] [11:07:03.834] [INFO] GraphQL request successful
+plugin:notehelper:24 [NoteHelper] [11:07:03.834] [INFO] getItems result: {
   "itemsCount": 15,
   "hasNextPage": true,
   "totalCount": 15,
@@ -56,22 +37,22 @@ plugin:notehelper:24 [NoteHelper] [10:59:01.728] [INFO] getItems result: {
   "endCursor": "14",
   "firstItemId": "5bda98d4-c2dc-4e27-b473-bf09edcf45ef"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:01.728] [INFO] Fetching batch 2...
-plugin:notehelper:24 [NoteHelper] [10:59:01.728] [INFO] getItems called with params: {
+plugin:notehelper:24 [NoteHelper] [11:07:03.834] [INFO] Fetching batch 2...
+plugin:notehelper:24 [NoteHelper] [11:07:03.834] [INFO] getItems called with params: {
   "endpoint": "https://siyuan.notebooksyncer.com/api/graphql",
   "after": 15,
   "first": 15,
-  "updatedAt": "2025-11-19T08:19:00.000Z",
+  "updatedAt": "2025-11-20T03:06:51.210Z",
   "includeContent": true,
-  "finalSearchQuery": " updated:>2025-11-19T08:19:00.000Z"
+  "finalSearchQuery": " updated:>2025-11-20T03:06:51.210Z"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:01.728] [INFO] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
-plugin:notehelper:24 [NoteHelper] [10:59:01.728] [INFO] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
-plugin:notehelper:24 [NoteHelper] [10:59:01.728] [INFO] Variables: {"after":15,"first":15,"query":" updated:>2025-11-19T08:19:00.000Z"}
-plugin:notehelper:24 [NoteHelper] [10:59:01.728] [INFO] API Key: o56...bIuqq4
-plugin:notehelper:24 [NoteHelper] [10:59:03.094] [INFO] Response received: 200  (1366ms)
-plugin:notehelper:24 [NoteHelper] [10:59:03.175] [INFO] Response size: 16518 bytes
-plugin:notehelper:24 [NoteHelper] [10:59:03.175] [WARN] Non-standard GraphQL response: server returns search content directly
+plugin:notehelper:24 [NoteHelper] [11:07:03.834] [INFO] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
+plugin:notehelper:24 [NoteHelper] [11:07:03.834] [INFO] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
+plugin:notehelper:24 [NoteHelper] [11:07:03.834] [INFO] Variables: {"after":15,"first":15,"query":" updated:>2025-11-20T03:06:51.210Z"}
+plugin:notehelper:24 [NoteHelper] [11:07:03.834] [INFO] API Key: o56...bIuqq4
+plugin:notehelper:24 [NoteHelper] [11:07:05.202] [INFO] Response received: 200  (1368ms)
+plugin:notehelper:24 [NoteHelper] [11:07:05.268] [INFO] Response size: 16518 bytes
+plugin:notehelper:24 [NoteHelper] [11:07:05.268] [WARN] Non-standard GraphQL response: server returns search content directly
 warn @ plugin:notehelper:24
 eval @ plugin:notehelper:52
 i @ plugin:notehelper:52
@@ -102,8 +83,8 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
-plugin:notehelper:24 [NoteHelper] [10:59:03.175] [INFO] GraphQL request successful
-plugin:notehelper:24 [NoteHelper] [10:59:03.175] [INFO] getItems result: {
+plugin:notehelper:24 [NoteHelper] [11:07:05.268] [INFO] GraphQL request successful
+plugin:notehelper:24 [NoteHelper] [11:07:05.268] [INFO] getItems result: {
   "itemsCount": 15,
   "hasNextPage": true,
   "totalCount": 15,
@@ -111,22 +92,22 @@ plugin:notehelper:24 [NoteHelper] [10:59:03.175] [INFO] getItems result: {
   "endCursor": "29",
   "firstItemId": "93b1df53-100b-48c0-8335-4de191a57419"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:03.176] [INFO] Fetching batch 3...
-plugin:notehelper:24 [NoteHelper] [10:59:03.176] [INFO] getItems called with params: {
+plugin:notehelper:24 [NoteHelper] [11:07:05.268] [INFO] Fetching batch 3...
+plugin:notehelper:24 [NoteHelper] [11:07:05.268] [INFO] getItems called with params: {
   "endpoint": "https://siyuan.notebooksyncer.com/api/graphql",
   "after": 30,
   "first": 15,
-  "updatedAt": "2025-11-19T08:19:00.000Z",
+  "updatedAt": "2025-11-20T03:06:51.210Z",
   "includeContent": true,
-  "finalSearchQuery": " updated:>2025-11-19T08:19:00.000Z"
+  "finalSearchQuery": " updated:>2025-11-20T03:06:51.210Z"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:03.176] [INFO] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
-plugin:notehelper:24 [NoteHelper] [10:59:03.176] [INFO] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
-plugin:notehelper:24 [NoteHelper] [10:59:03.176] [INFO] Variables: {"after":30,"first":15,"query":" updated:>2025-11-19T08:19:00.000Z"}
-plugin:notehelper:24 [NoteHelper] [10:59:03.176] [INFO] API Key: o56...bIuqq4
-plugin:notehelper:24 [NoteHelper] [10:59:04.533] [INFO] Response received: 200  (1357ms)
-plugin:notehelper:24 [NoteHelper] [10:59:04.581] [INFO] Response size: 12898 bytes
-plugin:notehelper:24 [NoteHelper] [10:59:04.581] [WARN] Non-standard GraphQL response: server returns search content directly
+plugin:notehelper:24 [NoteHelper] [11:07:05.268] [INFO] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
+plugin:notehelper:24 [NoteHelper] [11:07:05.268] [INFO] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
+plugin:notehelper:24 [NoteHelper] [11:07:05.268] [INFO] Variables: {"after":30,"first":15,"query":" updated:>2025-11-20T03:06:51.210Z"}
+plugin:notehelper:24 [NoteHelper] [11:07:05.268] [INFO] API Key: o56...bIuqq4
+plugin:notehelper:24 [NoteHelper] [11:07:06.645] [INFO] Response received: 200  (1377ms)
+plugin:notehelper:24 [NoteHelper] [11:07:06.697] [INFO] Response size: 12898 bytes
+plugin:notehelper:24 [NoteHelper] [11:07:06.697] [WARN] Non-standard GraphQL response: server returns search content directly
 warn @ plugin:notehelper:24
 eval @ plugin:notehelper:52
 i @ plugin:notehelper:52
@@ -160,8 +141,8 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
-plugin:notehelper:24 [NoteHelper] [10:59:04.581] [INFO] GraphQL request successful
-plugin:notehelper:24 [NoteHelper] [10:59:04.582] [INFO] getItems result: {
+plugin:notehelper:24 [NoteHelper] [11:07:06.698] [INFO] GraphQL request successful
+plugin:notehelper:24 [NoteHelper] [11:07:06.698] [INFO] getItems result: {
   "itemsCount": 15,
   "hasNextPage": true,
   "totalCount": 15,
@@ -169,22 +150,22 @@ plugin:notehelper:24 [NoteHelper] [10:59:04.582] [INFO] getItems result: {
   "endCursor": "44",
   "firstItemId": "c103cce3-8009-4550-b6dc-73486ac4ba74"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:04.582] [INFO] Fetching batch 4...
-plugin:notehelper:24 [NoteHelper] [10:59:04.582] [INFO] getItems called with params: {
+plugin:notehelper:24 [NoteHelper] [11:07:06.698] [INFO] Fetching batch 4...
+plugin:notehelper:24 [NoteHelper] [11:07:06.698] [INFO] getItems called with params: {
   "endpoint": "https://siyuan.notebooksyncer.com/api/graphql",
   "after": 45,
   "first": 15,
-  "updatedAt": "2025-11-19T08:19:00.000Z",
+  "updatedAt": "2025-11-20T03:06:51.210Z",
   "includeContent": true,
-  "finalSearchQuery": " updated:>2025-11-19T08:19:00.000Z"
+  "finalSearchQuery": " updated:>2025-11-20T03:06:51.210Z"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:04.582] [INFO] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
-plugin:notehelper:24 [NoteHelper] [10:59:04.582] [INFO] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
-plugin:notehelper:24 [NoteHelper] [10:59:04.582] [INFO] Variables: {"after":45,"first":15,"query":" updated:>2025-11-19T08:19:00.000Z"}
-plugin:notehelper:24 [NoteHelper] [10:59:04.582] [INFO] API Key: o56...bIuqq4
-plugin:notehelper:24 [NoteHelper] [10:59:05.747] [INFO] Response received: 200  (1165ms)
- [NoteHelper] [10:59:05.764] [INFO] Response size: 1019 bytes
- [NoteHelper] [10:59:05.765] [WARN] Non-standard GraphQL response: server returns search content directly
+plugin:notehelper:24 [NoteHelper] [11:07:06.698] [INFO] GraphQL Request: POST https://siyuan.notebooksyncer.com/api/graphql
+plugin:notehelper:24 [NoteHelper] [11:07:06.698] [INFO] Query: query Search($after: Int, $first: Int, $query: String) { search(after: $after,...
+plugin:notehelper:24 [NoteHelper] [11:07:06.698] [INFO] Variables: {"after":45,"first":15,"query":" updated:>2025-11-20T03:06:51.210Z"}
+plugin:notehelper:24 [NoteHelper] [11:07:06.698] [INFO] API Key: o56...bIuqq4
+plugin:notehelper:24 [NoteHelper] [11:07:07.896] [INFO] Response received: 200  (1198ms)
+plugin:notehelper:24 [NoteHelper] [11:07:07.914] [INFO] Response size: 1019 bytes
+plugin:notehelper:24 [NoteHelper] [11:07:07.915] [WARN] Non-standard GraphQL response: server returns search content directly
 warn @ plugin:notehelper:24
 eval @ plugin:notehelper:52
 i @ plugin:notehelper:52
@@ -221,8 +202,8 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.765] [INFO] GraphQL request successful
- [NoteHelper] [10:59:05.765] [INFO] getItems result: {
+plugin:notehelper:24 [NoteHelper] [11:07:07.915] [INFO] GraphQL request successful
+plugin:notehelper:24 [NoteHelper] [11:07:07.915] [INFO] getItems result: {
   "itemsCount": 1,
   "hasNextPage": false,
   "totalCount": 1,
@@ -230,8 +211,8 @@ eval @ plugin:notehelper:302
   "endCursor": "45",
   "firstItemId": "d7ed0d64-3735-406f-9906-3727b13bbb26"
 }
- [NoteHelper] [10:59:05.765] [INFO] Total articles to process: 46
- [NoteHelper] [10:59:05.767] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:07.915] [INFO] Total articles to process: 46
+plugin:notehelper:24 [NoteHelper] [11:07:07.915] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "5bda98d4-c2dc-4e27-b473-bf09edcf45ef",
   "articleTitle": "同步助手_20251104_闭园公告_链接",
   "isWeChatMessage": true,
@@ -240,34 +221,39 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-11",
   "docPath": "笔记同步助手/企微消息/2025-11/同步助手_2025-11-04"
 }
- [NoteHelper] [10:59:05.768] [INFO] [getDocumentByPath] Searching for document: {
+plugin:notehelper:24 [NoteHelper] [11:07:07.916] [INFO] [getDocumentByPath] Searching for document: {
   "notebookId": "20251119120526-rly7mmp",
   "originalPath": "笔记同步助手/企微消息/2025-11/同步助手_2025-11-04",
   "normalizedPath": "笔记同步助手/企微消息/2025-11/同步助手_2025-11-04",
   "filename": "同步助手_2025-11-04"
 }
- [NoteHelper] [10:59:05.772] [INFO] [getDocumentByPath] SQL response: {
+plugin:notehelper:24 [NoteHelper] [11:07:07.919] [INFO] [getDocumentByPath] SQL response: {
   "code": 0,
-  "dataLength": 1
+  "dataLength": 0
 }
- [NoteHelper] [10:59:05.772] [INFO] [getDocumentByPath] Document found via SQL with ID: 20251120103900-dzkmle8 {
-  "hpath": "/笔记同步助手/企微消息/2025-11/同步助手_2025-11-04",
-  "content": "同步助手_2025-11-04"
+plugin:notehelper:24 [NoteHelper] [11:07:07.919] [INFO] [getDocumentByPath] SQL query found no results, trying filetree API
+plugin:notehelper:24 [NoteHelper] [11:07:07.922] [INFO] [getDocumentByPath] Filetree API response: {
+  "code": 0,
+  "dataLength": 0,
+  "data": []
 }
- [NoteHelper] [10:59:05.772] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103900-dzkmle8",
-  "existingDocIdType": "string",
+plugin:notehelper:24 [NoteHelper] [11:07:07.922] [INFO] [getDocumentByPath] Document not found: 笔记同步助手/企微消息/2025-11/同步助手_2025-11-04.md
+plugin:notehelper:24 [NoteHelper] [11:07:07.922] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": null,
+  "existingDocIdType": "object",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.772] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103900-dzkmle8",
+plugin:notehelper:24 [NoteHelper] [11:07:07.922] [INFO] [createMergedDocument] Creating new merged document: {
+  "notebookId": "20251119120526-rly7mmp",
+  "docPath": "笔记同步助手/企微消息/2025-11/同步助手_2025-11-04",
   "articleId": "5bda98d4-c2dc-4e27-b473-bf09edcf45ef",
   "articleTitle": "同步助手_20251104_闭园公告_链接",
-  "docPath": "笔记同步助手/企微消息/2025-11/同步助手_2025-11-04"
+  "mergeDate": "2025-11-04"
 }
- [NoteHelper] [10:59:05.775] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.775] [INFO] [mergeToExistingDocument] Article 5bda98d4-c2dc-4e27-b473-bf09edcf45ef already exists in 笔记同步助手/企微消息/2025-11/同步助手_2025-11-04, skipping
- [NoteHelper] [10:59:05.776] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:08.289] [INFO] [createMergedDocument] Document created with ID: 20251120110707-0re02he
+plugin:notehelper:24 [NoteHelper] [11:07:08.351] [INFO] [addMergedId] Successfully added article 5bda98d4-c2dc-4e27-b473-bf09edcf45ef to merged list (total: 1)
+plugin:notehelper:24 [NoteHelper] [11:07:08.411] [INFO] [createMergedDocument] Successfully created merged document: 笔记同步助手/企微消息/2025-11/同步助手_2025-11-04
+plugin:notehelper:24 [NoteHelper] [11:07:08.411] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "a1d1c62a-6406-4934-b0d9-c11bfc9a62e2",
   "articleTitle": "同步助手_20251104_闭园公告_链接",
   "isWeChatMessage": true,
@@ -276,32 +262,32 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-11",
   "docPath": "笔记同步助手/企微消息/2025-11/同步助手_2025-11-04"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.776] [INFO] [getDocumentByPath] Found in cache: 20251120103900-dzkmle8 for path: 笔记同步助手/企微消息/2025-11/同步助手_2025-11-04
-plugin:notehelper:24 [NoteHelper] [10:59:05.776] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103900-dzkmle8",
+plugin:notehelper:24 [NoteHelper] [11:07:08.411] [INFO] [getDocumentByPath] Found in cache: 20251120110707-0re02he for path: 笔记同步助手/企微消息/2025-11/同步助手_2025-11-04
+plugin:notehelper:24 [NoteHelper] [11:07:08.411] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110707-0re02he",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.776] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103900-dzkmle8",
+plugin:notehelper:24 [NoteHelper] [11:07:08.411] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110707-0re02he",
   "articleId": "a1d1c62a-6406-4934-b0d9-c11bfc9a62e2",
   "articleTitle": "同步助手_20251104_闭园公告_链接",
   "docPath": "笔记同步助手/企微消息/2025-11/同步助手_2025-11-04"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.778] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
-plugin:notehelper:24 [NoteHelper] [10:59:05.778] [INFO] [mergeToExistingDocument] Adding new article a1d1c62a-6406-4934-b0d9-c11bfc9a62e2 to 笔记同步助手/企微消息/2025-11/同步助手_2025-11-04
-plugin:notehelper:24 [NoteHelper] [10:59:05.781] [INFO] [updateDocument] Called with docId: 20251120103900-dzkmle8
-plugin:notehelper:24 [NoteHelper] [10:59:05.781] [INFO] [updateDocument] DocId type: string
-plugin:notehelper:24 [NoteHelper] [10:59:05.781] [INFO] [updateDocument] DocId looks like timestamp: false
-plugin:notehelper:24 [NoteHelper] [10:59:05.781] [INFO] [updateDocument] Content length: 1557
-plugin:notehelper:24 [NoteHelper] [10:59:05.781] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103900-faf7hp3" updated="20251120103900"}
+plugin:notehelper:24 [NoteHelper] [11:07:08.414] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:08.414] [INFO] [mergeToExistingDocument] Adding new article a1d1c62a-6406-4934-b0d9-c11bfc9a62e2 to 笔记同步助手/企微消息/2025-11/同步助手_2025-11-04
+plugin:notehelper:24 [NoteHelper] [11:07:08.423] [INFO] [updateDocument] Called with docId: 20251120110707-0re02he
+plugin:notehelper:24 [NoteHelper] [11:07:08.423] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:08.423] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:08.423] [INFO] [updateDocument] Content length: 1495
+plugin:notehelper:24 [NoteHelper] [11:07:08.423] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-11-04 19:28:34
+{: id="20251120110707-m73f775" updated="20251120110707"}
 
-## 📅 2025-11-04 19:28:34
-{: id="20251120103900-qm0awfg" updated="20251120103900"}
+[闭园公告](https://mp.weixin.qq.com/s?__biz=MzI3OTA3MzkwNA==&mid=2652843493&idx=1&sn=b2be47ddd613c137608f70c4b19f4d03&chksm=f19c7149880d8ffbff500ca5cbf138df9ad195ccbaf56ca9e91350fa4721b65b197b6f54b304&mpshare=1&scene=1&srcid=1031I6ccv9I6hINlJAs6XpxP&sharer_shareinfo=a53d58f6e642e42b0e40aa4a18495619&sharer_shareinfo_first=a53d58f6e642e42b0e40aa4a18495619#rd)
+{: id="20251120110707-u2qyk15" updated="20251120110707"}
 
-[闭园公告](https://mp.weixin.qq.com/s?__biz=MzI3OTA3MzkwNA==&mid=2652843493&idx=1&sn=b2be47ddd613c137608f70c4b19f4d03&chksm=f19c7149880d8ffbff500ca5cbf138df9ad195ccbaf56ca9e91350fa4721b65b197b6f54b304&mpshare=1&scene=1&srcid=1031I6ccv9I6hINlJAs6XpxP&sharer_shareinfo=a53d58f6e642e42b0e40aa4a18495619&sharer_shareinfo_first=a53d58f6e642e42b0e40aa4a18495619#rd
-plugin:notehelper:24 [NoteHelper] [10:59:05.781] [INFO] [updateDocument] Content preview (last 500 chars): "doc" updated="20251120103900"}
+![
+plugin:notehelper:24 [NoteHelper] [11:07:08.423] [INFO] [updateDocument] Content preview (last 500 chars): "doc" updated="20251120110707"}
 
 ---
 
@@ -310,10 +296,10 @@ plugin:notehelper:24 [NoteHelper] [10:59:05.781] [INFO] [updateDocument] Content
 [闭园公告](https://mp.weixin.qq.com/s?__biz=MzI3OTA3MzkwNA==&mid=2652843493&idx=1&sn=b2be47ddd613c137608f70c4b19f4d03&chksm=f19c7149880d8ffbff500ca5cbf138df9ad195ccbaf56ca9e91350fa4721b65b197b6f54b304&mpshare=1&scene=1&srcid=1031I6ccv9I6hINlJAs6XpxP&sharer_shareinfo=a53d58f6e642e42b0e40aa4a18495619&sharer_shareinfo_first=a53d58f6e642e42b0e40aa4a18495619#rd)
 
 ![缩略图](https://wework.qpic.cn/wwpic3az/621276_TRzgKWhdTdO7xih_1762255013/0)
-plugin:notehelper:24 [NoteHelper] [10:59:05.784] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:08.426] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:00.693Z]",
-  "docId": "20251120103900-dzkmle8"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:08.351Z]",
+  "docId": "20251120110707-0re02he"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -377,7 +363,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
-plugin:notehelper:24 [NoteHelper] [10:59:05.784] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:08.426] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -440,7 +426,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
-plugin:notehelper:24 [NoteHelper] [10:59:05.784] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:08.426] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -496,7 +482,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
-plugin:notehelper:24 [NoteHelper] [10:59:05.784] [ERROR] Failed to process article a1d1c62a-6406-4934-b0d9-c11bfc9a62e2: {}
+plugin:notehelper:24 [NoteHelper] [11:07:08.426] [ERROR] Failed to process article a1d1c62a-6406-4934-b0d9-c11bfc9a62e2: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -532,7 +518,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
-plugin:notehelper:24 [NoteHelper] [10:59:05.784] [ERROR] Failed to process article a1d1c62a-6406-4934-b0d9-c11bfc9a62e2: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:00.693Z]
+plugin:notehelper:24 [NoteHelper] [11:07:08.426] [ERROR] Failed to process article a1d1c62a-6406-4934-b0d9-c11bfc9a62e2: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:08.351Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -564,13 +550,13 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
-plugin:notehelper:24 [NoteHelper] [10:59:05.787] [INFO] Document already exists for article 0e923e70-6f06-4ecf-903d-3ce6669c53dc, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.789] [INFO] Document already exists for article f5368e0f-df9c-450c-b7b4-df75d731c3d2, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.791] [INFO] Document already exists for article bbc9f4ac-7352-4902-b4c4-54cf04a14a2a, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.793] [INFO] Document already exists for article 03c7668e-c691-4f47-b2b1-1b4ea1722aa2, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.795] [INFO] Document already exists for article 5efd6788-cf11-4e24-b3ac-2ebeba407e25, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.797] [INFO] Document already exists for article c9d03b5c-073a-45e5-9cd2-42cd5f360a4e, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.797] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:08.428] [INFO] Document already exists for article 0e923e70-6f06-4ecf-903d-3ce6669c53dc, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.430] [INFO] Document already exists for article f5368e0f-df9c-450c-b7b4-df75d731c3d2, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.432] [INFO] Document already exists for article bbc9f4ac-7352-4902-b4c4-54cf04a14a2a, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.434] [INFO] Document already exists for article 03c7668e-c691-4f47-b2b1-1b4ea1722aa2, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.437] [INFO] Document already exists for article 5efd6788-cf11-4e24-b3ac-2ebeba407e25, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.439] [INFO] Document already exists for article c9d03b5c-073a-45e5-9cd2-42cd5f360a4e, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.439] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "72cb97f6-4c65-48d8-a4bf-37839168de27",
   "articleTitle": "同步助手_20251031_十五运会倒计时10天，深圳场馆准备好了_链接",
   "isWeChatMessage": true,
@@ -579,36 +565,41 @@ plugin:notehelper:24 [NoteHelper] [10:59:05.797] [INFO] [mergeArticleToFile] Pro
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-31"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.797] [INFO] [getDocumentByPath] Searching for document: {
+plugin:notehelper:24 [NoteHelper] [11:07:08.439] [INFO] [getDocumentByPath] Searching for document: {
   "notebookId": "20251119120526-rly7mmp",
   "originalPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-31",
   "normalizedPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-31",
   "filename": "同步助手_2025-10-31"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.800] [INFO] [getDocumentByPath] SQL response: {
+plugin:notehelper:24 [NoteHelper] [11:07:08.441] [INFO] [getDocumentByPath] SQL response: {
   "code": 0,
-  "dataLength": 1
+  "dataLength": 0
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.800] [INFO] [getDocumentByPath] Document found via SQL with ID: 20251120103902-31rnwez {
-  "hpath": "/笔记同步助手/企微消息/2025-10/同步助手_2025-10-31",
-  "content": "同步助手_2025-10-31"
+plugin:notehelper:24 [NoteHelper] [11:07:08.441] [INFO] [getDocumentByPath] SQL query found no results, trying filetree API
+plugin:notehelper:24 [NoteHelper] [11:07:08.443] [INFO] [getDocumentByPath] Filetree API response: {
+  "code": 0,
+  "dataLength": 0,
+  "data": []
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.800] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103902-31rnwez",
-  "existingDocIdType": "string",
+plugin:notehelper:24 [NoteHelper] [11:07:08.443] [INFO] [getDocumentByPath] Document not found: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-31.md
+plugin:notehelper:24 [NoteHelper] [11:07:08.443] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": null,
+  "existingDocIdType": "object",
   "looksLikeTimestamp": false
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.801] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103902-31rnwez",
+plugin:notehelper:24 [NoteHelper] [11:07:08.443] [INFO] [createMergedDocument] Creating new merged document: {
+  "notebookId": "20251119120526-rly7mmp",
+  "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-31",
   "articleId": "72cb97f6-4c65-48d8-a4bf-37839168de27",
   "articleTitle": "同步助手_20251031_十五运会倒计时10天，深圳场馆准备好了_链接",
-  "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-31"
+  "mergeDate": "2025-10-31"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.803] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
-plugin:notehelper:24 [NoteHelper] [10:59:05.804] [INFO] [mergeToExistingDocument] Article 72cb97f6-4c65-48d8-a4bf-37839168de27 already exists in 笔记同步助手/企微消息/2025-10/同步助手_2025-10-31, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.806] [INFO] Document already exists for article 26704c6f-ddac-405b-8d90-eea07a43d660, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.808] [INFO] Document already exists for article a0f9374e-341c-4bcc-b89d-8db880385856, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.808] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:08.760] [INFO] [createMergedDocument] Document created with ID: 20251120110708-sqrjd53
+plugin:notehelper:24 [NoteHelper] [11:07:08.823] [INFO] [addMergedId] Successfully added article 72cb97f6-4c65-48d8-a4bf-37839168de27 to merged list (total: 1)
+plugin:notehelper:24 [NoteHelper] [11:07:08.884] [INFO] [createMergedDocument] Successfully created merged document: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-31
+plugin:notehelper:24 [NoteHelper] [11:07:08.886] [INFO] Document already exists for article 26704c6f-ddac-405b-8d90-eea07a43d660, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.888] [INFO] Document already exists for article a0f9374e-341c-4bcc-b89d-8db880385856, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.889] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "92d4ad33-a7a5-4f1e-a9e5-3177a5dd7aaa",
   "articleTitle": "同步助手_20251031_十五运会倒计时10天，深圳场馆准备好了_链接",
   "isWeChatMessage": true,
@@ -617,32 +608,30 @@ plugin:notehelper:24 [NoteHelper] [10:59:05.808] [INFO] [mergeArticleToFile] Pro
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-31"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.808] [INFO] [getDocumentByPath] Found in cache: 20251120103902-31rnwez for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-31
-plugin:notehelper:24 [NoteHelper] [10:59:05.808] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103902-31rnwez",
+plugin:notehelper:24 [NoteHelper] [11:07:08.889] [INFO] [getDocumentByPath] Found in cache: 20251120110708-sqrjd53 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-31
+plugin:notehelper:24 [NoteHelper] [11:07:08.889] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110708-sqrjd53",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.808] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103902-31rnwez",
+plugin:notehelper:24 [NoteHelper] [11:07:08.889] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110708-sqrjd53",
   "articleId": "92d4ad33-a7a5-4f1e-a9e5-3177a5dd7aaa",
   "articleTitle": "同步助手_20251031_十五运会倒计时10天，深圳场馆准备好了_链接",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-31"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.810] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
-plugin:notehelper:24 [NoteHelper] [10:59:05.811] [INFO] [mergeToExistingDocument] Adding new article 92d4ad33-a7a5-4f1e-a9e5-3177a5dd7aaa to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-31
-plugin:notehelper:24 [NoteHelper] [10:59:05.813] [INFO] [updateDocument] Called with docId: 20251120103902-31rnwez
-plugin:notehelper:24 [NoteHelper] [10:59:05.813] [INFO] [updateDocument] DocId type: string
-plugin:notehelper:24 [NoteHelper] [10:59:05.813] [INFO] [updateDocument] DocId looks like timestamp: false
-plugin:notehelper:24 [NoteHelper] [10:59:05.813] [INFO] [updateDocument] Content length: 1587
-plugin:notehelper:24 [NoteHelper] [10:59:05.813] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103903-w68f487" updated="20251120103903"}
+plugin:notehelper:24 [NoteHelper] [11:07:08.891] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:08.891] [INFO] [mergeToExistingDocument] Adding new article 92d4ad33-a7a5-4f1e-a9e5-3177a5dd7aaa to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-31
+plugin:notehelper:24 [NoteHelper] [11:07:08.896] [INFO] [updateDocument] Called with docId: 20251120110708-sqrjd53
+plugin:notehelper:24 [NoteHelper] [11:07:08.896] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:08.896] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:08.896] [INFO] [updateDocument] Content length: 1525
+plugin:notehelper:24 [NoteHelper] [11:07:08.896] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-31 11:53:21
+{: id="20251120110708-kysiy2z" updated="20251120110708"}
 
-## 📅 2025-10-31 11:53:21
-{: updated="20251120103903" id="20251120103903-h3vkgkd"}
-
-[十五运会倒计时10天，深圳场馆准备好了](https://mp.weixin.qq.com/s?__biz=MzIxNTE5MTIyMQ==&mid=2651874339&idx=2&sn=29784a5c514164d225e581e507abc452&chksm=8d36b987fdb434a9567e3be6a6463ed3b834460e792ff94763291b4f1175d83804eaef046484&mpshare=1&scene=1&srcid=1030Q3ZpS1SDjm3NeYeRW5be&sharer_shareinfo=deeba13a4440411c6d1e6b79707915b6&sharer_shareinfo_first=deeba13a4440411c6d1e
-plugin:notehelper:24 [NoteHelper] [10:59:05.813] [INFO] [updateDocument] Content preview (last 500 chars): 20251120103902"}
+[十五运会倒计时10天，深圳场馆准备好了](https://mp.weixin.qq.com/s?__biz=MzIxNTE5MTIyMQ==&mid=2651874339&idx=2&sn=29784a5c514164d225e581e507abc452&chksm=8d36b987fdb434a9567e3be6a6463ed3b834460e792ff94763291b4f1175d83804eaef046484&mpshare=1&scene=1&srcid=1030Q3ZpS1SDjm3NeYeRW5be&sharer_shareinfo=deeba13a4440411c6d1e6b79707915b6&sharer_shareinfo_first=deeba13a4440411c6d1e6b79707915b6#rd)
+{: id="20251120110708-nbae1qq" updated="20251
+plugin:notehelper:24 [NoteHelper] [11:07:08.896] [INFO] [updateDocument] Content preview (last 500 chars): 20251120110708"}
 
 ---
 
@@ -651,10 +640,10 @@ plugin:notehelper:24 [NoteHelper] [10:59:05.813] [INFO] [updateDocument] Content
 [十五运会倒计时10天，深圳场馆准备好了](https://mp.weixin.qq.com/s?__biz=MzIxNTE5MTIyMQ==&mid=2651874339&idx=2&sn=29784a5c514164d225e581e507abc452&chksm=8d36b987fdb434a9567e3be6a6463ed3b834460e792ff94763291b4f1175d83804eaef046484&mpshare=1&scene=1&srcid=1030Q3ZpS1SDjm3NeYeRW5be&sharer_shareinfo=deeba13a4440411c6d1e6b79707915b6&sharer_shareinfo_first=deeba13a4440411c6d1e6b79707915b6#rd)
 
 ![缩略图](https://wework.qpic.cn/wwpic3az/636542_IUAOMR2GS9q_ub5_1761881712/0)
- [NoteHelper] [10:59:05.816] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:08.899] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:03.372Z]",
-  "docId": "20251120103902-31rnwez"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:08.823Z]",
+  "docId": "20251120110708-sqrjd53"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -748,7 +737,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.816] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:08.899] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -841,7 +830,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.816] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:08.899] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -927,7 +916,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.816] [ERROR] Failed to process article 92d4ad33-a7a5-4f1e-a9e5-3177a5dd7aaa: {}
+plugin:notehelper:24 [NoteHelper] [11:07:08.900] [ERROR] Failed to process article 92d4ad33-a7a5-4f1e-a9e5-3177a5dd7aaa: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -993,7 +982,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.816] [ERROR] Failed to process article 92d4ad33-a7a5-4f1e-a9e5-3177a5dd7aaa: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:03.372Z]
+plugin:notehelper:24 [NoteHelper] [11:07:08.900] [ERROR] Failed to process article 92d4ad33-a7a5-4f1e-a9e5-3177a5dd7aaa: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:08.823Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -1055,14 +1044,14 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.819] [INFO] Document already exists for article 34334d65-560c-402e-bcd5-05fa08c07aa8, skipping
- [NoteHelper] [10:59:05.821] [INFO] Document already exists for article c45671b9-22ad-4344-b1a6-9cb5824c4e83, skipping
- [NoteHelper] [10:59:05.823] [INFO] Document already exists for article 59996603-e2f5-4258-ab5c-78d21d118838, skipping
- [NoteHelper] [10:59:05.826] [INFO] Document already exists for article 93b1df53-100b-48c0-8335-4de191a57419, skipping
- [NoteHelper] [10:59:05.828] [INFO] Document already exists for article 67cff05f-4232-4734-a111-151aff6513ff, skipping
- [NoteHelper] [10:59:05.830] [INFO] Document already exists for article 01f2b981-144f-4457-bbb1-e06facc13ae6, skipping
- [NoteHelper] [10:59:05.833] [INFO] Document already exists for article 3a9fa4f6-9214-4ca3-b9cb-5ba664002e75, skipping
- [NoteHelper] [10:59:05.833] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:08.902] [INFO] Document already exists for article 34334d65-560c-402e-bcd5-05fa08c07aa8, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.904] [INFO] Document already exists for article c45671b9-22ad-4344-b1a6-9cb5824c4e83, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.906] [INFO] Document already exists for article 59996603-e2f5-4258-ab5c-78d21d118838, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.908] [INFO] Document already exists for article 93b1df53-100b-48c0-8335-4de191a57419, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.909] [INFO] Document already exists for article 67cff05f-4232-4734-a111-151aff6513ff, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.911] [INFO] Document already exists for article 01f2b981-144f-4457-bbb1-e06facc13ae6, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.913] [INFO] Document already exists for article 3a9fa4f6-9214-4ca3-b9cb-5ba664002e75, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:08.913] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "cab42e47-2a65-41e4-9a08-4341a96868d1",
   "articleTitle": "同步助手_20251024_图片_图片",
   "isWeChatMessage": true,
@@ -1071,34 +1060,39 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-24"
 }
- [NoteHelper] [10:59:05.833] [INFO] [getDocumentByPath] Searching for document: {
+plugin:notehelper:24 [NoteHelper] [11:07:08.913] [INFO] [getDocumentByPath] Searching for document: {
   "notebookId": "20251119120526-rly7mmp",
   "originalPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-24",
   "normalizedPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-24",
   "filename": "同步助手_2025-10-24"
 }
- [NoteHelper] [10:59:05.836] [INFO] [getDocumentByPath] SQL response: {
+plugin:notehelper:24 [NoteHelper] [11:07:08.916] [INFO] [getDocumentByPath] SQL response: {
   "code": 0,
-  "dataLength": 1
+  "dataLength": 0
 }
- [NoteHelper] [10:59:05.836] [INFO] [getDocumentByPath] Document found via SQL with ID: 20251120103906-j818p5q {
-  "hpath": "/笔记同步助手/企微消息/2025-10/同步助手_2025-10-24",
-  "content": "同步助手_2025-10-24"
+plugin:notehelper:24 [NoteHelper] [11:07:08.916] [INFO] [getDocumentByPath] SQL query found no results, trying filetree API
+plugin:notehelper:24 [NoteHelper] [11:07:08.918] [INFO] [getDocumentByPath] Filetree API response: {
+  "code": 0,
+  "dataLength": 0,
+  "data": []
 }
- [NoteHelper] [10:59:05.836] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103906-j818p5q",
-  "existingDocIdType": "string",
+plugin:notehelper:24 [NoteHelper] [11:07:08.918] [INFO] [getDocumentByPath] Document not found: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-24.md
+plugin:notehelper:24 [NoteHelper] [11:07:08.918] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": null,
+  "existingDocIdType": "object",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.836] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103906-j818p5q",
+plugin:notehelper:24 [NoteHelper] [11:07:08.918] [INFO] [createMergedDocument] Creating new merged document: {
+  "notebookId": "20251119120526-rly7mmp",
+  "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-24",
   "articleId": "cab42e47-2a65-41e4-9a08-4341a96868d1",
   "articleTitle": "同步助手_20251024_图片_图片",
-  "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-24"
+  "mergeDate": "2025-10-24"
 }
- [NoteHelper] [10:59:05.838] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.839] [INFO] [mergeToExistingDocument] Article cab42e47-2a65-41e4-9a08-4341a96868d1 already exists in 笔记同步助手/企微消息/2025-10/同步助手_2025-10-24, skipping
- [NoteHelper] [10:59:05.839] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.201] [INFO] [createMergedDocument] Document created with ID: 20251120110708-rjdl6zb
+plugin:notehelper:24 [NoteHelper] [11:07:09.263] [INFO] [addMergedId] Successfully added article cab42e47-2a65-41e4-9a08-4341a96868d1 to merged list (total: 1)
+plugin:notehelper:24 [NoteHelper] [11:07:09.322] [INFO] [createMergedDocument] Successfully created merged document: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-24
+plugin:notehelper:24 [NoteHelper] [11:07:09.322] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "10c2e28b-9e53-4ed3-9d88-98b4e415c708",
   "articleTitle": "同步助手_20251023_图片_图片",
   "isWeChatMessage": true,
@@ -1107,34 +1101,39 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.839] [INFO] [getDocumentByPath] Searching for document: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.322] [INFO] [getDocumentByPath] Searching for document: {
   "notebookId": "20251119120526-rly7mmp",
   "originalPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23",
   "normalizedPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23",
   "filename": "同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.841] [INFO] [getDocumentByPath] SQL response: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.325] [INFO] [getDocumentByPath] SQL response: {
   "code": 0,
-  "dataLength": 1
+  "dataLength": 0
 }
- [NoteHelper] [10:59:05.842] [INFO] [getDocumentByPath] Document found via SQL with ID: 20251120103906-vumr57a {
-  "hpath": "/笔记同步助手/企微消息/2025-10/同步助手_2025-10-23",
-  "content": "同步助手_2025-10-23"
+plugin:notehelper:24 [NoteHelper] [11:07:09.325] [INFO] [getDocumentByPath] SQL query found no results, trying filetree API
+plugin:notehelper:24 [NoteHelper] [11:07:09.328] [INFO] [getDocumentByPath] Filetree API response: {
+  "code": 0,
+  "dataLength": 0,
+  "data": []
 }
- [NoteHelper] [10:59:05.842] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103906-vumr57a",
-  "existingDocIdType": "string",
+plugin:notehelper:24 [NoteHelper] [11:07:09.328] [INFO] [getDocumentByPath] Document not found: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23.md
+plugin:notehelper:24 [NoteHelper] [11:07:09.328] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": null,
+  "existingDocIdType": "object",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.842] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103906-vumr57a",
+plugin:notehelper:24 [NoteHelper] [11:07:09.328] [INFO] [createMergedDocument] Creating new merged document: {
+  "notebookId": "20251119120526-rly7mmp",
+  "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23",
   "articleId": "10c2e28b-9e53-4ed3-9d88-98b4e415c708",
   "articleTitle": "同步助手_20251023_图片_图片",
-  "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
+  "mergeDate": "2025-10-23"
 }
- [NoteHelper] [10:59:05.844] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.844] [INFO] [mergeToExistingDocument] Article 10c2e28b-9e53-4ed3-9d88-98b4e415c708 already exists in 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23, skipping
- [NoteHelper] [10:59:05.845] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.612] [INFO] [createMergedDocument] Document created with ID: 20251120110709-x878kwx
+plugin:notehelper:24 [NoteHelper] [11:07:09.675] [INFO] [addMergedId] Successfully added article 10c2e28b-9e53-4ed3-9d88-98b4e415c708 to merged list (total: 1)
+plugin:notehelper:24 [NoteHelper] [11:07:09.734] [INFO] [createMergedDocument] Successfully created merged document: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+ [NoteHelper] [11:07:09.735] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "90eca4b7-71a3-4951-bb7f-4d347e19d339",
   "articleTitle": "同步助手_20251023_图片_图片",
   "isWeChatMessage": true,
@@ -1143,35 +1142,32 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.845] [INFO] [getDocumentByPath] Found in cache: 20251120103906-vumr57a for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.845] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103906-vumr57a",
+ [NoteHelper] [11:07:09.735] [INFO] [getDocumentByPath] Found in cache: 20251120110709-x878kwx for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+ [NoteHelper] [11:07:09.735] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-x878kwx",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.845] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103906-vumr57a",
+ [NoteHelper] [11:07:09.735] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-x878kwx",
   "articleId": "90eca4b7-71a3-4951-bb7f-4d347e19d339",
   "articleTitle": "同步助手_20251023_图片_图片",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.847] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.847] [INFO] [mergeToExistingDocument] Adding new article 90eca4b7-71a3-4951-bb7f-4d347e19d339 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.850] [INFO] [updateDocument] Called with docId: 20251120103906-vumr57a
- [NoteHelper] [10:59:05.850] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.850] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.850] [INFO] [updateDocument] Content length: 772
- [NoteHelper] [10:59:05.850] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-u3popvn" updated="20251120103907"}
-
-## 📅 2025-10-23 15:03:59
-{: id="20251120103907-vkwz163" updated="20251120103907"}
+ [NoteHelper] [11:07:09.737] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+ [NoteHelper] [11:07:09.737] [INFO] [mergeToExistingDocument] Adding new article 90eca4b7-71a3-4951-bb7f-4d347e19d339 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+ [NoteHelper] [11:07:09.743] [INFO] [updateDocument] Called with docId: 20251120110709-x878kwx
+ [NoteHelper] [11:07:09.743] [INFO] [updateDocument] DocId type: string
+ [NoteHelper] [11:07:09.744] [INFO] [updateDocument] DocId looks like timestamp: false
+ [NoteHelper] [11:07:09.744] [INFO] [updateDocument] Content length: 710
+ [NoteHelper] [11:07:09.744] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-23 15:03:59
+{: id="20251120110709-wp2q4km" updated="20251120110709"}
 
 ![](http://www.bijitongbu.site:4080/i/2025/10/23/68f999e9eeda1.jpg)
-{: id="20251120103907-b99l2em" updated="20251120103907"}
+{: updated="20251120110709" id="20251120110709-eh4qtj8"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-
- [NoteHelper] [10:59:05.850] [INFO] [updateDocument] Content preview (last 500 chars): {: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120103906-vumr57a" title="同步助手_2025-10-23" type="doc" updated="20251120103906"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e
+ [NoteHelper] [11:07:09.744] [INFO] [updateDocument] Content preview (last 500 chars): {: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120110709-x878kwx" title="同步助手_2025-10-23" type="doc" updated="20251120110709"}
 
 ---
 
@@ -1180,10 +1176,10 @@ eval @ plugin:notehelper:302
 ![](http://www.bijitongbu.site:4080/i/2025/10/23/68f9d3578fe6b.jpg)
 
 
- [NoteHelper] [10:59:05.853] [ERROR] [updateDocument] API error response: {
+ [NoteHelper] [11:07:09.748] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]",
-  "docId": "20251120103906-vumr57a"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]",
+  "docId": "20251120110709-x878kwx"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -1307,7 +1303,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.853] [ERROR] Failed to update document: {}
+ [NoteHelper] [11:07:09.748] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -1430,7 +1426,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.853] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+ [NoteHelper] [11:07:09.748] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -1546,7 +1542,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.853] [ERROR] Failed to process article 90eca4b7-71a3-4951-bb7f-4d347e19d339: {}
+ [NoteHelper] [11:07:09.748] [ERROR] Failed to process article 90eca4b7-71a3-4951-bb7f-4d347e19d339: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -1642,7 +1638,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.853] [ERROR] Failed to process article 90eca4b7-71a3-4951-bb7f-4d347e19d339: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]
+ [NoteHelper] [11:07:09.748] [ERROR] Failed to process article 90eca4b7-71a3-4951-bb7f-4d347e19d339: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -1734,7 +1730,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.854] [INFO] [mergeArticleToFile] Processing article for merge: {
+ [NoteHelper] [11:07:09.749] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "8488e154-4364-442b-9310-d581b8bb3e23",
   "articleTitle": "同步助手_20251023_图片_图片",
   "isWeChatMessage": true,
@@ -1743,37 +1739,34 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.854] [INFO] [getDocumentByPath] Found in cache: 20251120103906-vumr57a for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.854] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103906-vumr57a",
+ [NoteHelper] [11:07:09.749] [INFO] [getDocumentByPath] Found in cache: 20251120110709-x878kwx for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+ [NoteHelper] [11:07:09.749] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-x878kwx",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.854] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103906-vumr57a",
+ [NoteHelper] [11:07:09.749] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-x878kwx",
   "articleId": "8488e154-4364-442b-9310-d581b8bb3e23",
   "articleTitle": "同步助手_20251023_图片_图片",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.856] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.856] [INFO] [mergeToExistingDocument] Adding new article 8488e154-4364-442b-9310-d581b8bb3e23 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.859] [INFO] [updateDocument] Called with docId: 20251120103906-vumr57a
- [NoteHelper] [10:59:05.859] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.859] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.859] [INFO] [updateDocument] Content length: 726
- [NoteHelper] [10:59:05.859] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-u3popvn" updated="20251120103907"}
-
-## 📅 2025-10-23 15:03:59
-{: id="20251120103907-vkwz163" updated="20251120103907"}
+ [NoteHelper] [11:07:09.751] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+ [NoteHelper] [11:07:09.751] [INFO] [mergeToExistingDocument] Adding new article 8488e154-4364-442b-9310-d581b8bb3e23 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+ [NoteHelper] [11:07:09.754] [INFO] [updateDocument] Called with docId: 20251120110709-x878kwx
+ [NoteHelper] [11:07:09.754] [INFO] [updateDocument] DocId type: string
+ [NoteHelper] [11:07:09.754] [INFO] [updateDocument] DocId looks like timestamp: false
+ [NoteHelper] [11:07:09.754] [INFO] [updateDocument] Content length: 664
+ [NoteHelper] [11:07:09.754] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-23 15:03:59
+{: id="20251120110709-wp2q4km" updated="20251120110709"}
 
 ![](http://www.bijitongbu.site:4080/i/2025/10/23/68f999e9eeda1.jpg)
-{: id="20251120103907-b99l2em" updated="20251120103907"}
+{: id="20251120110709-eh4qtj8" updated="20251120110709"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-
- [NoteHelper] [10:59:05.859] [INFO] [updateDocument] Content preview (last 500 chars): 120103907-b99l2em" updated="20251120103907"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e
+ [NoteHelper] [11:07:09.754] [INFO] [updateDocument] Content preview (last 500 chars): 120110709-eh4qtj8" updated="20251120110709"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120103906-vumr57a" title="同步助手_2025-10-23" type="doc" updated="20251120103906"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120110709-x878kwx" title="同步助手_2025-10-23" type="doc" updated="20251120110709"}
 
 ---
 
@@ -1782,10 +1775,10 @@ eval @ plugin:notehelper:302
 [图片] - ⚠️ 图片缓存失败，无法显示
 
 
- [NoteHelper] [10:59:05.862] [ERROR] [updateDocument] API error response: {
+ [NoteHelper] [11:07:09.756] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]",
-  "docId": "20251120103906-vumr57a"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]",
+  "docId": "20251120110709-x878kwx"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -1902,7 +1895,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.862] [ERROR] Failed to update document: {}
+ [NoteHelper] [11:07:09.756] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -2018,7 +2011,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.862] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+ [NoteHelper] [11:07:09.757] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -2137,7 +2130,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.862] [ERROR] Failed to process article 8488e154-4364-442b-9310-d581b8bb3e23: {}
+ [NoteHelper] [11:07:09.757] [ERROR] Failed to process article 8488e154-4364-442b-9310-d581b8bb3e23: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -2236,7 +2229,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.862] [ERROR] Failed to process article 8488e154-4364-442b-9310-d581b8bb3e23: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]
+ [NoteHelper] [11:07:09.757] [ERROR] Failed to process article 8488e154-4364-442b-9310-d581b8bb3e23: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -2331,7 +2324,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.863] [INFO] [mergeArticleToFile] Processing article for merge: {
+ [NoteHelper] [11:07:09.757] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "1d998d5e-743a-44b1-85ec-16b1df5d2b5b",
   "articleTitle": "同步助手_20251023_图片_图片",
   "isWeChatMessage": true,
@@ -2340,37 +2333,34 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.863] [INFO] [getDocumentByPath] Found in cache: 20251120103906-vumr57a for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.863] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103906-vumr57a",
+ [NoteHelper] [11:07:09.757] [INFO] [getDocumentByPath] Found in cache: 20251120110709-x878kwx for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+ [NoteHelper] [11:07:09.757] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-x878kwx",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.863] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103906-vumr57a",
+ [NoteHelper] [11:07:09.757] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-x878kwx",
   "articleId": "1d998d5e-743a-44b1-85ec-16b1df5d2b5b",
   "articleTitle": "同步助手_20251023_图片_图片",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.865] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.865] [INFO] [mergeToExistingDocument] Adding new article 1d998d5e-743a-44b1-85ec-16b1df5d2b5b to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.869] [INFO] [updateDocument] Called with docId: 20251120103906-vumr57a
- [NoteHelper] [10:59:05.870] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.870] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.870] [INFO] [updateDocument] Content length: 726
- [NoteHelper] [10:59:05.870] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-u3popvn" updated="20251120103907"}
-
-## 📅 2025-10-23 15:03:59
-{: id="20251120103907-vkwz163" updated="20251120103907"}
+ [NoteHelper] [11:07:09.759] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+ [NoteHelper] [11:07:09.759] [INFO] [mergeToExistingDocument] Adding new article 1d998d5e-743a-44b1-85ec-16b1df5d2b5b to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+ [NoteHelper] [11:07:09.761] [INFO] [updateDocument] Called with docId: 20251120110709-x878kwx
+ [NoteHelper] [11:07:09.761] [INFO] [updateDocument] DocId type: string
+ [NoteHelper] [11:07:09.761] [INFO] [updateDocument] DocId looks like timestamp: false
+ [NoteHelper] [11:07:09.762] [INFO] [updateDocument] Content length: 664
+ [NoteHelper] [11:07:09.762] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-23 15:03:59
+{: id="20251120110709-wp2q4km" updated="20251120110709"}
 
 ![](http://www.bijitongbu.site:4080/i/2025/10/23/68f999e9eeda1.jpg)
-{: id="20251120103907-b99l2em" updated="20251120103907"}
+{: id="20251120110709-eh4qtj8" updated="20251120110709"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-
- [NoteHelper] [10:59:05.870] [INFO] [updateDocument] Content preview (last 500 chars): 120103907-b99l2em" updated="20251120103907"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e
+ [NoteHelper] [11:07:09.762] [INFO] [updateDocument] Content preview (last 500 chars): 120110709-eh4qtj8" updated="20251120110709"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120103906-vumr57a" title="同步助手_2025-10-23" type="doc" updated="20251120103906"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120110709-x878kwx" title="同步助手_2025-10-23" type="doc" updated="20251120110709"}
 
 ---
 
@@ -2379,10 +2369,10 @@ eval @ plugin:notehelper:302
 [图片] - ⚠️ 图片缓存失败，无法显示
 
 
- [NoteHelper] [10:59:05.873] [ERROR] [updateDocument] API error response: {
+ [NoteHelper] [11:07:09.764] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]",
-  "docId": "20251120103906-vumr57a"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]",
+  "docId": "20251120110709-x878kwx"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -2499,7 +2489,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.873] [ERROR] Failed to update document: {}
+ [NoteHelper] [11:07:09.764] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -2615,7 +2605,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.873] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+ [NoteHelper] [11:07:09.764] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -2727,7 +2717,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.873] [ERROR] Failed to process article 1d998d5e-743a-44b1-85ec-16b1df5d2b5b: {}
+ [NoteHelper] [11:07:09.764] [ERROR] Failed to process article 1d998d5e-743a-44b1-85ec-16b1df5d2b5b: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -2829,7 +2819,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.873] [ERROR] Failed to process article 1d998d5e-743a-44b1-85ec-16b1df5d2b5b: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]
+ [NoteHelper] [11:07:09.764] [ERROR] Failed to process article 1d998d5e-743a-44b1-85ec-16b1df5d2b5b: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -2927,7 +2917,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.873] [INFO] [mergeArticleToFile] Processing article for merge: {
+ [NoteHelper] [11:07:09.764] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "ebb4fa38-9636-45c2-b8ca-33288008fd25",
   "articleTitle": "同步助手_20251023_图片_图片",
   "isWeChatMessage": true,
@@ -2936,35 +2926,32 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.874] [INFO] [getDocumentByPath] Found in cache: 20251120103906-vumr57a for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.874] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103906-vumr57a",
+ [NoteHelper] [11:07:09.764] [INFO] [getDocumentByPath] Found in cache: 20251120110709-x878kwx for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] [11:07:09.764] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-x878kwx",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.874] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103906-vumr57a",
+plugin:notehelper:24 [NoteHelper] [11:07:09.764] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-x878kwx",
   "articleId": "ebb4fa38-9636-45c2-b8ca-33288008fd25",
   "articleTitle": "同步助手_20251023_图片_图片",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.876] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.876] [INFO] [mergeToExistingDocument] Adding new article ebb4fa38-9636-45c2-b8ca-33288008fd25 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.879] [INFO] [updateDocument] Called with docId: 20251120103906-vumr57a
- [NoteHelper] [10:59:05.879] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.879] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.879] [INFO] [updateDocument] Content length: 772
- [NoteHelper] [10:59:05.879] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-u3popvn" updated="20251120103907"}
-
-## 📅 2025-10-23 15:03:59
-{: updated="20251120103907" id="20251120103907-vkwz163"}
+plugin:notehelper:24 [NoteHelper] [11:07:09.766] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:09.766] [INFO] [mergeToExistingDocument] Adding new article ebb4fa38-9636-45c2-b8ca-33288008fd25 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] [11:07:09.769] [INFO] [updateDocument] Called with docId: 20251120110709-x878kwx
+plugin:notehelper:24 [NoteHelper] [11:07:09.769] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:09.769] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:09.769] [INFO] [updateDocument] Content length: 710
+plugin:notehelper:24 [NoteHelper] [11:07:09.769] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-23 15:03:59
+{: updated="20251120110709" id="20251120110709-wp2q4km"}
 
 ![](http://www.bijitongbu.site:4080/i/2025/10/23/68f999e9eeda1.jpg)
-{: id="20251120103907-b99l2em" updated="20251120103907"}
+{: id="20251120110709-eh4qtj8" updated="20251120110709"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-
- [NoteHelper] [10:59:05.879] [INFO] [updateDocument] Content preview (last 500 chars): {: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120103906-vumr57a" title="同步助手_2025-10-23" type="doc" updated="20251120103906"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e
+plugin:notehelper:24 [NoteHelper] [11:07:09.770] [INFO] [updateDocument] Content preview (last 500 chars): {: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120110709-x878kwx" title="同步助手_2025-10-23" type="doc" updated="20251120110709"}
 
 ---
 
@@ -2973,10 +2960,10 @@ eval @ plugin:notehelper:302
 ![](http://www.bijitongbu.site:4080/i/2025/10/23/68f999e9eeda1.jpg)
 
 
- [NoteHelper] [10:59:05.881] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.772] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]",
-  "docId": "20251120103906-vumr57a"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]",
+  "docId": "20251120110709-x878kwx"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -3093,7 +3080,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.881] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.772] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -3209,7 +3196,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.881] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.772] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -3321,7 +3308,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.881] [ERROR] Failed to process article ebb4fa38-9636-45c2-b8ca-33288008fd25: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.772] [ERROR] Failed to process article ebb4fa38-9636-45c2-b8ca-33288008fd25: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -3426,7 +3413,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.881] [ERROR] Failed to process article ebb4fa38-9636-45c2-b8ca-33288008fd25: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]
+plugin:notehelper:24 [NoteHelper] [11:07:09.772] [ERROR] Failed to process article ebb4fa38-9636-45c2-b8ca-33288008fd25: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -3527,7 +3514,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.882] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.772] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "ed0bec0a-2ed0-4376-9eae-0cf14781266c",
   "articleTitle": "同步助手_20251023_图片_图片",
   "isWeChatMessage": true,
@@ -3536,37 +3523,34 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.882] [INFO] [getDocumentByPath] Found in cache: 20251120103906-vumr57a for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.882] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103906-vumr57a",
+plugin:notehelper:24 [NoteHelper] [11:07:09.772] [INFO] [getDocumentByPath] Found in cache: 20251120110709-x878kwx for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] [11:07:09.772] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-x878kwx",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.882] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103906-vumr57a",
+plugin:notehelper:24 [NoteHelper] [11:07:09.772] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-x878kwx",
   "articleId": "ed0bec0a-2ed0-4376-9eae-0cf14781266c",
   "articleTitle": "同步助手_20251023_图片_图片",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.884] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.884] [INFO] [mergeToExistingDocument] Adding new article ed0bec0a-2ed0-4376-9eae-0cf14781266c to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.887] [INFO] [updateDocument] Called with docId: 20251120103906-vumr57a
- [NoteHelper] [10:59:05.887] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.887] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.887] [INFO] [updateDocument] Content length: 768
- [NoteHelper] [10:59:05.887] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-u3popvn" updated="20251120103907"}
-
-## 📅 2025-10-23 15:03:59
-{: id="20251120103907-vkwz163" updated="20251120103907"}
+plugin:notehelper:24 [NoteHelper] [11:07:09.774] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:09.774] [INFO] [mergeToExistingDocument] Adding new article ed0bec0a-2ed0-4376-9eae-0cf14781266c to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] [11:07:09.778] [INFO] [updateDocument] Called with docId: 20251120110709-x878kwx
+plugin:notehelper:24 [NoteHelper] [11:07:09.778] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:09.778] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:09.778] [INFO] [updateDocument] Content length: 706
+plugin:notehelper:24 [NoteHelper] [11:07:09.778] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-23 15:03:59
+{: id="20251120110709-wp2q4km" updated="20251120110709"}
 
 ![](http://www.bijitongbu.site:4080/i/2025/10/23/68f999e9eeda1.jpg)
-{: id="20251120103907-b99l2em" updated="20251120103907"}
+{: id="20251120110709-eh4qtj8" updated="20251120110709"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-
- [NoteHelper] [10:59:05.887] [INFO] [updateDocument] Content preview (last 500 chars): "}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e
+plugin:notehelper:24 [NoteHelper] [11:07:09.778] [INFO] [updateDocument] Content preview (last 500 chars): "}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120103906-vumr57a" title="同步助手_2025-10-23" type="doc" updated="20251120103906"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120110709-x878kwx" title="同步助手_2025-10-23" type="doc" updated="20251120110709"}
 
 ---
 
@@ -3575,10 +3559,10 @@ eval @ plugin:notehelper:302
 ![](http://116.196.122.170:4080/i/2025/10/23/68f999e9eeda1.jpg)
 
 
- [NoteHelper] [10:59:05.891] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.781] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]",
-  "docId": "20251120103906-vumr57a"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]",
+  "docId": "20251120110709-x878kwx"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -3695,7 +3679,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.891] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.781] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -3811,7 +3795,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.892] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.781] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -3923,7 +3907,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.892] [ERROR] Failed to process article ed0bec0a-2ed0-4376-9eae-0cf14781266c: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.781] [ERROR] Failed to process article ed0bec0a-2ed0-4376-9eae-0cf14781266c: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -4031,7 +4015,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.892] [ERROR] Failed to process article ed0bec0a-2ed0-4376-9eae-0cf14781266c: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]
+plugin:notehelper:24 [NoteHelper] [11:07:09.782] [ERROR] Failed to process article ed0bec0a-2ed0-4376-9eae-0cf14781266c: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -4135,7 +4119,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.892] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.782] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "e3e2ccd4-c6d0-4b3a-a8e6-a9589972b1f2",
   "articleTitle": "同步助手_20251023_图片_图片",
   "isWeChatMessage": true,
@@ -4144,37 +4128,34 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.892] [INFO] [getDocumentByPath] Found in cache: 20251120103906-vumr57a for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.892] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103906-vumr57a",
+plugin:notehelper:24 [NoteHelper] [11:07:09.782] [INFO] [getDocumentByPath] Found in cache: 20251120110709-x878kwx for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] [11:07:09.782] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-x878kwx",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.892] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103906-vumr57a",
+plugin:notehelper:24 [NoteHelper] [11:07:09.782] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-x878kwx",
   "articleId": "e3e2ccd4-c6d0-4b3a-a8e6-a9589972b1f2",
   "articleTitle": "同步助手_20251023_图片_图片",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.895] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.895] [INFO] [mergeToExistingDocument] Adding new article e3e2ccd4-c6d0-4b3a-a8e6-a9589972b1f2 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.898] [INFO] [updateDocument] Called with docId: 20251120103906-vumr57a
- [NoteHelper] [10:59:05.898] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.898] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.898] [INFO] [updateDocument] Content length: 726
- [NoteHelper] [10:59:05.898] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-u3popvn" updated="20251120103907"}
-
-## 📅 2025-10-23 15:03:59
-{: id="20251120103907-vkwz163" updated="20251120103907"}
+plugin:notehelper:24 [NoteHelper] [11:07:09.785] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:09.785] [INFO] [mergeToExistingDocument] Adding new article e3e2ccd4-c6d0-4b3a-a8e6-a9589972b1f2 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] [11:07:09.787] [INFO] [updateDocument] Called with docId: 20251120110709-x878kwx
+plugin:notehelper:24 [NoteHelper] [11:07:09.787] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:09.787] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:09.787] [INFO] [updateDocument] Content length: 664
+plugin:notehelper:24 [NoteHelper] [11:07:09.787] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-23 15:03:59
+{: id="20251120110709-wp2q4km" updated="20251120110709"}
 
 ![](http://www.bijitongbu.site:4080/i/2025/10/23/68f999e9eeda1.jpg)
-{: id="20251120103907-b99l2em" updated="20251120103907"}
+{: id="20251120110709-eh4qtj8" updated="20251120110709"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-
- [NoteHelper] [10:59:05.898] [INFO] [updateDocument] Content preview (last 500 chars): 120103907-b99l2em" updated="20251120103907"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e
+plugin:notehelper:24 [NoteHelper] [11:07:09.787] [INFO] [updateDocument] Content preview (last 500 chars): 120110709-eh4qtj8" updated="20251120110709"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120103906-vumr57a" title="同步助手_2025-10-23" type="doc" updated="20251120103906"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120110709-x878kwx" title="同步助手_2025-10-23" type="doc" updated="20251120110709"}
 
 ---
 
@@ -4183,10 +4164,10 @@ eval @ plugin:notehelper:302
 [图片] - ⚠️ 图片缓存失败，无法显示
 
 
- [NoteHelper] [10:59:05.900] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.789] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]",
-  "docId": "20251120103906-vumr57a"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]",
+  "docId": "20251120110709-x878kwx"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -4303,7 +4284,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.900] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.789] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -4419,7 +4400,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.901] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.789] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -4531,7 +4512,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.901] [ERROR] Failed to process article e3e2ccd4-c6d0-4b3a-a8e6-a9589972b1f2: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.789] [ERROR] Failed to process article e3e2ccd4-c6d0-4b3a-a8e6-a9589972b1f2: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -4642,7 +4623,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.901] [ERROR] Failed to process article e3e2ccd4-c6d0-4b3a-a8e6-a9589972b1f2: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]
+plugin:notehelper:24 [NoteHelper] [11:07:09.790] [ERROR] Failed to process article e3e2ccd4-c6d0-4b3a-a8e6-a9589972b1f2: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -4749,7 +4730,7 @@ eval @ plugin:notehelper:258
 V @ plugin:notehelper:258
 performSync @ plugin:notehelper:302
 eval @ plugin:notehelper:302
- [NoteHelper] [10:59:05.901] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.790] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "a4e6d0a9-02a4-4cef-a64c-cd6f888e8336",
   "articleTitle": "同步助手_20251023_图片_图片",
   "isWeChatMessage": true,
@@ -4758,37 +4739,34 @@ eval @ plugin:notehelper:302
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.901] [INFO] [getDocumentByPath] Found in cache: 20251120103906-vumr57a for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
- [NoteHelper] [10:59:05.901] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103906-vumr57a",
+plugin:notehelper:24 [NoteHelper] [11:07:09.790] [INFO] [getDocumentByPath] Found in cache: 20251120110709-x878kwx for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] [11:07:09.790] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-x878kwx",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.901] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103906-vumr57a",
+plugin:notehelper:24 [NoteHelper] [11:07:09.790] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-x878kwx",
   "articleId": "a4e6d0a9-02a4-4cef-a64c-cd6f888e8336",
   "articleTitle": "同步助手_20251023_图片_图片",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-23"
 }
- [NoteHelper] [10:59:05.903] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
-plugin:notehelper:24 [NoteHelper] [10:59:05.903] [INFO] [mergeToExistingDocument] Adding new article a4e6d0a9-02a4-4cef-a64c-cd6f888e8336 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
-plugin:notehelper:24 [NoteHelper] [10:59:05.906] [INFO] [updateDocument] Called with docId: 20251120103906-vumr57a
-plugin:notehelper:24 [NoteHelper] [10:59:05.906] [INFO] [updateDocument] DocId type: string
-plugin:notehelper:24 [NoteHelper] [10:59:05.906] [INFO] [updateDocument] DocId looks like timestamp: false
-plugin:notehelper:24 [NoteHelper] [10:59:05.906] [INFO] [updateDocument] Content length: 726
-plugin:notehelper:24 [NoteHelper] [10:59:05.906] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-u3popvn" updated="20251120103907"}
-
-## 📅 2025-10-23 15:03:59
-{: id="20251120103907-vkwz163" updated="20251120103907"}
+plugin:notehelper:24 [NoteHelper] [11:07:09.792] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:09.792] [INFO] [mergeToExistingDocument] Adding new article a4e6d0a9-02a4-4cef-a64c-cd6f888e8336 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-23
+plugin:notehelper:24 [NoteHelper] [11:07:09.795] [INFO] [updateDocument] Called with docId: 20251120110709-x878kwx
+plugin:notehelper:24 [NoteHelper] [11:07:09.795] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:09.795] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:09.795] [INFO] [updateDocument] Content length: 664
+plugin:notehelper:24 [NoteHelper] [11:07:09.795] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-23 15:03:59
+{: id="20251120110709-wp2q4km" updated="20251120110709"}
 
 ![](http://www.bijitongbu.site:4080/i/2025/10/23/68f999e9eeda1.jpg)
-{: id="20251120103907-b99l2em" updated="20251120103907"}
+{: updated="20251120110709" id="20251120110709-eh4qtj8"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-
-plugin:notehelper:24 [NoteHelper] [10:59:05.906] [INFO] [updateDocument] Content preview (last 500 chars): 120103907-b99l2em" updated="20251120103907"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e
+plugin:notehelper:24 [NoteHelper] [11:07:09.795] [INFO] [updateDocument] Content preview (last 500 chars): 20251120110709" id="20251120110709-eh4qtj8"}
 
-{: custom-creation-time="2025-11-20T02:39:07.321Z" custom-last-merge-time="2025-11-20T02:39:07.259Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120103906-vumr57a" title="同步助手_2025-10-23" type="doc" updated="20251120103906"}
+{: custom-creation-time="2025-11-20T03:07:09.675Z" custom-last-merge-time="2025-11-20T03:07:09.614Z" custom-merge-count="1" custom-merge-date="2025-10-23" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-23" custom-merged-ids="[&quot;10c2e28b-9e53-4ed3-9d88-98b4e415c708&quot;]" id="20251120110709-x878kwx" title="同步助手_2025-10-23" type="doc" updated="20251120110709"}
 
 ---
 
@@ -4797,10 +4775,10 @@ plugin:notehelper:24 [NoteHelper] [10:59:05.906] [INFO] [updateDocument] Content
 [图片] - ⚠️ 图片缓存失败，无法显示
 
 
-plugin:notehelper:24 [NoteHelper] [10:59:05.909] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.798] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]",
-  "docId": "20251120103906-vumr57a"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]",
+  "docId": "20251120110709-x878kwx"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -4917,7 +4895,7 @@ a @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.909] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.798] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -5033,7 +5011,7 @@ a @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.909] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.798] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -5145,7 +5123,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.909] [ERROR] Failed to process article a4e6d0a9-02a4-4cef-a64c-cd6f888e8336: {}
+plugin:notehelper:24 [NoteHelper] [11:07:09.798] [ERROR] Failed to process article a4e6d0a9-02a4-4cef-a64c-cd6f888e8336: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -5249,7 +5227,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.910] [ERROR] Failed to process article a4e6d0a9-02a4-4cef-a64c-cd6f888e8336: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.321Z]
+plugin:notehelper:24 [NoteHelper] [11:07:09.798] [ERROR] Failed to process article a4e6d0a9-02a4-4cef-a64c-cd6f888e8336: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:09.675Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -5349,7 +5327,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.910] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.798] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "6075077c-0f41-492c-adda-1b126cf5f1a5",
   "articleTitle": "同步助手_20251021_聊天记录_聊天记录",
   "isWeChatMessage": true,
@@ -5358,34 +5336,39 @@ plugin:notehelper:24 [NoteHelper] [10:59:05.910] [INFO] [mergeArticleToFile] Pro
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.910] [INFO] [getDocumentByPath] Searching for document: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.798] [INFO] [getDocumentByPath] Searching for document: {
   "notebookId": "20251119120526-rly7mmp",
   "originalPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21",
   "normalizedPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21",
   "filename": "同步助手_2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.914] [INFO] [getDocumentByPath] SQL response: {
+plugin:notehelper:24 [NoteHelper] [11:07:09.801] [INFO] [getDocumentByPath] SQL response: {
   "code": 0,
-  "dataLength": 1
+  "dataLength": 0
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.914] [INFO] [getDocumentByPath] Document found via SQL with ID: 20251120103907-9p677i7 {
-  "hpath": "/笔记同步助手/企微消息/2025-10/同步助手_2025-10-21",
-  "content": "同步助手_2025-10-21"
+plugin:notehelper:24 [NoteHelper] [11:07:09.801] [INFO] [getDocumentByPath] SQL query found no results, trying filetree API
+plugin:notehelper:24 [NoteHelper] [11:07:09.803] [INFO] [getDocumentByPath] Filetree API response: {
+  "code": 0,
+  "dataLength": 0,
+  "data": []
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.914] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103907-9p677i7",
-  "existingDocIdType": "string",
+plugin:notehelper:24 [NoteHelper] [11:07:09.803] [INFO] [getDocumentByPath] Document not found: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21.md
+plugin:notehelper:24 [NoteHelper] [11:07:09.803] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": null,
+  "existingDocIdType": "object",
   "looksLikeTimestamp": false
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.914] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103907-9p677i7",
+plugin:notehelper:24 [NoteHelper] [11:07:09.803] [INFO] [createMergedDocument] Creating new merged document: {
+  "notebookId": "20251119120526-rly7mmp",
+  "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21",
   "articleId": "6075077c-0f41-492c-adda-1b126cf5f1a5",
   "articleTitle": "同步助手_20251021_聊天记录_聊天记录",
-  "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
+  "mergeDate": "2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.917] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
-plugin:notehelper:24 [NoteHelper] [10:59:05.918] [INFO] [mergeToExistingDocument] Article 6075077c-0f41-492c-adda-1b126cf5f1a5 already exists in 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.918] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.066] [INFO] [createMergedDocument] Document created with ID: 20251120110709-xsyhpwh
+plugin:notehelper:24 [NoteHelper] [11:07:10.129] [INFO] [addMergedId] Successfully added article 6075077c-0f41-492c-adda-1b126cf5f1a5 to merged list (total: 1)
+ [NoteHelper] [11:07:10.188] [INFO] [createMergedDocument] Successfully created merged document: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+ [NoteHelper] [11:07:10.188] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "7f375545-ea25-428b-bb60-bf31c2bad538",
   "articleTitle": "同步助手_20251021_图片_图片",
   "isWeChatMessage": true,
@@ -5394,42 +5377,41 @@ plugin:notehelper:24 [NoteHelper] [10:59:05.918] [INFO] [mergeArticleToFile] Pro
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.918] [INFO] [getDocumentByPath] Found in cache: 20251120103907-9p677i7 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
-plugin:notehelper:24 [NoteHelper] [10:59:05.918] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103907-9p677i7",
+ [NoteHelper] [11:07:10.189] [INFO] [getDocumentByPath] Found in cache: 20251120110709-xsyhpwh for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+ [NoteHelper] [11:07:10.189] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-xsyhpwh",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.918] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103907-9p677i7",
+ [NoteHelper] [11:07:10.189] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-xsyhpwh",
   "articleId": "7f375545-ea25-428b-bb60-bf31c2bad538",
   "articleTitle": "同步助手_20251021_图片_图片",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.920] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
-plugin:notehelper:24 [NoteHelper] [10:59:05.920] [INFO] [mergeToExistingDocument] Adding new article 7f375545-ea25-428b-bb60-bf31c2bad538 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
-plugin:notehelper:24 [NoteHelper] [10:59:05.924] [INFO] [updateDocument] Called with docId: 20251120103907-9p677i7
-plugin:notehelper:24 [NoteHelper] [10:59:05.924] [INFO] [updateDocument] DocId type: string
-plugin:notehelper:24 [NoteHelper] [10:59:05.924] [INFO] [updateDocument] DocId looks like timestamp: false
-plugin:notehelper:24 [NoteHelper] [10:59:05.924] [INFO] [updateDocument] Content length: 1663
-plugin:notehelper:24 [NoteHelper] [10:59:05.924] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-a0dw93q" updated="20251120103907"}
-
-## 📅 2025-10-21 11:37:01
-{: id="20251120103907-06p6jwi" updated="20251120103907"}
+ [NoteHelper] [11:07:10.191] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+ [NoteHelper] [11:07:10.191] [INFO] [mergeToExistingDocument] Adding new article 7f375545-ea25-428b-bb60-bf31c2bad538 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+ [NoteHelper] [11:07:10.202] [INFO] [updateDocument] Called with docId: 20251120110709-xsyhpwh
+ [NoteHelper] [11:07:10.202] [INFO] [updateDocument] DocId type: string
+ [NoteHelper] [11:07:10.202] [INFO] [updateDocument] DocId looks like timestamp: false
+ [NoteHelper] [11:07:10.202] [INFO] [updateDocument] Content length: 1601
+ [NoteHelper] [11:07:10.202] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-21 11:37:01
+{: id="20251120110709-jkvp1ax" updated="20251120110709"}
 
 <small style="color: #999;">2025/01/19 18:41:49</small>
-{: updated="20251120103907" id="20251120103907-8a34g8b"}
+{: id="20251120110709-hfseqdh" updated="20251120110709"}
 
 皮爷咖啡豆
-{: updated="20251120103907" id="20251120103907-a9bcc3e"}
+{: updated="20251120110709" id="20251120110709-2ccdhpw"}
 
 <small style="color: #999;">2025/04/03 10:49:57</small>
-{: id="20251120103907-9cf21pj" updated="20251120103907"}
+{: id="20251120110709-vobwyud" updated="20251120110709"}
 
 2CUL3VK3A261AM6J
-{: id="20251120103907-tokwscq" updated="20251
-plugin:notehelper:24 [NoteHelper] [10:59:05.924] [INFO] [updateDocument] Content preview (last 500 chars): 企微消息/2025-10/同步助手_2025-10-21" custom-merged-ids="[&quot;6075077c-0f41-492c-adda-1b126cf5f1a5&quot;]" id="20251120103907-9p677i7" title="同步助手_2025-10-21" type="doc" updated="20251120103907"}
+{: id="20251120110709-g2pmtfv" updated="20251120110709"}
+
+<small style="color: #999;">2025/08/21 15:10:10</
+ [NoteHelper] [11:07:10.202] [INFO] [updateDocument] Content preview (last 500 chars): 企微消息/2025-10/同步助手_2025-10-21" custom-merged-ids="[&quot;6075077c-0f41-492c-adda-1b126cf5f1a5&quot;]" id="20251120110709-xsyhpwh" title="同步助手_2025-10-21" type="doc" updated="20251120110709"}
 
 ---
 
@@ -5438,10 +5420,10 @@ plugin:notehelper:24 [NoteHelper] [10:59:05.924] [INFO] [updateDocument] Content
 ![](https://api.weixin.qq.com/cgi-bin/media/get?access_token=97_8niGYxotogsZRtryynFI6PvJpzTxUCgPASpOFbI8f2AfW6-7obQ5msukEgR3q3Kn5DwsyztJ8VoN9jKA-m-LWYqtlmq2sFzkgzLdPYXHiOfIZTrzDYE0-OpOGMMDESiAAASTH&media_id=dNeGPlRsbVZj1xQw8pQyL8WFd5cSWiiZSWbx8ZS2sj4skmAF5VBI1gMeGdqIV5AL)
 
 
-plugin:notehelper:24 [NoteHelper] [10:59:05.926] [ERROR] [updateDocument] API error response: {
+ [NoteHelper] [11:07:10.206] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]",
-  "docId": "20251120103907-9p677i7"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]",
+  "docId": "20251120110709-xsyhpwh"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -5558,7 +5540,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.926] [ERROR] Failed to update document: {}
+ [NoteHelper] [11:07:10.206] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -5674,7 +5656,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.926] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+ [NoteHelper] [11:07:10.206] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -5786,7 +5768,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 a @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.927] [ERROR] Failed to process article 7f375545-ea25-428b-bb60-bf31c2bad538: {}
+ [NoteHelper] [11:07:10.206] [ERROR] Failed to process article 7f375545-ea25-428b-bb60-bf31c2bad538: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -5890,7 +5872,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.927] [ERROR] Failed to process article 7f375545-ea25-428b-bb60-bf31c2bad538: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]
+ [NoteHelper] [11:07:10.206] [ERROR] Failed to process article 7f375545-ea25-428b-bb60-bf31c2bad538: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -5990,8 +5972,8 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.928] [INFO] Document already exists for article c103cce3-8009-4550-b6dc-73486ac4ba74, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:05.929] [INFO] [mergeArticleToFile] Processing article for merge: {
+ [NoteHelper] [11:07:10.209] [INFO] Document already exists for article c103cce3-8009-4550-b6dc-73486ac4ba74, skipping
+ [NoteHelper] [11:07:10.209] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "18734613-f6fc-49be-a469-0e601c09080c",
   "articleTitle": "同步助手_20251021_皮爷咖啡豆_文本",
   "isWeChatMessage": true,
@@ -6000,55 +5982,54 @@ plugin:notehelper:24 [NoteHelper] [10:59:05.929] [INFO] [mergeArticleToFile] Pro
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.929] [INFO] [getDocumentByPath] Found in cache: 20251120103907-9p677i7 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
-plugin:notehelper:24 [NoteHelper] [10:59:05.929] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103907-9p677i7",
+ [NoteHelper] [11:07:10.209] [INFO] [getDocumentByPath] Found in cache: 20251120110709-xsyhpwh for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+ [NoteHelper] [11:07:10.209] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-xsyhpwh",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.929] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103907-9p677i7",
+ [NoteHelper] [11:07:10.209] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-xsyhpwh",
   "articleId": "18734613-f6fc-49be-a469-0e601c09080c",
   "articleTitle": "同步助手_20251021_皮爷咖啡豆_文本",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.931] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
-plugin:notehelper:24 [NoteHelper] [10:59:05.931] [INFO] [mergeToExistingDocument] Adding new article 18734613-f6fc-49be-a469-0e601c09080c to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
- [NoteHelper] [10:59:05.935] [INFO] [updateDocument] Called with docId: 20251120103907-9p677i7
- [NoteHelper] [10:59:05.935] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.935] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.935] [INFO] [updateDocument] Content length: 1394
- [NoteHelper] [10:59:05.935] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-a0dw93q" updated="20251120103907"}
-
-## 📅 2025-10-21 11:37:01
-{: updated="20251120103907" id="20251120103907-06p6jwi"}
+ [NoteHelper] [11:07:10.211] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+ [NoteHelper] [11:07:10.211] [INFO] [mergeToExistingDocument] Adding new article 18734613-f6fc-49be-a469-0e601c09080c to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+ [NoteHelper] [11:07:10.214] [INFO] [updateDocument] Called with docId: 20251120110709-xsyhpwh
+ [NoteHelper] [11:07:10.214] [INFO] [updateDocument] DocId type: string
+ [NoteHelper] [11:07:10.214] [INFO] [updateDocument] DocId looks like timestamp: false
+ [NoteHelper] [11:07:10.214] [INFO] [updateDocument] Content length: 1332
+ [NoteHelper] [11:07:10.214] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-21 11:37:01
+{: id="20251120110709-jkvp1ax" updated="20251120110709"}
 
 <small style="color: #999;">2025/01/19 18:41:49</small>
-{: id="20251120103907-8a34g8b" updated="20251120103907"}
+{: id="20251120110709-hfseqdh" updated="20251120110709"}
 
 皮爷咖啡豆
-{: updated="20251120103907" id="20251120103907-a9bcc3e"}
+{: id="20251120110709-2ccdhpw" updated="20251120110709"}
 
 <small style="color: #999;">2025/04/03 10:49:57</small>
-{: id="20251120103907-9cf21pj" updated="20251120103907"}
+{: id="20251120110709-vobwyud" updated="20251120110709"}
 
 2CUL3VK3A261AM6J
-{: updated="20251120103907" id="2025112010390
- [NoteHelper] [10:59:05.935] [INFO] [updateDocument] Content preview (last 500 chars): yZCj)
-{: id="20251120103907-ci6g5e2" updated="20251120103907"}
+{: id="20251120110709-g2pmtfv" updated="20251120110709"}
 
-{: custom-creation-time="2025-11-20T02:39:07.791Z" custom-last-merge-time="2025-11-20T02:39:07.725Z" custom-merge-count="1" custom-merge-date="2025-10-21" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-21" custom-merged-ids="[&quot;6075077c-0f41-492c-adda-1b126cf5f1a5&quot;]" id="20251120103907-9p677i7" title="同步助手_2025-10-21" type="doc" updated="20251120103907"}
+<small style="color: #999;">2025/08/21 15:10:10</
+ [NoteHelper] [11:07:10.214] [INFO] [updateDocument] Content preview (last 500 chars): yZCj)
+{: id="20251120110709-y46q78f" updated="20251120110709"}
+
+{: custom-creation-time="2025-11-20T03:07:10.129Z" custom-last-merge-time="2025-11-20T03:07:10.069Z" custom-merge-count="1" custom-merge-date="2025-10-21" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-21" custom-merged-ids="[&quot;6075077c-0f41-492c-adda-1b126cf5f1a5&quot;]" id="20251120110709-xsyhpwh" title="同步助手_2025-10-21" type="doc" updated="20251120110709"}
 
 ---
 
 ---
 ## 📅 2025-10-21 11:23:59
 皮爷咖啡豆
- [NoteHelper] [10:59:05.937] [ERROR] [updateDocument] API error response: {
+ [NoteHelper] [11:07:10.216] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]",
-  "docId": "20251120103907-9p677i7"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]",
+  "docId": "20251120110709-xsyhpwh"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -6165,7 +6146,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.938] [ERROR] Failed to update document: {}
+ [NoteHelper] [11:07:10.216] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -6281,7 +6262,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.938] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+ [NoteHelper] [11:07:10.216] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -6393,7 +6374,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.938] [ERROR] Failed to process article 18734613-f6fc-49be-a469-0e601c09080c: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.217] [ERROR] Failed to process article 18734613-f6fc-49be-a469-0e601c09080c: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -6497,7 +6478,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.938] [ERROR] Failed to process article 18734613-f6fc-49be-a469-0e601c09080c: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]
+plugin:notehelper:24 [NoteHelper] [11:07:10.217] [ERROR] Failed to process article 18734613-f6fc-49be-a469-0e601c09080c: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -6597,7 +6578,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.938] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.217] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "a122d353-144e-4c7a-bfb2-78c26beebb8a",
   "articleTitle": "同步助手_20251021_聊天记录_聊天记录",
   "isWeChatMessage": true,
@@ -6606,42 +6587,41 @@ i @ plugin:notehelper:133
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
- [NoteHelper] [10:59:05.938] [INFO] [getDocumentByPath] Found in cache: 20251120103907-9p677i7 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
- [NoteHelper] [10:59:05.938] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103907-9p677i7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.217] [INFO] [getDocumentByPath] Found in cache: 20251120110709-xsyhpwh for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] [11:07:10.217] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-xsyhpwh",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.938] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103907-9p677i7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.217] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-xsyhpwh",
   "articleId": "a122d353-144e-4c7a-bfb2-78c26beebb8a",
   "articleTitle": "同步助手_20251021_聊天记录_聊天记录",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
- [NoteHelper] [10:59:05.941] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.941] [INFO] [mergeToExistingDocument] Adding new article a122d353-144e-4c7a-bfb2-78c26beebb8a to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
- [NoteHelper] [10:59:05.944] [INFO] [updateDocument] Called with docId: 20251120103907-9p677i7
- [NoteHelper] [10:59:05.944] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.944] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.944] [INFO] [updateDocument] Content length: 1859
- [NoteHelper] [10:59:05.945] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-a0dw93q" updated="20251120103907"}
-
-## 📅 2025-10-21 11:37:01
-{: id="20251120103907-06p6jwi" updated="20251120103907"}
+plugin:notehelper:24 [NoteHelper] [11:07:10.219] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:10.219] [INFO] [mergeToExistingDocument] Adding new article a122d353-144e-4c7a-bfb2-78c26beebb8a to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] [11:07:10.222] [INFO] [updateDocument] Called with docId: 20251120110709-xsyhpwh
+plugin:notehelper:24 [NoteHelper] [11:07:10.222] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:10.222] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:10.222] [INFO] [updateDocument] Content length: 1797
+plugin:notehelper:24 [NoteHelper] [11:07:10.222] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-21 11:37:01
+{: updated="20251120110709" id="20251120110709-jkvp1ax"}
 
 <small style="color: #999;">2025/01/19 18:41:49</small>
-{: id="20251120103907-8a34g8b" updated="20251120103907"}
+{: id="20251120110709-hfseqdh" updated="20251120110709"}
 
 皮爷咖啡豆
-{: id="20251120103907-a9bcc3e" updated="20251120103907"}
+{: id="20251120110709-2ccdhpw" updated="20251120110709"}
 
 <small style="color: #999;">2025/04/03 10:49:57</small>
-{: id="20251120103907-9cf21pj" updated="20251120103907"}
+{: id="20251120110709-vobwyud" updated="20251120110709"}
 
 2CUL3VK3A261AM6J
-{: updated="20251120103907" id="2025112010390
- [NoteHelper] [10:59:05.945] [INFO] [updateDocument] Content preview (last 500 chars): ---
+{: id="20251120110709-g2pmtfv" updated="20251120110709"}
+
+<small style="color: #999;">2025/08/21 15:10:10</
+plugin:notehelper:24 [NoteHelper] [11:07:10.222] [INFO] [updateDocument] Content preview (last 500 chars): ---
 ## 📅 2025-10-21 09:38:49
 <small style="color: #999;">2025/01/19 18:41:49</small>
 
@@ -6656,10 +6636,10 @@ i @ plugin:notehelper:133
 ![](https://api.weixin.qq.com/cgi-bin/media/get?access_token=97_bGrp6DVODem3Vipt9rIdLxYnNfTvK0kI7l0CRD6PXmtWDJ7_DiJLCnMKg-qVhg1luPkBgKQQcNe8EO7AkGYDvHV9W9BhiyOcK4yz6aiBo1NAWXHHjGWzCprZfBAOEVgAEAZPG&media_id=P4BG2m8B7mM-i3aL2f2LLJZcZlPcaOvk59ti77DaQ7d1YeITD38bRWTxyV_9Tq3k)
 
 
- [NoteHelper] [10:59:05.947] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.225] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]",
-  "docId": "20251120103907-9p677i7"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]",
+  "docId": "20251120110709-xsyhpwh"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -6776,7 +6756,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.948] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.225] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -6892,7 +6872,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.948] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.225] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -7004,7 +6984,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.948] [ERROR] Failed to process article a122d353-144e-4c7a-bfb2-78c26beebb8a: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.225] [ERROR] Failed to process article a122d353-144e-4c7a-bfb2-78c26beebb8a: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -7108,7 +7088,7 @@ a @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.948] [ERROR] Failed to process article a122d353-144e-4c7a-bfb2-78c26beebb8a: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]
+plugin:notehelper:24 [NoteHelper] [11:07:10.225] [ERROR] Failed to process article a122d353-144e-4c7a-bfb2-78c26beebb8a: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -7208,7 +7188,7 @@ a @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.948] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.225] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "2a5e45dc-319e-46c0-b560-34ca9bfa3ae8",
   "articleTitle": "同步助手_20251021_图片_图片",
   "isWeChatMessage": true,
@@ -7217,42 +7197,41 @@ i @ plugin:notehelper:133
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
- [NoteHelper] [10:59:05.948] [INFO] [getDocumentByPath] Found in cache: 20251120103907-9p677i7 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
- [NoteHelper] [10:59:05.949] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103907-9p677i7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.226] [INFO] [getDocumentByPath] Found in cache: 20251120110709-xsyhpwh for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] [11:07:10.226] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-xsyhpwh",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.949] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103907-9p677i7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.226] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-xsyhpwh",
   "articleId": "2a5e45dc-319e-46c0-b560-34ca9bfa3ae8",
   "articleTitle": "同步助手_20251021_图片_图片",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
- [NoteHelper] [10:59:05.951] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.951] [INFO] [mergeToExistingDocument] Adding new article 2a5e45dc-319e-46c0-b560-34ca9bfa3ae8 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
- [NoteHelper] [10:59:05.954] [INFO] [updateDocument] Called with docId: 20251120103907-9p677i7
- [NoteHelper] [10:59:05.954] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.954] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.954] [INFO] [updateDocument] Content length: 1663
- [NoteHelper] [10:59:05.954] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-a0dw93q" updated="20251120103907"}
-
-## 📅 2025-10-21 11:37:01
-{: id="20251120103907-06p6jwi" updated="20251120103907"}
+plugin:notehelper:24 [NoteHelper] [11:07:10.227] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:10.228] [INFO] [mergeToExistingDocument] Adding new article 2a5e45dc-319e-46c0-b560-34ca9bfa3ae8 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] [11:07:10.231] [INFO] [updateDocument] Called with docId: 20251120110709-xsyhpwh
+plugin:notehelper:24 [NoteHelper] [11:07:10.231] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:10.231] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:10.231] [INFO] [updateDocument] Content length: 1601
+plugin:notehelper:24 [NoteHelper] [11:07:10.231] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-21 11:37:01
+{: id="20251120110709-jkvp1ax" updated="20251120110709"}
 
 <small style="color: #999;">2025/01/19 18:41:49</small>
-{: id="20251120103907-8a34g8b" updated="20251120103907"}
+{: id="20251120110709-hfseqdh" updated="20251120110709"}
 
 皮爷咖啡豆
-{: id="20251120103907-a9bcc3e" updated="20251120103907"}
+{: id="20251120110709-2ccdhpw" updated="20251120110709"}
 
 <small style="color: #999;">2025/04/03 10:49:57</small>
-{: id="20251120103907-9cf21pj" updated="20251120103907"}
+{: id="20251120110709-vobwyud" updated="20251120110709"}
 
 2CUL3VK3A261AM6J
-{: id="20251120103907-tokwscq" updated="20251
- [NoteHelper] [10:59:05.954] [INFO] [updateDocument] Content preview (last 500 chars): 企微消息/2025-10/同步助手_2025-10-21" custom-merged-ids="[&quot;6075077c-0f41-492c-adda-1b126cf5f1a5&quot;]" id="20251120103907-9p677i7" title="同步助手_2025-10-21" type="doc" updated="20251120103907"}
+{: id="20251120110709-g2pmtfv" updated="20251120110709"}
+
+<small style="color: #999;">2025/08/21 15:10:10</
+plugin:notehelper:24 [NoteHelper] [11:07:10.231] [INFO] [updateDocument] Content preview (last 500 chars): 企微消息/2025-10/同步助手_2025-10-21" custom-merged-ids="[&quot;6075077c-0f41-492c-adda-1b126cf5f1a5&quot;]" id="20251120110709-xsyhpwh" title="同步助手_2025-10-21" type="doc" updated="20251120110709"}
 
 ---
 
@@ -7261,10 +7240,10 @@ i @ plugin:notehelper:133
 ![](https://api.weixin.qq.com/cgi-bin/media/get?access_token=97_bGrp6DVODem3Vipt9rIdLxYnNfTvK0kI7l0CRD6PXmtWDJ7_DiJLCnMKg-qVhg1luPkBgKQQcNe8EO7AkGYDvHV9W9BhiyOcK4yz6aiBo1NAWXHHjGWzCprZfBAOEVgAEAZPG&media_id=P4BG2m8B7mM-i3aL2f2LLOZje4-NymB9oJF8yFODRkWKjUxnsN5aSGte1SysSyC0)
 
 
- [NoteHelper] [10:59:05.956] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.233] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]",
-  "docId": "20251120103907-9p677i7"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]",
+  "docId": "20251120110709-xsyhpwh"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -7381,7 +7360,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.956] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.233] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -7497,7 +7476,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.957] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.233] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -7609,7 +7588,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.957] [ERROR] Failed to process article 2a5e45dc-319e-46c0-b560-34ca9bfa3ae8: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.234] [ERROR] Failed to process article 2a5e45dc-319e-46c0-b560-34ca9bfa3ae8: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -7713,7 +7692,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 a @ plugin:notehelper:133
- [NoteHelper] [10:59:05.957] [ERROR] Failed to process article 2a5e45dc-319e-46c0-b560-34ca9bfa3ae8: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]
+plugin:notehelper:24 [NoteHelper] [11:07:10.234] [ERROR] Failed to process article 2a5e45dc-319e-46c0-b560-34ca9bfa3ae8: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -7813,7 +7792,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 a @ plugin:notehelper:133
- [NoteHelper] [10:59:05.957] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.234] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "d63d6244-0abf-4917-9abd-ca705d44af3d",
   "articleTitle": "同步助手_20251020_聊天记录_聊天记录",
   "isWeChatMessage": true,
@@ -7822,34 +7801,39 @@ a @ plugin:notehelper:133
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20"
 }
- [NoteHelper] [10:59:05.957] [INFO] [getDocumentByPath] Searching for document: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.234] [INFO] [getDocumentByPath] Searching for document: {
   "notebookId": "20251119120526-rly7mmp",
   "originalPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20",
   "normalizedPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20",
   "filename": "同步助手_2025-10-20"
 }
- [NoteHelper] [10:59:05.960] [INFO] [getDocumentByPath] SQL response: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.237] [INFO] [getDocumentByPath] SQL response: {
   "code": 0,
-  "dataLength": 1
+  "dataLength": 0
 }
- [NoteHelper] [10:59:05.960] [INFO] [getDocumentByPath] Document found via SQL with ID: 20251120103908-f6kbak7 {
-  "hpath": "/笔记同步助手/企微消息/2025-10/同步助手_2025-10-20",
-  "content": "同步助手_2025-10-20"
+plugin:notehelper:24 [NoteHelper] [11:07:10.237] [INFO] [getDocumentByPath] SQL query found no results, trying filetree API
+plugin:notehelper:24 [NoteHelper] [11:07:10.239] [INFO] [getDocumentByPath] Filetree API response: {
+  "code": 0,
+  "dataLength": 0,
+  "data": []
 }
- [NoteHelper] [10:59:05.960] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103908-f6kbak7",
-  "existingDocIdType": "string",
+plugin:notehelper:24 [NoteHelper] [11:07:10.239] [INFO] [getDocumentByPath] Document not found: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20.md
+plugin:notehelper:24 [NoteHelper] [11:07:10.239] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": null,
+  "existingDocIdType": "object",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.961] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103908-f6kbak7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.240] [INFO] [createMergedDocument] Creating new merged document: {
+  "notebookId": "20251119120526-rly7mmp",
+  "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20",
   "articleId": "d63d6244-0abf-4917-9abd-ca705d44af3d",
   "articleTitle": "同步助手_20251020_聊天记录_聊天记录",
-  "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20"
+  "mergeDate": "2025-10-20"
 }
- [NoteHelper] [10:59:05.963] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.963] [INFO] [mergeToExistingDocument] Article d63d6244-0abf-4917-9abd-ca705d44af3d already exists in 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20, skipping
- [NoteHelper] [10:59:05.963] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.504] [INFO] [createMergedDocument] Document created with ID: 20251120110710-0y2xjdp
+plugin:notehelper:24 [NoteHelper] [11:07:10.566] [INFO] [addMergedId] Successfully added article d63d6244-0abf-4917-9abd-ca705d44af3d to merged list (total: 1)
+plugin:notehelper:24 [NoteHelper] [11:07:10.627] [INFO] [createMergedDocument] Successfully created merged document: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
+ [NoteHelper] [11:07:10.627] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "f1c85a6c-790a-47e5-afc4-e34c7555c065",
   "articleTitle": "同步助手_20251020_聊天记录_聊天记录",
   "isWeChatMessage": true,
@@ -7858,42 +7842,41 @@ a @ plugin:notehelper:133
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20"
 }
- [NoteHelper] [10:59:05.963] [INFO] [getDocumentByPath] Found in cache: 20251120103908-f6kbak7 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
- [NoteHelper] [10:59:05.963] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103908-f6kbak7",
+ [NoteHelper] [11:07:10.627] [INFO] [getDocumentByPath] Found in cache: 20251120110710-0y2xjdp for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
+ [NoteHelper] [11:07:10.627] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110710-0y2xjdp",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.964] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103908-f6kbak7",
+ [NoteHelper] [11:07:10.627] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110710-0y2xjdp",
   "articleId": "f1c85a6c-790a-47e5-afc4-e34c7555c065",
   "articleTitle": "同步助手_20251020_聊天记录_聊天记录",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20"
 }
- [NoteHelper] [10:59:05.966] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.966] [INFO] [mergeToExistingDocument] Adding new article f1c85a6c-790a-47e5-afc4-e34c7555c065 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
- [NoteHelper] [10:59:05.969] [INFO] [updateDocument] Called with docId: 20251120103908-f6kbak7
- [NoteHelper] [10:59:05.969] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.969] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.969] [INFO] [updateDocument] Content length: 1859
- [NoteHelper] [10:59:05.969] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103908-rrruze1" updated="20251120103908"}
-
-## 📅 2025-10-21 09:38:37
-{: id="20251120103908-e8s068g" updated="20251120103908"}
+ [NoteHelper] [11:07:10.630] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+ [NoteHelper] [11:07:10.631] [INFO] [mergeToExistingDocument] Adding new article f1c85a6c-790a-47e5-afc4-e34c7555c065 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
+ [NoteHelper] [11:07:10.642] [INFO] [updateDocument] Called with docId: 20251120110710-0y2xjdp
+ [NoteHelper] [11:07:10.642] [INFO] [updateDocument] DocId type: string
+ [NoteHelper] [11:07:10.642] [INFO] [updateDocument] DocId looks like timestamp: false
+ [NoteHelper] [11:07:10.642] [INFO] [updateDocument] Content length: 1797
+ [NoteHelper] [11:07:10.642] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-21 09:38:37
+{: id="20251120110710-fiuzyhl" updated="20251120110710"}
 
 <small style="color: #999;">2025/01/19 18:41:49</small>
-{: id="20251120103908-ekxwl2k" updated="20251120103908"}
+{: id="20251120110710-htkvbll" updated="20251120110710"}
 
 皮爷咖啡豆
-{: updated="20251120103908" id="20251120103908-svdo0mp"}
+{: id="20251120110710-fz6c6lq" updated="20251120110710"}
 
 <small style="color: #999;">2025/04/03 10:49:57</small>
-{: id="20251120103908-plxdqax" updated="20251120103908"}
+{: id="20251120110710-44ne6pw" updated="20251120110710"}
 
 2CUL3VK3A261AM6J
-{: id="20251120103908-6udpnpt" updated="20251
- [NoteHelper] [10:59:05.969] [INFO] [updateDocument] Content preview (last 500 chars): ---
+{: id="20251120110710-05bimcv" updated="20251120110710"}
+
+<small style="color: #999;">2025/08/21 15:10:10</
+ [NoteHelper] [11:07:10.642] [INFO] [updateDocument] Content preview (last 500 chars): ---
 ## 📅 2025-10-21 09:38:33
 <small style="color: #999;">2025/01/19 18:41:49</small>
 
@@ -7908,10 +7891,10 @@ a @ plugin:notehelper:133
 ![](https://api.weixin.qq.com/cgi-bin/media/get?access_token=97_bGrp6DVODem3Vipt9rIdLxYnNfTvK0kI7l0CRD6PXmtWDJ7_DiJLCnMKg-qVhg1luPkBgKQQcNe8EO7AkGYDvHV9W9BhiyOcK4yz6aiBo1NAWXHHjGWzCprZfBAOEVgAEAZPG&media_id=P4BG2m8B7mM-i3aL2f2LLJZcZlPcaOvk59ti77DaQ7d1YeITD38bRWTxyV_9Tq3k)
 
 
- [NoteHelper] [10:59:05.972] [ERROR] [updateDocument] API error response: {
+ [NoteHelper] [11:07:10.647] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:08.618Z]",
-  "docId": "20251120103908-f6kbak7"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:10.567Z]",
+  "docId": "20251120110710-0y2xjdp"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -8028,7 +8011,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.972] [ERROR] Failed to update document: {}
+ [NoteHelper] [11:07:10.647] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -8144,7 +8127,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.973] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+ [NoteHelper] [11:07:10.647] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -8256,7 +8239,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.973] [ERROR] Failed to process article f1c85a6c-790a-47e5-afc4-e34c7555c065: {}
+ [NoteHelper] [11:07:10.647] [ERROR] Failed to process article f1c85a6c-790a-47e5-afc4-e34c7555c065: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -8360,7 +8343,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.973] [ERROR] Failed to process article f1c85a6c-790a-47e5-afc4-e34c7555c065: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:08.618Z]
+ [NoteHelper] [11:07:10.648] [ERROR] Failed to process article f1c85a6c-790a-47e5-afc4-e34c7555c065: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:10.567Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -8460,7 +8443,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.973] [INFO] [mergeArticleToFile] Processing article for merge: {
+ [NoteHelper] [11:07:10.648] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "dc13c1fb-84c8-43d6-aa02-a0797f713ce5",
   "articleTitle": "同步助手_20251020_聊天记录_聊天记录",
   "isWeChatMessage": true,
@@ -8469,42 +8452,41 @@ i @ plugin:notehelper:133
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20"
 }
- [NoteHelper] [10:59:05.973] [INFO] [getDocumentByPath] Found in cache: 20251120103908-f6kbak7 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
- [NoteHelper] [10:59:05.973] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103908-f6kbak7",
+ [NoteHelper] [11:07:10.648] [INFO] [getDocumentByPath] Found in cache: 20251120110710-0y2xjdp for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
+ [NoteHelper] [11:07:10.648] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110710-0y2xjdp",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.973] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103908-f6kbak7",
+ [NoteHelper] [11:07:10.648] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110710-0y2xjdp",
   "articleId": "dc13c1fb-84c8-43d6-aa02-a0797f713ce5",
   "articleTitle": "同步助手_20251020_聊天记录_聊天记录",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20"
 }
- [NoteHelper] [10:59:05.976] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.976] [INFO] [mergeToExistingDocument] Adding new article dc13c1fb-84c8-43d6-aa02-a0797f713ce5 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
- [NoteHelper] [10:59:05.978] [INFO] [updateDocument] Called with docId: 20251120103908-f6kbak7
- [NoteHelper] [10:59:05.978] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.978] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.978] [INFO] [updateDocument] Content length: 2082
- [NoteHelper] [10:59:05.979] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103908-rrruze1" updated="20251120103908"}
-
-## 📅 2025-10-21 09:38:37
-{: id="20251120103908-e8s068g" updated="20251120103908"}
+ [NoteHelper] [11:07:10.651] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+ [NoteHelper] [11:07:10.651] [INFO] [mergeToExistingDocument] Adding new article dc13c1fb-84c8-43d6-aa02-a0797f713ce5 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
+ [NoteHelper] [11:07:10.654] [INFO] [updateDocument] Called with docId: 20251120110710-0y2xjdp
+ [NoteHelper] [11:07:10.654] [INFO] [updateDocument] DocId type: string
+ [NoteHelper] [11:07:10.654] [INFO] [updateDocument] DocId looks like timestamp: false
+ [NoteHelper] [11:07:10.654] [INFO] [updateDocument] Content length: 2020
+ [NoteHelper] [11:07:10.654] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-21 09:38:37
+{: updated="20251120110710" id="20251120110710-fiuzyhl"}
 
 <small style="color: #999;">2025/01/19 18:41:49</small>
-{: id="20251120103908-ekxwl2k" updated="20251120103908"}
+{: updated="20251120110710" id="20251120110710-htkvbll"}
 
 皮爷咖啡豆
-{: updated="20251120103908" id="20251120103908-svdo0mp"}
+{: id="20251120110710-fz6c6lq" updated="20251120110710"}
 
 <small style="color: #999;">2025/04/03 10:49:57</small>
-{: id="20251120103908-plxdqax" updated="20251120103908"}
+{: id="20251120110710-44ne6pw" updated="20251120110710"}
 
 2CUL3VK3A261AM6J
-{: id="20251120103908-6udpnpt" updated="20251
- [NoteHelper] [10:59:05.979] [INFO] [updateDocument] Content preview (last 500 chars): s://api.weixin.qq.com/cgi-bin/media/get?access_token=97_bGrp6DVODem3Vipt9rIdLxYnNfTvK0kI7l0CRD6PXmtWDJ7_DiJLCnMKg-qVhg1luPkBgKQQcNe8EO7AkGYDvHV9W9BhiyOcK4yz6aiBo1NAWXHHjGWzCprZfBAOEVgAEAZPG&media_id=P4BG2m8B7mM-i3aL2f2LLIMIUjgXVXmV4gHg6kPuCotpUbGxgK0-XEcne0KoVvRC)
+{: id="20251120110710-05bimcv" updated="20251120110710"}
+
+<small style="color: #999;">2025/08/21 15:10:10</
+ [NoteHelper] [11:07:10.654] [INFO] [updateDocument] Content preview (last 500 chars): s://api.weixin.qq.com/cgi-bin/media/get?access_token=97_bGrp6DVODem3Vipt9rIdLxYnNfTvK0kI7l0CRD6PXmtWDJ7_DiJLCnMKg-qVhg1luPkBgKQQcNe8EO7AkGYDvHV9W9BhiyOcK4yz6aiBo1NAWXHHjGWzCprZfBAOEVgAEAZPG&media_id=P4BG2m8B7mM-i3aL2f2LLIMIUjgXVXmV4gHg6kPuCotpUbGxgK0-XEcne0KoVvRC)
 
 <small style="color: #999;">2025/10/17 16:04:20</small>
 
@@ -8517,10 +8499,10 @@ i @ plugin:notehelper:133
 📎 ZhangXI_CV.docx - ⚠️ 文件处理失败
 
 
- [NoteHelper] [10:59:05.981] [ERROR] [updateDocument] API error response: {
+ [NoteHelper] [11:07:10.657] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:08.618Z]",
-  "docId": "20251120103908-f6kbak7"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:10.567Z]",
+  "docId": "20251120110710-0y2xjdp"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -8637,7 +8619,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.982] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.657] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -8753,7 +8735,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.982] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.657] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -8865,7 +8847,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.982] [ERROR] Failed to process article dc13c1fb-84c8-43d6-aa02-a0797f713ce5: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.658] [ERROR] Failed to process article dc13c1fb-84c8-43d6-aa02-a0797f713ce5: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -8969,7 +8951,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.982] [ERROR] Failed to process article dc13c1fb-84c8-43d6-aa02-a0797f713ce5: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:08.618Z]
+plugin:notehelper:24 [NoteHelper] [11:07:10.658] [ERROR] Failed to process article dc13c1fb-84c8-43d6-aa02-a0797f713ce5: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:10.567Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -9069,7 +9051,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.982] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.658] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "b1a6f952-7c86-44db-b766-b242fd67e0be",
   "articleTitle": "同步助手_20251020_笔记同步助手插件教程_文件",
   "isWeChatMessage": true,
@@ -9078,44 +9060,43 @@ i @ plugin:notehelper:133
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20"
 }
- [NoteHelper] [10:59:05.982] [INFO] [getDocumentByPath] Found in cache: 20251120103908-f6kbak7 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
- [NoteHelper] [10:59:05.982] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103908-f6kbak7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.658] [INFO] [getDocumentByPath] Found in cache: 20251120110710-0y2xjdp for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
+plugin:notehelper:24 [NoteHelper] [11:07:10.658] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110710-0y2xjdp",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.983] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103908-f6kbak7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.658] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110710-0y2xjdp",
   "articleId": "b1a6f952-7c86-44db-b766-b242fd67e0be",
   "articleTitle": "同步助手_20251020_笔记同步助手插件教程_文件",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20"
 }
- [NoteHelper] [10:59:05.985] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.985] [INFO] [mergeToExistingDocument] Adding new article b1a6f952-7c86-44db-b766-b242fd67e0be to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
- [NoteHelper] [10:59:05.987] [INFO] [updateDocument] Called with docId: 20251120103908-f6kbak7
- [NoteHelper] [10:59:05.987] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.988] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.988] [INFO] [updateDocument] Content length: 1437
- [NoteHelper] [10:59:05.988] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: updated="20251120103908" id="20251120103908-rrruze1"}
-
-## 📅 2025-10-21 09:38:37
-{: id="20251120103908-e8s068g" updated="20251120103908"}
+plugin:notehelper:24 [NoteHelper] [11:07:10.661] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:10.662] [INFO] [mergeToExistingDocument] Adding new article b1a6f952-7c86-44db-b766-b242fd67e0be to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
+plugin:notehelper:24 [NoteHelper] [11:07:10.664] [INFO] [updateDocument] Called with docId: 20251120110710-0y2xjdp
+plugin:notehelper:24 [NoteHelper] [11:07:10.664] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:10.664] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:10.664] [INFO] [updateDocument] Content length: 1375
+plugin:notehelper:24 [NoteHelper] [11:07:10.665] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-21 09:38:37
+{: id="20251120110710-fiuzyhl" updated="20251120110710"}
 
 <small style="color: #999;">2025/01/19 18:41:49</small>
-{: id="20251120103908-ekxwl2k" updated="20251120103908"}
+{: id="20251120110710-htkvbll" updated="20251120110710"}
 
 皮爷咖啡豆
-{: id="20251120103908-svdo0mp" updated="20251120103908"}
+{: id="20251120110710-fz6c6lq" updated="20251120110710"}
 
 <small style="color: #999;">2025/04/03 10:49:57</small>
-{: id="20251120103908-plxdqax" updated="20251120103908"}
+{: id="20251120110710-44ne6pw" updated="20251120110710"}
 
 2CUL3VK3A261AM6J
-{: id="20251120103908-6udpnpt" updated="20251
- [NoteHelper] [10:59:05.988] [INFO] [updateDocument] Content preview (last 500 chars): 120103908-f3m12te"}
+{: id="20251120110710-05bimcv" updated="20251120110710"}
 
-{: custom-creation-time="2025-11-20T02:39:08.618Z" custom-last-merge-time="2025-11-20T02:39:08.555Z" custom-merge-count="1" custom-merge-date="2025-10-20" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-20" custom-merged-ids="[&quot;d63d6244-0abf-4917-9abd-ca705d44af3d&quot;]" id="20251120103908-f6kbak7" title="同步助手_2025-10-20" type="doc" updated="20251120103908"}
+<small style="color: #999;">2025/08/21 15:10:10</
+plugin:notehelper:24 [NoteHelper] [11:07:10.665] [INFO] [updateDocument] Content preview (last 500 chars): d="20251120110710"}
+
+{: custom-creation-time="2025-11-20T03:07:10.567Z" custom-last-merge-time="2025-11-20T03:07:10.506Z" custom-merge-count="1" custom-merge-date="2025-10-20" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-20" custom-merged-ids="[&quot;d63d6244-0abf-4917-9abd-ca705d44af3d&quot;]" id="20251120110710-0y2xjdp" title="同步助手_2025-10-20" type="doc" updated="20251120110710"}
 
 ---
 
@@ -9124,10 +9105,10 @@ i @ plugin:notehelper:133
 📎 笔记同步助手插件教程.pdf (0.86MB) - ⚠️ 笔记同步助手暂不支持文档文件
 
 
- [NoteHelper] [10:59:05.990] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.667] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:08.618Z]",
-  "docId": "20251120103908-f6kbak7"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:10.567Z]",
+  "docId": "20251120110710-0y2xjdp"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -9244,7 +9225,7 @@ a @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.991] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.667] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -9360,7 +9341,7 @@ a @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.991] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.667] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -9472,7 +9453,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.991] [ERROR] Failed to process article b1a6f952-7c86-44db-b766-b242fd67e0be: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.667] [ERROR] Failed to process article b1a6f952-7c86-44db-b766-b242fd67e0be: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -9576,7 +9557,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.991] [ERROR] Failed to process article b1a6f952-7c86-44db-b766-b242fd67e0be: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:08.618Z]
+plugin:notehelper:24 [NoteHelper] [11:07:10.667] [ERROR] Failed to process article b1a6f952-7c86-44db-b766-b242fd67e0be: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:10.567Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -9676,7 +9657,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
- [NoteHelper] [10:59:05.991] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.668] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "8353f1b6-8dfd-4d7e-8dd7-2e190e5694a3",
   "articleTitle": "同步助手_20251020_ZhangXI_CV_文件",
   "isWeChatMessage": true,
@@ -9685,44 +9666,43 @@ i @ plugin:notehelper:133
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20"
 }
- [NoteHelper] [10:59:05.991] [INFO] [getDocumentByPath] Found in cache: 20251120103908-f6kbak7 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
- [NoteHelper] [10:59:05.991] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103908-f6kbak7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.668] [INFO] [getDocumentByPath] Found in cache: 20251120110710-0y2xjdp for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
+plugin:notehelper:24 [NoteHelper] [11:07:10.668] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110710-0y2xjdp",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
- [NoteHelper] [10:59:05.991] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103908-f6kbak7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.668] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110710-0y2xjdp",
   "articleId": "8353f1b6-8dfd-4d7e-8dd7-2e190e5694a3",
   "articleTitle": "同步助手_20251020_ZhangXI_CV_文件",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-20"
 }
- [NoteHelper] [10:59:05.994] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
- [NoteHelper] [10:59:05.994] [INFO] [mergeToExistingDocument] Adding new article 8353f1b6-8dfd-4d7e-8dd7-2e190e5694a3 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
- [NoteHelper] [10:59:05.996] [INFO] [updateDocument] Called with docId: 20251120103908-f6kbak7
- [NoteHelper] [10:59:05.996] [INFO] [updateDocument] DocId type: string
- [NoteHelper] [10:59:05.996] [INFO] [updateDocument] DocId looks like timestamp: false
- [NoteHelper] [10:59:05.996] [INFO] [updateDocument] Content length: 1438
- [NoteHelper] [10:59:05.996] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: updated="20251120103908" id="20251120103908-rrruze1"}
-
-## 📅 2025-10-21 09:38:37
-{: id="20251120103908-e8s068g" updated="20251120103908"}
+plugin:notehelper:24 [NoteHelper] [11:07:10.670] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:10.670] [INFO] [mergeToExistingDocument] Adding new article 8353f1b6-8dfd-4d7e-8dd7-2e190e5694a3 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-20
+plugin:notehelper:24 [NoteHelper] [11:07:10.674] [INFO] [updateDocument] Called with docId: 20251120110710-0y2xjdp
+plugin:notehelper:24 [NoteHelper] [11:07:10.674] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:10.674] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:10.674] [INFO] [updateDocument] Content length: 1376
+plugin:notehelper:24 [NoteHelper] [11:07:10.674] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-21 09:38:37
+{: id="20251120110710-fiuzyhl" updated="20251120110710"}
 
 <small style="color: #999;">2025/01/19 18:41:49</small>
-{: updated="20251120103908" id="20251120103908-ekxwl2k"}
+{: id="20251120110710-htkvbll" updated="20251120110710"}
 
 皮爷咖啡豆
-{: id="20251120103908-svdo0mp" updated="20251120103908"}
+{: id="20251120110710-fz6c6lq" updated="20251120110710"}
 
 <small style="color: #999;">2025/04/03 10:49:57</small>
-{: id="20251120103908-plxdqax" updated="20251120103908"}
+{: id="20251120110710-44ne6pw" updated="20251120110710"}
 
 2CUL3VK3A261AM6J
-{: id="20251120103908-6udpnpt" updated="20251
- [NoteHelper] [10:59:05.996] [INFO] [updateDocument] Content preview (last 500 chars): ="20251120103908"}
+{: id="20251120110710-05bimcv" updated="20251120110710"}
 
-{: custom-creation-time="2025-11-20T02:39:08.618Z" custom-last-merge-time="2025-11-20T02:39:08.555Z" custom-merge-count="1" custom-merge-date="2025-10-20" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-20" custom-merged-ids="[&quot;d63d6244-0abf-4917-9abd-ca705d44af3d&quot;]" id="20251120103908-f6kbak7" title="同步助手_2025-10-20" type="doc" updated="20251120103908"}
+<small style="color: #999;">2025/08/21 15:10:10</
+plugin:notehelper:24 [NoteHelper] [11:07:10.674] [INFO] [updateDocument] Content preview (last 500 chars): ="20251120110710"}
+
+{: custom-creation-time="2025-11-20T03:07:10.567Z" custom-last-merge-time="2025-11-20T03:07:10.506Z" custom-merge-count="1" custom-merge-date="2025-10-20" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-20" custom-merged-ids="[&quot;d63d6244-0abf-4917-9abd-ca705d44af3d&quot;]" id="20251120110710-0y2xjdp" title="同步助手_2025-10-20" type="doc" updated="20251120110710"}
 
 ---
 
@@ -9731,10 +9711,10 @@ i @ plugin:notehelper:133
 📎 ZhangXI_CV.docx (0.57MB) - ⚠️ 笔记同步助手暂不支持文档文件
 
 
-plugin:notehelper:24 [NoteHelper] [10:59:05.998] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.677] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:08.618Z]",
-  "docId": "20251120103908-f6kbak7"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:10.567Z]",
+  "docId": "20251120110710-0y2xjdp"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -9851,7 +9831,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 a @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.999] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.677] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -9967,7 +9947,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 a @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.999] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.677] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -10079,7 +10059,7 @@ a @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.999] [ERROR] Failed to process article 8353f1b6-8dfd-4d7e-8dd7-2e190e5694a3: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.677] [ERROR] Failed to process article 8353f1b6-8dfd-4d7e-8dd7-2e190e5694a3: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -10183,7 +10163,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.999] [ERROR] Failed to process article 8353f1b6-8dfd-4d7e-8dd7-2e190e5694a3: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:08.618Z]
+plugin:notehelper:24 [NoteHelper] [11:07:10.677] [ERROR] Failed to process article 8353f1b6-8dfd-4d7e-8dd7-2e190e5694a3: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:10.567Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -10283,7 +10263,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:05.999] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.678] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "417e5f3b-a019-4965-9b6a-a0dd40d4475e",
   "articleTitle": "同步助手_20251021_皮爷咖啡豆_文本",
   "isWeChatMessage": true,
@@ -10292,55 +10272,54 @@ plugin:notehelper:24 [NoteHelper] [10:59:05.999] [INFO] [mergeArticleToFile] Pro
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.999] [INFO] [getDocumentByPath] Found in cache: 20251120103907-9p677i7 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
-plugin:notehelper:24 [NoteHelper] [10:59:05.999] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103907-9p677i7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.678] [INFO] [getDocumentByPath] Found in cache: 20251120110709-xsyhpwh for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] [11:07:10.678] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-xsyhpwh",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
-plugin:notehelper:24 [NoteHelper] [10:59:05.999] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103907-9p677i7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.678] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-xsyhpwh",
   "articleId": "417e5f3b-a019-4965-9b6a-a0dd40d4475e",
   "articleTitle": "同步助手_20251021_皮爷咖啡豆_文本",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:06.001] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
-plugin:notehelper:24 [NoteHelper] [10:59:06.001] [INFO] [mergeToExistingDocument] Adding new article 417e5f3b-a019-4965-9b6a-a0dd40d4475e to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
-plugin:notehelper:24 [NoteHelper] [10:59:06.006] [INFO] [updateDocument] Called with docId: 20251120103907-9p677i7
-plugin:notehelper:24 [NoteHelper] [10:59:06.007] [INFO] [updateDocument] DocId type: string
-plugin:notehelper:24 [NoteHelper] [10:59:06.007] [INFO] [updateDocument] DocId looks like timestamp: false
-plugin:notehelper:24 [NoteHelper] [10:59:06.007] [INFO] [updateDocument] Content length: 1394
-plugin:notehelper:24 [NoteHelper] [10:59:06.007] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-a0dw93q" updated="20251120103907"}
-
-## 📅 2025-10-21 11:37:01
-{: id="20251120103907-06p6jwi" updated="20251120103907"}
+plugin:notehelper:24 [NoteHelper] [11:07:10.680] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:10.680] [INFO] [mergeToExistingDocument] Adding new article 417e5f3b-a019-4965-9b6a-a0dd40d4475e to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] [11:07:10.683] [INFO] [updateDocument] Called with docId: 20251120110709-xsyhpwh
+plugin:notehelper:24 [NoteHelper] [11:07:10.683] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:10.683] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:10.683] [INFO] [updateDocument] Content length: 1332
+plugin:notehelper:24 [NoteHelper] [11:07:10.683] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-21 11:37:01
+{: id="20251120110709-jkvp1ax" updated="20251120110709"}
 
 <small style="color: #999;">2025/01/19 18:41:49</small>
-{: updated="20251120103907" id="20251120103907-8a34g8b"}
+{: id="20251120110709-hfseqdh" updated="20251120110709"}
 
 皮爷咖啡豆
-{: id="20251120103907-a9bcc3e" updated="20251120103907"}
+{: id="20251120110709-2ccdhpw" updated="20251120110709"}
 
 <small style="color: #999;">2025/04/03 10:49:57</small>
-{: id="20251120103907-9cf21pj" updated="20251120103907"}
+{: id="20251120110709-vobwyud" updated="20251120110709"}
 
 2CUL3VK3A261AM6J
-{: id="20251120103907-tokwscq" updated="20251
-plugin:notehelper:24 [NoteHelper] [10:59:06.007] [INFO] [updateDocument] Content preview (last 500 chars): yZCj)
-{: updated="20251120103907" id="20251120103907-ci6g5e2"}
+{: updated="20251120110709" id="20251120110709-g2pmtfv"}
 
-{: custom-creation-time="2025-11-20T02:39:07.791Z" custom-last-merge-time="2025-11-20T02:39:07.725Z" custom-merge-count="1" custom-merge-date="2025-10-21" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-21" custom-merged-ids="[&quot;6075077c-0f41-492c-adda-1b126cf5f1a5&quot;]" id="20251120103907-9p677i7" title="同步助手_2025-10-21" type="doc" updated="20251120103907"}
+<small style="color: #999;">2025/08/21 15:10:10</
+plugin:notehelper:24 [NoteHelper] [11:07:10.683] [INFO] [updateDocument] Content preview (last 500 chars): yZCj)
+{: id="20251120110709-y46q78f" updated="20251120110709"}
+
+{: custom-creation-time="2025-11-20T03:07:10.129Z" custom-last-merge-time="2025-11-20T03:07:10.069Z" custom-merge-count="1" custom-merge-date="2025-10-21" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-21" custom-merged-ids="[&quot;6075077c-0f41-492c-adda-1b126cf5f1a5&quot;]" id="20251120110709-xsyhpwh" title="同步助手_2025-10-21" type="doc" updated="20251120110709"}
 
 ---
 
 ---
 ## 📅 2025-10-21 09:37:20
 皮爷咖啡豆
-plugin:notehelper:24 [NoteHelper] [10:59:06.010] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.686] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]",
-  "docId": "20251120103907-9p677i7"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]",
+  "docId": "20251120110709-xsyhpwh"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -10457,7 +10436,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:06.010] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.686] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -10573,7 +10552,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:06.010] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.686] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -10685,7 +10664,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 a @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:06.010] [ERROR] Failed to process article 417e5f3b-a019-4965-9b6a-a0dd40d4475e: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.686] [ERROR] Failed to process article 417e5f3b-a019-4965-9b6a-a0dd40d4475e: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -10789,7 +10768,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:06.011] [ERROR] Failed to process article 417e5f3b-a019-4965-9b6a-a0dd40d4475e: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]
+plugin:notehelper:24 [NoteHelper] [11:07:10.687] [ERROR] Failed to process article 417e5f3b-a019-4965-9b6a-a0dd40d4475e: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -10889,7 +10868,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:06.011] [INFO] [mergeArticleToFile] Processing article for merge: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.687] [INFO] [mergeArticleToFile] Processing article for merge: {
   "articleId": "85179b1c-69b7-4bf3-a2cc-8a916d5398d6",
   "articleTitle": "同步助手_20251021_皮爷咖啡豆_文本",
   "isWeChatMessage": true,
@@ -10898,55 +10877,54 @@ plugin:notehelper:24 [NoteHelper] [10:59:06.011] [INFO] [mergeArticleToFile] Pro
   "folderPath": "笔记同步助手/企微消息/2025-10",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:06.011] [INFO] [getDocumentByPath] Found in cache: 20251120103907-9p677i7 for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
-plugin:notehelper:24 [NoteHelper] [10:59:06.011] [INFO] [processMergedArticle] getDocumentByPath result: {
-  "existingDocId": "20251120103907-9p677i7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.687] [INFO] [getDocumentByPath] Found in cache: 20251120110709-xsyhpwh for path: 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] [11:07:10.687] [INFO] [processMergedArticle] getDocumentByPath result: {
+  "existingDocId": "20251120110709-xsyhpwh",
   "existingDocIdType": "string",
   "looksLikeTimestamp": false
 }
-plugin:notehelper:24 [NoteHelper] [10:59:06.011] [INFO] [mergeToExistingDocument] Starting merge for article: {
-  "docId": "20251120103907-9p677i7",
+plugin:notehelper:24 [NoteHelper] [11:07:10.687] [INFO] [mergeToExistingDocument] Starting merge for article: {
+  "docId": "20251120110709-xsyhpwh",
   "articleId": "85179b1c-69b7-4bf3-a2cc-8a916d5398d6",
   "articleTitle": "同步助手_20251021_皮爷咖啡豆_文本",
   "docPath": "笔记同步助手/企微消息/2025-10/同步助手_2025-10-21"
 }
-plugin:notehelper:24 [NoteHelper] [10:59:06.014] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
-plugin:notehelper:24 [NoteHelper] [10:59:06.014] [INFO] [mergeToExistingDocument] Adding new article 85179b1c-69b7-4bf3-a2cc-8a916d5398d6 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
-plugin:notehelper:24 [NoteHelper] [10:59:06.017] [INFO] [updateDocument] Called with docId: 20251120103907-9p677i7
-plugin:notehelper:24 [NoteHelper] [10:59:06.017] [INFO] [updateDocument] DocId type: string
-plugin:notehelper:24 [NoteHelper] [10:59:06.017] [INFO] [updateDocument] DocId looks like timestamp: false
-plugin:notehelper:24 [NoteHelper] [10:59:06.017] [INFO] [updateDocument] Content length: 1394
-plugin:notehelper:24 [NoteHelper] [10:59:06.018] [INFO] [updateDocument] Content preview (first 500 chars): ---
-{: id="20251120103907-a0dw93q" updated="20251120103907"}
-
-## 📅 2025-10-21 11:37:01
-{: id="20251120103907-06p6jwi" updated="20251120103907"}
+plugin:notehelper:24 [NoteHelper] [11:07:10.690] [INFO] [mergeToExistingDocument] Found 1 existing merged IDs
+plugin:notehelper:24 [NoteHelper] [11:07:10.690] [INFO] [mergeToExistingDocument] Adding new article 85179b1c-69b7-4bf3-a2cc-8a916d5398d6 to 笔记同步助手/企微消息/2025-10/同步助手_2025-10-21
+plugin:notehelper:24 [NoteHelper] [11:07:10.693] [INFO] [updateDocument] Called with docId: 20251120110709-xsyhpwh
+plugin:notehelper:24 [NoteHelper] [11:07:10.693] [INFO] [updateDocument] DocId type: string
+plugin:notehelper:24 [NoteHelper] [11:07:10.693] [INFO] [updateDocument] DocId looks like timestamp: false
+plugin:notehelper:24 [NoteHelper] [11:07:10.693] [INFO] [updateDocument] Content length: 1332
+plugin:notehelper:24 [NoteHelper] [11:07:10.693] [INFO] [updateDocument] Content preview (first 500 chars): ## 📅 2025-10-21 11:37:01
+{: id="20251120110709-jkvp1ax" updated="20251120110709"}
 
 <small style="color: #999;">2025/01/19 18:41:49</small>
-{: id="20251120103907-8a34g8b" updated="20251120103907"}
+{: updated="20251120110709" id="20251120110709-hfseqdh"}
 
 皮爷咖啡豆
-{: updated="20251120103907" id="20251120103907-a9bcc3e"}
+{: id="20251120110709-2ccdhpw" updated="20251120110709"}
 
 <small style="color: #999;">2025/04/03 10:49:57</small>
-{: id="20251120103907-9cf21pj" updated="20251120103907"}
+{: id="20251120110709-vobwyud" updated="20251120110709"}
 
 2CUL3VK3A261AM6J
-{: id="20251120103907-tokwscq" updated="20251
-plugin:notehelper:24 [NoteHelper] [10:59:06.018] [INFO] [updateDocument] Content preview (last 500 chars): yZCj)
-{: id="20251120103907-ci6g5e2" updated="20251120103907"}
+{: updated="20251120110709" id="20251120110709-g2pmtfv"}
 
-{: custom-creation-time="2025-11-20T02:39:07.791Z" custom-last-merge-time="2025-11-20T02:39:07.725Z" custom-merge-count="1" custom-merge-date="2025-10-21" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-21" custom-merged-ids="[&quot;6075077c-0f41-492c-adda-1b126cf5f1a5&quot;]" id="20251120103907-9p677i7" title="同步助手_2025-10-21" type="doc" updated="20251120103907"}
+<small style="color: #999;">2025/08/21 15:10:10</
+plugin:notehelper:24 [NoteHelper] [11:07:10.693] [INFO] [updateDocument] Content preview (last 500 chars): yZCj)
+{: id="20251120110709-y46q78f" updated="20251120110709"}
+
+{: custom-creation-time="2025-11-20T03:07:10.129Z" custom-last-merge-time="2025-11-20T03:07:10.069Z" custom-merge-count="1" custom-merge-date="2025-10-21" custom-merge-doc="true" custom-merge-path="笔记同步助手/企微消息/2025-10/同步助手_2025-10-21" custom-merged-ids="[&quot;6075077c-0f41-492c-adda-1b126cf5f1a5&quot;]" id="20251120110709-xsyhpwh" title="同步助手_2025-10-21" type="doc" updated="20251120110709"}
 
 ---
 
 ---
 ## 📅 2025-10-21 09:32:11
 皮爷咖啡豆
-plugin:notehelper:24 [NoteHelper] [10:59:06.020] [ERROR] [updateDocument] API error response: {
+plugin:notehelper:24 [NoteHelper] [11:07:10.696] [ERROR] [updateDocument] API error response: {
   "code": -1,
-  "msg": "data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]",
-  "docId": "20251120103907-9p677i7"
+  "msg": "data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]",
+  "docId": "20251120110709-xsyhpwh"
 }
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
@@ -11063,7 +11041,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:06.021] [ERROR] Failed to update document: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.696] [ERROR] Failed to update document: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 i @ plugin:notehelper:107
@@ -11179,7 +11157,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:06.021] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.696] [ERROR] [mergeToExistingDocument] Failed to merge article: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:111
 a @ plugin:notehelper:107
@@ -11291,7 +11269,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:06.021] [ERROR] Failed to process article 85179b1c-69b7-4bf3-a2cc-8a916d5398d6: {}
+plugin:notehelper:24 [NoteHelper] [11:07:10.696] [ERROR] Failed to process article 85179b1c-69b7-4bf3-a2cc-8a916d5398d6: {}
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:107
 a @ plugin:notehelper:107
@@ -11395,7 +11373,7 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:06.021] [ERROR] Failed to process article 85179b1c-69b7-4bf3-a2cc-8a916d5398d6: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T02:39:07.791Z]
+plugin:notehelper:24 [NoteHelper] [11:07:10.696] [ERROR] Failed to process article 85179b1c-69b7-4bf3-a2cc-8a916d5398d6: Error: Failed to update document: data block DOM failed: found invalid ID [2025-11-20T03:07:10.129Z]
 error @ plugin:notehelper:24
 eval @ plugin:notehelper:133
 a @ plugin:notehelper:133
@@ -11495,9 +11473,9 @@ i @ plugin:notehelper:133
 Promise.then
 o @ plugin:notehelper:133
 i @ plugin:notehelper:133
-plugin:notehelper:24 [NoteHelper] [10:59:06.023] [INFO] Document already exists for article 8ccc6634-8ce2-4256-b84e-c22c9551c3ff, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:06.026] [INFO] Document already exists for article 5217783b-4ee9-4f51-a642-0e04d2b32517, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:06.028] [INFO] Document already exists for article c1bfbbda-aa63-4768-b8fc-efcefd321f2b, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:06.030] [INFO] Document already exists for article 4e26ec9e-94c3-4ff0-9b96-0f0b4dcd3b28, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:06.031] [INFO] Document already exists for article d7ed0d64-3735-406f-9906-3727b13bbb26, skipping
-plugin:notehelper:24 [NoteHelper] [10:59:06.035] [INFO] Sync completed. Created: 0, Skipped: 27, Errors: 19
+plugin:notehelper:24 [NoteHelper] [11:07:10.699] [INFO] Document already exists for article 8ccc6634-8ce2-4256-b84e-c22c9551c3ff, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:10.701] [INFO] Document already exists for article 5217783b-4ee9-4f51-a642-0e04d2b32517, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:10.703] [INFO] Document already exists for article c1bfbbda-aa63-4768-b8fc-efcefd321f2b, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:10.705] [INFO] Document already exists for article 4e26ec9e-94c3-4ff0-9b96-0f0b4dcd3b28, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:10.707] [INFO] Document already exists for article d7ed0d64-3735-406f-9906-3727b13bbb26, skipping
+plugin:notehelper:24 [NoteHelper] [11:07:10.710] [INFO] Sync completed. Created: 6, Skipped: 21, Errors: 19

@@ -621,13 +621,18 @@ export class FileHandler {
 
             let content = data.data.kramdown || '';
 
+            logger.info(`[getDocumentContent] Original content length: ${content.length}`);
+            logger.info(`[getDocumentContent] Content starts with: ${content.substring(0, 100)}`);
+
             // 移除文档级别的IAL属性（思源的 Inline Attribute List）
             // 格式为：---\n{: attr1="value1" attr2="value2" ...}\n
             // 这些IAL属性中的ISO时间戳会导致思源解析时报错 "found invalid ID [2025-xx-xxTxx:xx:xx.xxxZ]"
             // 只移除文档开头的IAL，保留内容中的其他部分
+            const originalLength = content.length;
             content = this.removeDocumentIAL(content);
 
-            logger.debug(`[getDocumentContent] Content length after IAL removal: ${content.length}`);
+            logger.info(`[getDocumentContent] After IAL removal - length: ${content.length}, removed: ${originalLength - content.length} chars`);
+            logger.info(`[getDocumentContent] Content now starts with: ${content.substring(0, 100)}`);
 
             return content;
         } catch (error) {
@@ -658,13 +663,20 @@ export class FileHandler {
 
         // 先尝试移除带 --- 的格式
         if (pattern1.test(cleaned)) {
+            const match = cleaned.match(pattern1);
+            logger.info(`[removeDocumentIAL] Found IAL with --- prefix: ${match ? match[0].substring(0, 150) : 'none'}`);
             cleaned = cleaned.replace(pattern1, '');
-            logger.debug('[removeDocumentIAL] Removed IAL with --- prefix');
+            logger.info('[removeDocumentIAL] Removed IAL with --- prefix');
         }
         // 再尝试移除单独的IAL
         else if (pattern2.test(cleaned)) {
+            const match = cleaned.match(pattern2);
+            logger.info(`[removeDocumentIAL] Found standalone IAL: ${match ? match[0].substring(0, 150) : 'none'}`);
             cleaned = cleaned.replace(pattern2, '');
-            logger.debug('[removeDocumentIAL] Removed standalone IAL');
+            logger.info('[removeDocumentIAL] Removed standalone IAL');
+        }
+        else {
+            logger.info('[removeDocumentIAL] No IAL found at document start');
         }
 
         return cleaned;
