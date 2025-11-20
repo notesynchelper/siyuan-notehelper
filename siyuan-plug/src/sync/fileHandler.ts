@@ -287,6 +287,16 @@ export class FileHandler {
             // 这非常重要，必须在文档创建后立即执行
             await this.addMergedId(docId, article.id);
 
+            // 生成思源格式的时间戳（YYYYMMDDHHmmss）
+            const now = new Date();
+            const siyuanTimestamp =
+                now.getFullYear() +
+                String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0') +
+                String(now.getHours()).padStart(2, '0') +
+                String(now.getMinutes()).padStart(2, '0') +
+                String(now.getSeconds()).padStart(2, '0');
+
             // 设置额外的元数据属性（使用传入的mergeDate确保一致性）
             await fetch('/api/attr/setBlockAttrs', {
                 method: 'POST',
@@ -295,7 +305,7 @@ export class FileHandler {
                     id: docId,
                     attrs: {
                         'custom-merge-doc': 'true',
-                        'custom-creation-time': new Date().toISOString(),
+                        'custom-creation-time': siyuanTimestamp,  // 使用思源格式而不是ISO格式
                         'custom-merge-date': mergeDate,  // 使用传入的mergeDate
                         'custom-merge-path': docPath,    // 添加路径属性便于调试
                     },
@@ -832,6 +842,17 @@ export class FileHandler {
 
             logger.debug(`[addMergedId] Updating merged IDs list with ${mergedIds.length} items`);
 
+            // 生成思源格式的时间戳（YYYYMMDDHHmmss）
+            // 不使用ISO格式，因为ISO格式中的特殊字符会被思源误认为块ID引用
+            const now = new Date();
+            const siyuanTimestamp =
+                now.getFullYear() +
+                String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0') +
+                String(now.getHours()).padStart(2, '0') +
+                String(now.getMinutes()).padStart(2, '0') +
+                String(now.getSeconds()).padStart(2, '0');
+
             // 保存更新后的列表
             const response = await fetch('/api/attr/setBlockAttrs', {
                 method: 'POST',
@@ -840,7 +861,7 @@ export class FileHandler {
                     id: docId,
                     attrs: {
                         'custom-merged-ids': JSON.stringify(mergedIds),
-                        'custom-last-merge-time': new Date().toISOString(),
+                        'custom-last-merge-time': siyuanTimestamp,  // 使用思源格式而不是ISO格式
                         'custom-merge-count': String(mergedIds.length),
                     },
                 }),
