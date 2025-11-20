@@ -1,10 +1,10 @@
 # 笔记同步助手
 
+关注服务号使用。基础功能免费，进阶功能需付费订阅。
+
 ![preview](preview.png)
 
 ![关注公众号](https://siyuan.notebooksyncer.com/siyuanmp.png)
-
-关注服务号使用。基础功能免费，进阶功能需付费订阅。
 
 ## 安装
 

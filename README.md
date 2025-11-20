@@ -1,10 +1,10 @@
 # Notebook Sync Helper
 
+Follow the service account to use. Basic features are free, advanced features require paid subscription.
+
 ![preview](preview.png)
 
 ![Follow WeChat](https://siyuan.notebooksyncer.com/siyuanmp.png)
-
-Follow the service account to use. Basic features are free, advanced features require paid subscription.
 
 ## Installation
 
