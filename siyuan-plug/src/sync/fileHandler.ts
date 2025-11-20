@@ -652,41 +652,46 @@ export class FileHandler {
     }
 
     /**
-     * 移除文档级别的IAL属性
+     * 移除所有IAL属性（包括文档级和块级）
      * @param content 原始内容
      * @returns 移除IAL后的内容
      */
     private removeDocumentIAL(content: string): string {
-        // 匹配文档开头的IAL格式：
-        // ---
-        // {: attr1="value1" attr2="value2" ...}
-        //
-        // 或者单独的 {: ...} 行
-
-        // 模式1: 匹配 ---\n{: ...}\n 格式（文档属性）
-        const pattern1 = /^---\s*\n\{:[^}]*\}\s*\n+/;
-
-        // 模式2: 匹配单独的 {: ...} 行（文档属性）
-        const pattern2 = /^\{:[^}]*\}\s*\n+/;
-
         let cleaned = content;
+        const originalLength = content.length;
 
-        // 先尝试移除带 --- 的格式
-        if (pattern1.test(cleaned)) {
-            const match = cleaned.match(pattern1);
-            logger.info(`[removeDocumentIAL] Found IAL with --- prefix: ${match ? match[0].substring(0, 150) : 'none'}`);
-            cleaned = cleaned.replace(pattern1, '');
-            logger.info('[removeDocumentIAL] Removed IAL with --- prefix');
+        // 步骤1: 移除文档开头的IAL（---\n{: ...}\n格式）
+        const docIALPattern = /^---\s*\n\{:[^}]*\}\s*\n+/;
+        if (docIALPattern.test(cleaned)) {
+            cleaned = cleaned.replace(docIALPattern, '');
+            logger.info('[removeDocumentIAL] Removed document-level IAL with --- prefix');
         }
-        // 再尝试移除单独的IAL
-        else if (pattern2.test(cleaned)) {
-            const match = cleaned.match(pattern2);
-            logger.info(`[removeDocumentIAL] Found standalone IAL: ${match ? match[0].substring(0, 150) : 'none'}`);
-            cleaned = cleaned.replace(pattern2, '');
-            logger.info('[removeDocumentIAL] Removed standalone IAL');
+
+        // 步骤2: 移除所有块级IAL（{: ...}\n格式）
+        // 这些IAL通常紧跟在块（标题、段落等）之后
+        // 格式如：{: id="20251120112342-fg8fppm" updated="20251120112342"}
+        const blockIALPattern = /\n\{:[^}]*\}\s*\n/g;
+        const blockIALMatches = cleaned.match(blockIALPattern);
+        if (blockIALMatches) {
+            logger.info(`[removeDocumentIAL] Found ${blockIALMatches.length} block-level IAL attributes`);
+            cleaned = cleaned.replace(blockIALPattern, '\n');
+            logger.info('[removeDocumentIAL] Removed all block-level IAL attributes');
         }
-        else {
-            logger.info('[removeDocumentIAL] No IAL found at document start');
+
+        // 步骤3: 移除可能在行末的IAL（例如：## 标题{: id="xxx"}）
+        const inlineIALPattern = /\{:[^}]*\}/g;
+        const inlineIALMatches = cleaned.match(inlineIALPattern);
+        if (inlineIALMatches) {
+            logger.info(`[removeDocumentIAL] Found ${inlineIALMatches.length} inline IAL attributes`);
+            cleaned = cleaned.replace(inlineIALPattern, '');
+            logger.info('[removeDocumentIAL] Removed all inline IAL attributes');
+        }
+
+        const removedChars = originalLength - cleaned.length;
+        if (removedChars > 0) {
+            logger.info(`[removeDocumentIAL] Total removed: ${removedChars} chars`);
+        } else {
+            logger.info('[removeDocumentIAL] No IAL attributes found');
         }
 
         return cleaned;
