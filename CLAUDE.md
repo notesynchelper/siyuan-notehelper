@@ -18,7 +18,8 @@
 可以使用api key  o56E7690LHHXd5zvCAqoPobIuqq4 来测试服务端返回
 
 ## 本地测试
-复制插件文件到思源目录 cp -r siyuan-plug/dist/* "/c/Users/laizeyang/SiYuan/data/plugins/notehelper/"
+- git 先commit 变更
+- 复制插件文件到思源目录 cp -r siyuan-plug/dist/* "/c/Users/laizeyang/SiYuan/data/plugins/notehelper/"
 
 ## 发布用插件
 打包时需要修改 logLevel
