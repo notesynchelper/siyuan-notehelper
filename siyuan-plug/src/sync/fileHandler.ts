@@ -341,6 +341,9 @@ export class FileHandler {
                 id: docId,
             };
 
+            logger.info(`[updateDocument] Content preview (first 500 chars):`, requestBody.data.substring(0, 500));
+            logger.info(`[updateDocument] Content preview (last 500 chars):`, requestBody.data.substring(Math.max(0, requestBody.data.length - 500)));
+
             logger.debug(`[updateDocument] Request body:`, {
                 dataType: requestBody.dataType,
                 id: requestBody.id,
@@ -616,11 +619,55 @@ export class FileHandler {
                 throw new Error(`Failed to get document content: ${data.msg}`);
             }
 
-            return data.data.kramdown || '';
+            let content = data.data.kramdown || '';
+
+            // 移除文档级别的IAL属性（思源的 Inline Attribute List）
+            // 格式为：---\n{: attr1="value1" attr2="value2" ...}\n
+            // 这些IAL属性中的ISO时间戳会导致思源解析时报错 "found invalid ID [2025-xx-xxTxx:xx:xx.xxxZ]"
+            // 只移除文档开头的IAL，保留内容中的其他部分
+            content = this.removeDocumentIAL(content);
+
+            logger.debug(`[getDocumentContent] Content length after IAL removal: ${content.length}`);
+
+            return content;
         } catch (error) {
             logger.error('Failed to get document content:', error);
             return '';
         }
+    }
+
+    /**
+     * 移除文档级别的IAL属性
+     * @param content 原始内容
+     * @returns 移除IAL后的内容
+     */
+    private removeDocumentIAL(content: string): string {
+        // 匹配文档开头的IAL格式：
+        // ---
+        // {: attr1="value1" attr2="value2" ...}
+        //
+        // 或者单独的 {: ...} 行
+
+        // 模式1: 匹配 ---\n{: ...}\n 格式（文档属性）
+        const pattern1 = /^---\s*\n\{:[^}]*\}\s*\n+/;
+
+        // 模式2: 匹配单独的 {: ...} 行（文档属性）
+        const pattern2 = /^\{:[^}]*\}\s*\n+/;
+
+        let cleaned = content;
+
+        // 先尝试移除带 --- 的格式
+        if (pattern1.test(cleaned)) {
+            cleaned = cleaned.replace(pattern1, '');
+            logger.debug('[removeDocumentIAL] Removed IAL with --- prefix');
+        }
+        // 再尝试移除单独的IAL
+        else if (pattern2.test(cleaned)) {
+            cleaned = cleaned.replace(pattern2, '');
+            logger.debug('[removeDocumentIAL] Removed standalone IAL');
+        }
+
+        return cleaned;
     }
 
     /**
