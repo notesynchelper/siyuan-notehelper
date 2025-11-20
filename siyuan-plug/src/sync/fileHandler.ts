@@ -315,21 +315,56 @@ export class FileHandler {
      */
     private async updateDocument(docId: string, content: string): Promise<void> {
         try {
+            // 添加详细的诊断日志
+            logger.info(`[updateDocument] Called with docId: ${docId}`);
+            logger.info(`[updateDocument] DocId type: ${typeof docId}`);
+            logger.info(`[updateDocument] DocId looks like timestamp: ${typeof docId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(docId)}`);
+            logger.info(`[updateDocument] Content length: ${content.length}`);
+
+            // 如果发现docId是时间戳格式，记录错误并拒绝更新
+            if (typeof docId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(docId)) {
+                logger.error(`[updateDocument] ERROR: Refusing to update with timestamp ID: ${docId}`);
+                throw new Error(`Invalid document ID (timestamp format): ${docId}`);
+            }
+
+            // 检查content中是否有ID格式的内容
+            const idPattern = /\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)\]/;
+            const match = content.match(idPattern);
+            if (match) {
+                logger.warn(`[updateDocument] WARNING: Found timestamp pattern in content: ${match[1]}`);
+                logger.warn(`[updateDocument] Content snippet around timestamp: ${content.substring(Math.max(0, content.indexOf(match[0]) - 50), Math.min(content.length, content.indexOf(match[0]) + 100))}`);
+            }
+
+            const requestBody = {
+                dataType: 'markdown',
+                data: content,
+                id: docId,
+            };
+
+            logger.debug(`[updateDocument] Request body:`, {
+                dataType: requestBody.dataType,
+                id: requestBody.id,
+                dataPreview: requestBody.data.substring(0, 200)
+            });
+
             const response = await fetch('/api/block/updateBlock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    dataType: 'markdown',
-                    data: content,
-                    id: docId,
-                }),
+                body: JSON.stringify(requestBody),
             });
 
             const data = await response.json();
 
             if (data.code !== 0) {
+                logger.error(`[updateDocument] API error response:`, {
+                    code: data.code,
+                    msg: data.msg,
+                    docId: docId
+                });
                 throw new Error(`Failed to update document: ${data.msg}`);
             }
+
+            logger.info(`[updateDocument] Successfully updated document: ${docId}`);
         } catch (error) {
             logger.error('Failed to update document:', error);
             throw error;
