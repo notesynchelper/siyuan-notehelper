@@ -4,7 +4,9 @@ Follow the service account to use. Basic features are free, advanced features re
 
 ![preview](preview.png)
 
-![Follow WeChat](https://siyuan.notebooksyncer.com/siyuanmp.png)
+| Follow our WeChat official account | Join our user community |
+|:--:|:--:|
+| <img src="https://siyuan.notebooksyncer.com/siyuanmp.png" width="200"/> | <img src="https://siyuan.notebooksyncer.com/siyuanqun.png" width="200"/> |
 
 ## Installation
 

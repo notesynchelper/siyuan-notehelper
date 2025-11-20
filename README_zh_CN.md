@@ -4,7 +4,9 @@
 
 ![preview](preview.png)
 
-![关注公众号](https://siyuan.notebooksyncer.com/siyuanmp.png)
+| 关注公众号获取更多信息 | 加入用户交流群 |
+|:--:|:--:|
+| <img src="https://siyuan.notebooksyncer.com/siyuanmp.png" width="200"/> | <img src="https://siyuan.notebooksyncer.com/siyuanqun.png" width="200"/> |
 
 ## 安装
 
