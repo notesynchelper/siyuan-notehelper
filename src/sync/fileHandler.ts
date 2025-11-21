@@ -72,16 +72,25 @@ export class FileHandler {
      */
     private shouldMergeArticle(article: Article): boolean {
         const mergeMode = this.settings.mergeMode;
+        const isWeChat = isWeChatMessage(article.title);
+
+        let shouldMerge = false;
+        let reason = '';
 
         if (mergeMode === MergeMode.NONE) {
-            return false;
+            shouldMerge = false;
+            reason = 'mergeMode is NONE';
         } else if (mergeMode === MergeMode.MESSAGES) {
-            return isWeChatMessage(article.title);
+            shouldMerge = isWeChat;
+            reason = isWeChat ? 'mergeMode is MESSAGES and is WeChat message' : 'mergeMode is MESSAGES but not WeChat message';
         } else if (mergeMode === MergeMode.ALL) {
-            return true;
+            shouldMerge = true;
+            reason = 'mergeMode is ALL';
         }
 
-        return false;
+        logger.debug(`[shouldMergeArticle] Article: "${article.title}", MergeMode: ${mergeMode}, IsWeChat: ${isWeChat}, Result: ${shouldMerge}, Reason: ${reason}`);
+
+        return shouldMerge;
     }
 
     /**
@@ -128,6 +137,9 @@ export class FileHandler {
      * @returns 返回 { docId: string, skipped: boolean }
      */
     private async mergeArticleToFile(article: Article, notebookId: string): Promise<{ docId: string, skipped: boolean }> {
+        logger.debug('=== mergeArticleToFile START ===');
+        logger.debug(`Article title: ${article.title}`);
+
         // 确定合并文件的名称
         const mergeDate = isWeChatMessage(article.title)
             ? extractDateFromWeChatTitle(article.title) || article.savedAt.split('T')[0]
@@ -143,7 +155,7 @@ export class FileHandler {
         // 使用路径工具函数规范化路径
         const docPath = joinPath(folderPath, filename);
 
-        logger.debug(`[mergeArticleToFile] Processing article for merge:`, {
+        const mergeInfo = {
             articleId: article.id,
             articleTitle: article.title,
             isWeChatMessage: isWeChatMessage(article.title),
@@ -151,18 +163,22 @@ export class FileHandler {
             filename: filename,
             folderPath: folderPath,
             docPath: docPath
-        });
+        };
+
+        logger.debug(`[mergeArticleToFile] Processing article for merge:`, mergeInfo);
 
         // 检查合并目标文档是否已存在
         const existingDocId = await this.getDocumentByPath(notebookId, docPath);
 
-        logger.debug(`[processMergedArticle] getDocumentByPath result:`, {
+        const checkResult = {
             existingDocId,
             existingDocIdType: typeof existingDocId,
             looksLikeTimestamp: typeof existingDocId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(existingDocId)
-        });
+        };
+        logger.debug(`[processMergedArticle] getDocumentByPath result:`, checkResult);
 
         if (existingDocId) {
+            logger.debug('[mergeArticleToFile] Document exists, merging to existing...');
             // 再次检查ID的有效性
             if (typeof existingDocId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(existingDocId)) {
                 logger.error(`[processMergedArticle] Invalid document ID detected (timestamp): ${existingDocId}`);
@@ -171,9 +187,10 @@ export class FileHandler {
             }
 
             // 文档存在，使用块属性去重
-            return await this.mergeToExistingDocument(existingDocId, article, docPath);
+            return await this.mergeToExistingDocument(existingDocId, article, docPath, mergeDate);
         } else {
             // 文档不存在，创建新文档（传递mergeDate确保一致性）
+            logger.debug('[mergeArticleToFile] Document not found, creating new...');
             return await this.createMergedDocument(notebookId, docPath, article, mergeDate);
         }
     }
@@ -184,13 +201,15 @@ export class FileHandler {
     private async mergeToExistingDocument(
         docId: string,
         article: Article,
-        docPath: string
+        docPath: string,
+        mergeDate: string
     ): Promise<{ docId: string, skipped: boolean }> {
         logger.debug(`[mergeToExistingDocument] Starting merge for article:`, {
             docId,
             articleId: article.id,
             articleTitle: article.title,
-            docPath
+            docPath,
+            mergeDate
         });
 
         // 获取已合并的消息ID列表（从块属性读取）
@@ -232,6 +251,25 @@ export class FileHandler {
             // 添加消息ID到块属性列表（重要：这必须在更新文档成功后执行）
             await this.addMergedId(docId, article.id);
 
+            // 检查并补充 custom-merge-date 属性（兼容手动创建的文档）
+            const existingMergeDate = await this.getBlockAttribute(docId, 'custom-merge-date');
+            if (!existingMergeDate) {
+                logger.debug(`[mergeToExistingDocument] Document missing custom-merge-date, adding: ${mergeDate}`);
+                await fetch('/api/attr/setBlockAttrs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: docId,
+                        attrs: {
+                            'custom-merge-doc': 'true',
+                            'custom-merge-date': mergeDate,
+                            'custom-merge-path': docPath,
+                        },
+                    }),
+                });
+                logger.debug(`[mergeToExistingDocument] Added custom-merge-date attribute: ${mergeDate}`);
+            }
+
             logger.debug(`[mergeToExistingDocument] Successfully merged article ${article.id}`);
             return { docId, skipped: false };
         } catch (error) {
@@ -249,13 +287,15 @@ export class FileHandler {
         article: Article,
         mergeDate: string
     ): Promise<{ docId: string, skipped: boolean }> {
-        logger.debug(`[createMergedDocument] Creating new merged document:`, {
+        logger.debug('=== createMergedDocument START ===');
+        const createInfo = {
             notebookId,
             docPath,
             articleId: article.id,
             articleTitle: article.title,
             mergeDate: mergeDate
-        });
+        };
+        logger.debug(`[createMergedDocument] Creating new merged document:`, createInfo);
 
         try {
             // 生成内容（根据消息类型使用不同渲染）
@@ -298,17 +338,20 @@ export class FileHandler {
                 String(now.getSeconds()).padStart(2, '0');
 
             // 设置额外的元数据属性（使用传入的mergeDate确保一致性）
+            const attrs = {
+                'custom-merge-doc': 'true',
+                'custom-creation-time': siyuanTimestamp,  // 使用思源格式而不是ISO格式
+                'custom-merge-date': mergeDate,  // 使用传入的mergeDate
+                'custom-merge-path': docPath,    // 添加路径属性便于调试
+            };
+            logger.debug('[createMergedDocument] Setting attributes:', attrs);
+
             await fetch('/api/attr/setBlockAttrs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id: docId,
-                    attrs: {
-                        'custom-merge-doc': 'true',
-                        'custom-creation-time': siyuanTimestamp,  // 使用思源格式而不是ISO格式
-                        'custom-merge-date': mergeDate,  // 使用传入的mergeDate
-                        'custom-merge-path': docPath,    // 添加路径属性便于调试
-                    },
+                    attrs: attrs,
                 }),
             });
 
@@ -454,29 +497,36 @@ export class FileHandler {
             const filename = normalizedPath.split('/').pop() || '';
             const filenameWithoutExt = filename.replace(/\.md$/i, '');
 
-            logger.debug(`[getDocumentByPath] Searching for document:`, {
+            const searchInfo = {
                 notebookId,
                 originalPath: docPath,
                 normalizedPath: normalizedPath,
                 filename: filenameWithoutExt
-            });
+            };
+            logger.debug(`[getDocumentByPath] Searching for document:`, searchInfo);
 
-            // 方法1：使用SQL查询，通过自定义属性查找合并文档
-            // 先尝试通过 custom-merge-date 属性查找（更可靠）
+            // 方法1：使用SQL查询，通过自定义属性或标题查找合并文档
+            // 改进：使用 LEFT JOIN 兼容手动创建的文档（没有 custom-merge-date 属性）
             const mergeDate = filenameWithoutExt.match(/\d{4}-\d{2}-\d{2}/)?.[0];
             let sql = '';
 
             if (mergeDate) {
-                // 如果能提取日期，使用日期属性查询（最可靠）
+                // 如果能提取日期，使用智能查询：
+                // 1. 优先匹配有 custom-merge-date 属性的文档
+                // 2. 兜底匹配同名文档（兼容手动创建的文档）
                 sql = `
-                    SELECT DISTINCT b.id, b.content, b.hpath
+                    SELECT DISTINCT b.id, b.content, b.hpath, a.value as merge_date
                     FROM blocks b
-                    JOIN attributes a ON b.id = a.block_id
+                    LEFT JOIN attributes a ON b.id = a.block_id AND a.name = 'custom-merge-date'
                     WHERE b.type = 'd'
                     AND b.box = '${notebookId}'
-                    AND a.name = 'custom-merge-date'
-                    AND a.value = '${mergeDate}'
-                    ORDER BY b.created DESC
+                    AND (
+                        a.value = '${mergeDate}'
+                        OR (a.value IS NULL AND b.content = '${filenameWithoutExt}')
+                    )
+                    ORDER BY
+                        CASE WHEN a.value = '${mergeDate}' THEN 0 ELSE 1 END,
+                        b.created DESC
                     LIMIT 1
                 `;
             } else {
@@ -502,10 +552,11 @@ export class FileHandler {
 
             const data = await response.json();
 
-            logger.debug(`[getDocumentByPath] SQL response:`, {
+            const sqlResponse = {
                 code: data.code,
                 dataLength: data.data ? data.data.length : 0
-            });
+            };
+            logger.debug(`[getDocumentByPath] SQL response:`, sqlResponse);
 
             if (data.code !== 0 || !data.data || data.data.length === 0) {
                 // 方法2：如果精确匹配失败，尝试使用原API
@@ -527,11 +578,12 @@ export class FileHandler {
 
                 const apiData = await apiResponse.json();
 
-                logger.debug(`[getDocumentByPath] Filetree API response:`, {
+                const apiResponseInfo = {
                     code: apiData.code,
                     dataLength: apiData.data ? apiData.data.length : 0,
                     data: apiData.data
-                });
+                };
+                logger.debug(`[getDocumentByPath] Filetree API response:`, apiResponseInfo);
 
                 if (apiData.code !== 0 || !apiData.data || apiData.data.length === 0) {
                     logger.debug(`[getDocumentByPath] Document not found: ${normalizedPath}`);
@@ -565,10 +617,11 @@ export class FileHandler {
 
             // SQL查询成功
             const docId = data.data[0].id;
-            logger.debug(`[getDocumentByPath] Document found via SQL with ID: ${docId}`, {
+            const foundInfo = {
                 hpath: data.data[0].hpath,
                 content: data.data[0].content
-            });
+            };
+            logger.debug(`[getDocumentByPath] Document found via SQL with ID: ${docId}`, foundInfo);
             // 缓存结果
             this.documentCache.set(cacheKey, docId);
             return docId;

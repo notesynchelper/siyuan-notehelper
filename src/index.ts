@@ -178,10 +178,12 @@ export default class NoteHelperPlugin extends Plugin {
         logger.setLevel(LogLevel.INFO);
         logger.debug('Loading Note Sync Helper plugin...');
 
-        // 注册自定义图标
+        // 注册自定义图标 - 使用"同"字
         this.addIcons(`
 <symbol id="iconNoteSync" viewBox="0 0 32 32">
-  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="30" font-weight="bold" fill="currentColor">同</text>
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"
+        font-size="30" font-weight="bold" font-family="system-ui, -apple-system, sans-serif"
+        fill="currentColor">同</text>
 </symbol>
 `);
 
@@ -222,10 +224,8 @@ export default class NoteHelperPlugin extends Plugin {
         // 添加状态栏
         this.addStatusBarIcon();
 
-        // 延迟添加左侧栏同步dock，减少启动时的负载
-        setTimeout(() => {
-            this.addSyncDock();
-        }, 3000); // 延迟3秒加载dock面板
+        // 立即添加左侧栏同步dock
+        this.addSyncDock();
     }
 
     async onunload() {
@@ -359,41 +359,39 @@ export default class NoteHelperPlugin extends Plugin {
                 // 初始化状态显示
                 this.updateDockStatus();
 
-                // 延迟加载设置表单，减少初始化负载
-                setTimeout(() => {
-                    const settingsArea = dock.element.querySelector('#settingsFormArea');
-                    if (settingsArea) {
-                        settingsArea.innerHTML = `
-                            <div style="margin-bottom: 8px; font-weight: bold; color: var(--b3-theme-on-surface);">
-                                ${this.i18n.zh_CN.settings}
-                            </div>
-                            ${SettingsForm.renderSettingsForm(this.settings, this.i18n, () => this.formatSyncTimeForInput())}
-                        `;
+                // 立即加载设置表单
+                const settingsArea = dock.element.querySelector('#settingsFormArea');
+                if (settingsArea) {
+                    settingsArea.innerHTML = `
+                        <div style="margin-bottom: 8px; font-weight: bold; color: var(--b3-theme-on-surface);">
+                            ${this.i18n.zh_CN.settings}
+                        </div>
+                        ${SettingsForm.renderSettingsForm(this.settings, this.i18n.zh_CN, () => this.formatSyncTimeForInput())}
+                    `;
 
-                        // 为所有输入框添加自动保存功能（使用防抖减少频繁保存）
-                        let saveTimeout: any = null;
-                        const formInputs = settingsArea.querySelectorAll('input, select, textarea');
-                        formInputs.forEach((input) => {
-                            input.addEventListener('change', async () => {
-                                // 清除之前的定时器
-                                if (saveTimeout) {
-                                    clearTimeout(saveTimeout);
+                    // 为所有输入框添加自动保存功能（使用防抖减少频繁保存）
+                    let saveTimeout: any = null;
+                    const formInputs = settingsArea.querySelectorAll('input, select, textarea');
+                    formInputs.forEach((input) => {
+                        input.addEventListener('change', async () => {
+                            // 清除之前的定时器
+                            if (saveTimeout) {
+                                clearTimeout(saveTimeout);
+                            }
+
+                            // 设置新的定时器，延迟500ms保存
+                            saveTimeout = setTimeout(async () => {
+                                await this.saveSettingsFromContainer(dock.element);
+
+                                // 重启定时同步
+                                this.syncManager.stopScheduledSync();
+                                if (this.settings.frequency > 0) {
+                                    this.syncManager.startScheduledSync();
                                 }
-
-                                // 设置新的定时器，延迟500ms保存
-                                saveTimeout = setTimeout(async () => {
-                                    await this.saveSettingsFromContainer(dock.element);
-
-                                    // 重启定时同步
-                                    this.syncManager.stopScheduledSync();
-                                    if (this.settings.frequency > 0) {
-                                        this.syncManager.startScheduledSync();
-                                    }
-                                }, 500);
-                            });
+                            }, 500);
                         });
-                    }
-                }, 1000); // 延迟1秒加载设置表单
+                    });
+                }
             },
         });
     }

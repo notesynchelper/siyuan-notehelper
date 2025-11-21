@@ -209,6 +209,7 @@ export class SettingsForm {
                     // 转换为 ISO 格式并去掉毫秒，匹配服务端格式
                     values.syncAt = date.toISOString().replace(/\.\d{3}Z$/, 'Z');
                 } catch (e) {
+                    // 使用 console.error 而不是 logger，因为这是 UI 层代码
                     console.error('Failed to parse sync time:', e);
                 }
             } else {

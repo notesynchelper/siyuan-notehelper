@@ -86,7 +86,10 @@ export function throttle<T extends (...args: any[]) => any>(
  */
 export function isWeChatMessage(title: string): boolean {
     // 格式：同步助手_yyyyMMdd_xxx_类型
-    return /^同步助手_\d{8}/.test(title);
+    const pattern = /^同步助手_\d{8}/;
+    const result = pattern.test(title);
+    logger.debug(`[isWeChatMessage] Title: "${title}", Pattern: "${pattern}", Result: ${result}`);
+    return result;
 }
 
 /**
@@ -95,8 +98,11 @@ export function isWeChatMessage(title: string): boolean {
 export function extractDateFromWeChatTitle(title: string): string | null {
     const match = title.match(/同步助手_(\d{4})(\d{2})(\d{2})/);
     if (match) {
-        return `${match[1]}-${match[2]}-${match[3]}`;
+        const date = `${match[1]}-${match[2]}-${match[3]}`;
+        logger.debug(`[extractDateFromWeChatTitle] Title: "${title}", Extracted date: ${date}`);
+        return date;
     }
+    logger.debug(`[extractDateFromWeChatTitle] Title: "${title}", No date extracted`);
     return null;
 }
 

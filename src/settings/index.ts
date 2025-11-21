@@ -153,5 +153,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 
     // 其他
     version: '0.1.0',
-    logLevel: 'INFO',  // 生产环境使用INFO级别
+    logLevel: 'INFO',  // 生产环境
 };

@@ -131,7 +131,7 @@ async function fetchGraphQL<T>(
         } else if (result.edges !== undefined && result.pageInfo !== undefined) {
             // 非标准响应：服务端直接返回 search 的内容（edges + pageInfo）
             responseData = result as unknown as T;
-            logger.warn('Non-standard GraphQL response: server returns search content directly');
+            logger.debug('Non-standard GraphQL response: server returns search content directly');
         } else {
             logger.error('Unexpected response structure:', {
                 endpoint,
