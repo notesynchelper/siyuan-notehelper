@@ -24,6 +24,141 @@ import { SettingsForm } from './ui/SettingsForm';
 const SETTINGS_KEY = 'notehelper-settings';
 const DOCK_TYPE = 'notehelper_sync_dock';
 
+// 中文文本定义（替代i18n）
+const zhCN = {
+    pluginName: "笔记同步助手",
+    pluginDescription: "从微信同步到思源笔记,支持文字、图片、聊天记录、文章",
+
+    sync: "同步",
+    syncing: "同步中...",
+    syncComplete: "同步完成",
+    syncFailed: "同步失败",
+    syncNow: "立即同步",
+    resetSync: "重置同步时间",
+    resetSyncConfirm: "确认重置同步时间？这将在下次同步时获取所有文章。",
+    lastSyncAt: "上次同步时间",
+    noSyncYet: "尚未同步",
+
+    settings: "设置",
+    save: "保存",
+    cancel: "取消",
+    delete: "删除",
+    confirm: "确认",
+
+    basicSettings: "基础设置",
+    apiKey: "API 密钥",
+    apiKeyDesc: "你的笔记同步服务 API 密钥",
+    endpoint: "服务端点",
+    endpointDesc: "笔记同步服务器地址",
+    filter: "过滤器",
+    filterDesc: "同步文章的过滤条件",
+    customQuery: "自定义查询",
+    customQueryDesc: "高级用户可以自定义 GraphQL 查询",
+
+    syncSettings: "同步设置",
+    lastSyncTimeEdit: "最后同步时间",
+    lastSyncTimeEditDesc: "手动设置最后同步时间，影响增量同步起点",
+    frequency: "定时同步频率",
+    frequencyDesc: "自动同步间隔（分钟），0 表示禁用",
+    syncOnStart: "启动时同步",
+    syncOnStartDesc: "思源笔记启动时自动同步",
+    mergeMode: "合并模式",
+    mergeModeNone: "不合并（每篇文章独立文件）",
+    mergeModeMessages: "仅合并企微消息",
+    mergeModeAll: "合并所有文章到单个文件",
+
+    folderSettings: "文件夹和文件名",
+    folder: "目标文件夹",
+    folderDesc: "文章保存的文件夹路径（支持模板变量）",
+    folderDateFormat: "文件夹日期格式",
+    filename: "文件名模板",
+    filenameDesc: "文件名格式（支持模板变量）",
+    filenameDateFormat: "文件名日期格式",
+    singleFileName: "单文件模式文件名",
+    singleFileDateFormat: "单文件日期格式",
+    attachmentFolder: "附件文件夹",
+
+    mergeSettings: "合并消息设置",
+    mergeFolderTemplate: "合并消息路径模板",
+    mergeFolderTemplateDesc: "支持 {{{date}}} 占位符，日期格式根据 mergeFolderDateFormat 设置",
+    mergeMessageTemplate: "合并消息格式模板",
+    mergeMessageTemplateDesc: "支持 Mustache 变量：{{{dateSaved}}}, {{{content}}}。使用 --- 作为消息分隔符",
+
+    templateSettings: "模板设置",
+    template: "内容模板",
+    templateDesc: "使用 Mustache 语法自定义文章渲染模板",
+    frontMatterTemplate: "前言模板",
+    frontMatterVariables: "前言变量",
+    wechatMessageTemplate: "企微消息模板",
+    sectionSeparator: "消息分隔符开始",
+    sectionSeparatorEnd: "消息分隔符结束",
+
+    dateSettings: "日期和时间",
+    dateHighlightedFormat: "高亮日期格式",
+    dateSavedFormat: "保存日期格式",
+
+    highlightSettings: "高亮设置",
+    highlightOrder: "高亮排序",
+    highlightOrderLocation: "按文章中的位置",
+    highlightOrderTime: "按更新时间",
+    enableHighlightColorRender: "启用高亮颜色渲染",
+    highlightColorMapping: "高亮颜色映射",
+
+    imageSettings: "图片处理",
+    imageMode: "图片模式",
+    imageModeLocal: "本地缓存（下载到本地）",
+    imageModeRemote: "远程保留（保留原始链接）",
+    imageModeDisabled: "禁用（注释掉图片）",
+    imageAttachmentFolder: "图片存储文件夹",
+    enablePngToJpeg: "PNG 转 JPEG",
+    jpegQuality: "JPEG 质量",
+    imageDownloadRetries: "图片下载重试次数",
+
+    articleManagement: "文章管理",
+    viewArticleCount: "查看云空间文章数量",
+    articleCount: "云空间共有 {count} 篇文章",
+    deleteCurrentArticle: "删除当前文章",
+    deleteCurrentArticleConfirm: "确认从云空间删除当前文章？",
+    clearAllArticles: "清空云空间所有文章",
+    clearAllArticlesConfirm: "确认清空云空间的所有文章？此操作不可恢复！",
+
+    errors: {
+        noApiKey: "请先在设置中配置 API 密钥",
+        syncInProgress: "同步正在进行中，请稍后再试",
+        networkError: "网络错误，请检查网络连接",
+        apiError: "API 调用失败",
+        fileError: "文件操作失败",
+        imageDownloadFailed: "图片下载失败",
+        templateError: "模板渲染错误"
+    },
+
+    success: {
+        settingsSaved: "设置已保存",
+        syncCompleted: "同步完成，共处理 {count} 篇文章",
+        articleDeleted: "文章已删除",
+        articlesCleared: "云空间已清空"
+    },
+
+    commands: {
+        sync: "同步笔记",
+        resetSync: "重置同步时间",
+        openSettings: "打开设置"
+    },
+
+    dock: {
+        title: "同步",
+        status: "状态",
+        quickSync: "立即同步"
+    },
+
+    tips: {
+        templateVariables: "可用变量：{title}、{content}、{author}、{date}、{tags} 等",
+        dateFormat: "日期格式使用 Luxon 语法，如：yyyy-MM-dd HH:mm:ss",
+        mergeMode: "合并模式决定如何组织文章：独立文件、按日期合并企微消息、或全部合并",
+        wechatMessage: "企微消息格式：同步助手_yyyyMMdd_xxx_类型"
+    }
+};
+
 export default class NoteHelperPlugin extends Plugin {
 
     private settings: PluginSettings;
@@ -31,10 +166,11 @@ export default class NoteHelperPlugin extends Plugin {
     private imageLocalizer: ImageLocalizer;
     private statusBarElement: HTMLElement;
     private dockElement: HTMLElement;
+    private i18n: typeof zhCN = zhCN; // 使用中文文本对象
 
     async onload() {
-        // 先设置默认日志级别
-        logger.setLevel(LogLevel.DEBUG);
+        // 先设置默认日志级别（生产环境使用INFO）
+        logger.setLevel(LogLevel.INFO);
         logger.info('Loading Note Sync Helper plugin...');
 
         // 注册自定义图标
@@ -57,11 +193,11 @@ export default class NoteHelperPlugin extends Plugin {
         // 注册命令
         this.registerCommands();
 
-        // 启动时同步
+        // 启动时同步 - 延长延迟时间，减少启动时的资源占用
         if (this.settings.syncOnStart) {
             setTimeout(() => {
                 this.performSync();
-            }, 2000);
+            }, 10000); // 延长到10秒，让思源笔记先完成启动
         }
 
         // 启动定时同步
@@ -81,8 +217,10 @@ export default class NoteHelperPlugin extends Plugin {
         // 添加状态栏
         this.addStatusBarIcon();
 
-        // 添加左侧栏同步dock
-        this.addSyncDock();
+        // 延迟添加左侧栏同步dock，减少启动时的负载
+        setTimeout(() => {
+            this.addSyncDock();
+        }, 3000); // 延迟3秒加载dock面板
     }
 
     async onunload() {
@@ -172,7 +310,7 @@ export default class NoteHelperPlugin extends Plugin {
             init: (dock) => {
                 this.dockElement = dock.element;
 
-                // 渲染dock面板，包含同步状态和设置表单
+                // 先渲染基础UI，延迟加载设置表单
                 dock.element.innerHTML = `
                     <div class="fn__flex-1 fn__flex-column" style="padding: 8px; overflow-y: auto;">
                         <div class="block__icons">
@@ -198,12 +336,11 @@ export default class NoteHelperPlugin extends Plugin {
                             </button>
                         </div>
 
-                        <!-- 设置表单区域 -->
-                        <div style="padding: 12px 8px;">
-                            <div style="margin-bottom: 8px; font-weight: bold; color: var(--b3-theme-on-surface);">
-                                ${this.i18n.settings}
+                        <!-- 设置表单区域 - 初始为加载中状态 -->
+                        <div id="settingsFormArea" style="padding: 12px 8px;">
+                            <div style="text-align: center; color: var(--b3-theme-on-surface-light);">
+                                加载设置中...
                             </div>
-                            ${SettingsForm.renderSettingsForm(this.settings, this.i18n, () => this.formatSyncTimeForInput())}
                         </div>
                     </div>
                 `;
@@ -214,22 +351,44 @@ export default class NoteHelperPlugin extends Plugin {
                     this.performSync();
                 });
 
-                // 为所有输入框添加自动保存功能（失去焦点时保存）
-                const formInputs = dock.element.querySelectorAll('input, select, textarea');
-                formInputs.forEach((input) => {
-                    input.addEventListener('blur', async () => {
-                        await this.saveSettingsFromContainer(dock.element);
-
-                        // 重启定时同步
-                        this.syncManager.stopScheduledSync();
-                        if (this.settings.frequency > 0) {
-                            this.syncManager.startScheduledSync();
-                        }
-                    });
-                });
-
                 // 初始化状态显示
                 this.updateDockStatus();
+
+                // 延迟加载设置表单，减少初始化负载
+                setTimeout(() => {
+                    const settingsArea = dock.element.querySelector('#settingsFormArea');
+                    if (settingsArea) {
+                        settingsArea.innerHTML = `
+                            <div style="margin-bottom: 8px; font-weight: bold; color: var(--b3-theme-on-surface);">
+                                ${this.i18n.settings}
+                            </div>
+                            ${SettingsForm.renderSettingsForm(this.settings, this.i18n, () => this.formatSyncTimeForInput())}
+                        `;
+
+                        // 为所有输入框添加自动保存功能（使用防抖减少频繁保存）
+                        let saveTimeout: any = null;
+                        const formInputs = settingsArea.querySelectorAll('input, select, textarea');
+                        formInputs.forEach((input) => {
+                            input.addEventListener('change', async () => {
+                                // 清除之前的定时器
+                                if (saveTimeout) {
+                                    clearTimeout(saveTimeout);
+                                }
+
+                                // 设置新的定时器，延迟500ms保存
+                                saveTimeout = setTimeout(async () => {
+                                    await this.saveSettingsFromContainer(dock.element);
+
+                                    // 重启定时同步
+                                    this.syncManager.stopScheduledSync();
+                                    if (this.settings.frequency > 0) {
+                                        this.syncManager.startScheduledSync();
+                                    }
+                                }, 500);
+                            });
+                        });
+                    }
+                }, 1000); // 延迟1秒加载设置表单
             },
         });
     }

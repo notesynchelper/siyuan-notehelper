@@ -1,22 +1,22 @@
-# Notebook Sync Helper
+# 笔记同步助手
 
-Follow the service account to use. Basic features are free, advanced features require paid subscription.
+关注服务号使用。基础功能免费，进阶功能需付费订阅。
 
 ![preview](preview.png)
 
-| Follow our WeChat official account | Join our user community |
+| 关注公众号获取更多信息 | 加入用户交流群 |
 |:--:|:--:|
 | <img src="https://siyuan.notebooksyncer.com/siyuanmp.png" width="200"/> | <img src="https://siyuan.notebooksyncer.com/siyuanqun.png" width="200"/> |
 
-## Installation
+## 安装
 
-1. Download `package.zip`
-2. Extract to SiYuan plugins directory: `{workspace}/data/plugins/`
-3. Restart SiYuan and enable the plugin
-4. API Key: Follow the service account and send "思源笔记" to get it
+1. 下载 `package.zip`
+2. 解压到思源插件目录：`{工作空间}/data/plugins/`
+3. 重启思源笔记并启用插件
+4. 密钥：关注服务号发送"思源笔记"获取
 
-## License
+## 许可证
 
 MIT License
 
-Based on [siyuan-note/plugin-sample](https://github.com/siyuan-note/plugin-sample)
+基于 [siyuan-note/plugin-sample](https://github.com/siyuan-note/plugin-sample)

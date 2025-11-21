@@ -31,7 +31,6 @@ module.exports = (env, argv) => {
                 {from: "icon.png", to: "./dist/"},
                 {from: "README*.md", to: "./dist/"},
                 {from: "plugin.json", to: "./dist/"},
-                {from: "src/i18n/", to: "./dist/i18n/"},
             ],
         }));
         plugins.push(new ZipPlugin({
@@ -43,11 +42,7 @@ module.exports = (env, argv) => {
             },
         }));
     } else {
-        plugins.push(new CopyPlugin({
-            patterns: [
-                {from: "src/i18n/", to: "./i18n/"},
-            ],
-        }));
+        // 开发环境不需要额外的CopyPlugin
     }
     return {
         mode: argv.mode || "development",

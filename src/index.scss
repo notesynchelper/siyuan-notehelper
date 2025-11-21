@@ -1,26 +1,3 @@
-.plugin-sample {
-  &__custom-tab {
-    background-color: var(--b3-theme-background);
-    height: 100%;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  &__custom-dock {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  &__time {
-    background: var(--b3-card-info-background);
-    border-radius: 4px;
-    padding: 2px 8px;
-  }
-}
-
 // 增加笔记助手菜单宽度（原宽度约200px，增加一倍到400px）
 .b3-menu[data-name="noteHelperMenu"] {
   min-width: 400px !important;

@@ -92,7 +92,7 @@ export class FileHandler {
         // 检查文档是否已存在（通过服务端 ID 去重）
         const existingDocId = await this.checkDocumentBySourceId(article.id);
         if (existingDocId) {
-            logger.info(`Document already exists for article ${article.id}, skipping`);
+            logger.debug(`Document already exists for article ${article.id}, skipping`);
             return { docId: existingDocId, skipped: true };
         }
 
@@ -143,7 +143,7 @@ export class FileHandler {
         // 使用路径工具函数规范化路径
         const docPath = joinPath(folderPath, filename);
 
-        logger.info(`[mergeArticleToFile] Processing article for merge:`, {
+        logger.debug(`[mergeArticleToFile] Processing article for merge:`, {
             articleId: article.id,
             articleTitle: article.title,
             isWeChatMessage: isWeChatMessage(article.title),
@@ -156,7 +156,7 @@ export class FileHandler {
         // 检查合并目标文档是否已存在
         const existingDocId = await this.getDocumentByPath(notebookId, docPath);
 
-        logger.info(`[processMergedArticle] getDocumentByPath result:`, {
+        logger.debug(`[processMergedArticle] getDocumentByPath result:`, {
             existingDocId,
             existingDocIdType: typeof existingDocId,
             looksLikeTimestamp: typeof existingDocId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(existingDocId)
@@ -186,7 +186,7 @@ export class FileHandler {
         article: Article,
         docPath: string
     ): Promise<{ docId: string, skipped: boolean }> {
-        logger.info(`[mergeToExistingDocument] Starting merge for article:`, {
+        logger.debug(`[mergeToExistingDocument] Starting merge for article:`, {
             docId,
             articleId: article.id,
             articleTitle: article.title,
@@ -196,16 +196,16 @@ export class FileHandler {
         // 获取已合并的消息ID列表（从块属性读取）
         const mergedIds = await this.getMergedIds(docId);
 
-        logger.info(`[mergeToExistingDocument] Found ${mergedIds.length} existing merged IDs`);
+        logger.debug(`[mergeToExistingDocument] Found ${mergedIds.length} existing merged IDs`);
 
         // 检查文章是否已存在
         if (mergedIds.includes(article.id)) {
-            logger.info(`[mergeToExistingDocument] Article ${article.id} already exists in ${docPath}, skipping`);
+            logger.debug(`[mergeToExistingDocument] Article ${article.id} already exists in ${docPath}, skipping`);
             return { docId, skipped: true };
         }
 
         // 新文章，追加内容
-        logger.info(`[mergeToExistingDocument] Adding new article ${article.id} to ${docPath}`);
+        logger.debug(`[mergeToExistingDocument] Adding new article ${article.id} to ${docPath}`);
 
         try {
             // 获取现有文档内容
@@ -232,7 +232,7 @@ export class FileHandler {
             // 添加消息ID到块属性列表（重要：这必须在更新文档成功后执行）
             await this.addMergedId(docId, article.id);
 
-            logger.info(`[mergeToExistingDocument] Successfully merged article ${article.id}`);
+            logger.debug(`[mergeToExistingDocument] Successfully merged article ${article.id}`);
             return { docId, skipped: false };
         } catch (error) {
             logger.error(`[mergeToExistingDocument] Failed to merge article:`, error);
@@ -249,7 +249,7 @@ export class FileHandler {
         article: Article,
         mergeDate: string
     ): Promise<{ docId: string, skipped: boolean }> {
-        logger.info(`[createMergedDocument] Creating new merged document:`, {
+        logger.debug(`[createMergedDocument] Creating new merged document:`, {
             notebookId,
             docPath,
             articleId: article.id,
@@ -272,7 +272,7 @@ export class FileHandler {
                 throw new Error('Failed to create document: no docId returned');
             }
 
-            logger.info(`[createMergedDocument] Document created with ID: ${docId}`);
+            logger.debug(`[createMergedDocument] Document created with ID: ${docId}`);
 
             // 将新创建的文档添加到缓存
             const normalizedPath = docPath
@@ -312,7 +312,7 @@ export class FileHandler {
                 }),
             });
 
-            logger.info(`[createMergedDocument] Successfully created merged document: ${docPath}`);
+            logger.debug(`[createMergedDocument] Successfully created merged document: ${docPath}`);
             return { docId, skipped: false };
         } catch (error) {
             logger.error(`[createMergedDocument] Failed to create merged document:`, error);
@@ -326,10 +326,10 @@ export class FileHandler {
     private async updateDocument(docId: string, content: string): Promise<void> {
         try {
             // 添加详细的诊断日志
-            logger.info(`[updateDocument] Called with docId: ${docId}`);
-            logger.info(`[updateDocument] DocId type: ${typeof docId}`);
-            logger.info(`[updateDocument] DocId looks like timestamp: ${typeof docId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(docId)}`);
-            logger.info(`[updateDocument] Content length: ${content.length}`);
+            logger.debug(`[updateDocument] Called with docId: ${docId}`);
+            logger.debug(`[updateDocument] DocId type: ${typeof docId}`);
+            logger.debug(`[updateDocument] DocId looks like timestamp: ${typeof docId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(docId)}`);
+            logger.debug(`[updateDocument] Content length: ${content.length}`);
 
             // 如果发现docId是时间戳格式，记录错误并拒绝更新
             if (typeof docId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(docId)) {
@@ -351,8 +351,8 @@ export class FileHandler {
                 id: docId,
             };
 
-            logger.info(`[updateDocument] Content preview (first 500 chars):`, requestBody.data.substring(0, 500));
-            logger.info(`[updateDocument] Content preview (last 500 chars):`, requestBody.data.substring(Math.max(0, requestBody.data.length - 500)));
+            logger.debug(`[updateDocument] Content preview (first 500 chars):`, requestBody.data.substring(0, 500));
+            logger.debug(`[updateDocument] Content preview (last 500 chars):`, requestBody.data.substring(Math.max(0, requestBody.data.length - 500)));
 
             logger.debug(`[updateDocument] Request body:`, {
                 dataType: requestBody.dataType,
@@ -377,7 +377,7 @@ export class FileHandler {
                 throw new Error(`Failed to update document: ${data.msg}`);
             }
 
-            logger.info(`[updateDocument] Successfully updated document: ${docId}`);
+            logger.debug(`[updateDocument] Successfully updated document: ${docId}`);
         } catch (error) {
             logger.error('Failed to update document:', error);
             throw error;
@@ -446,7 +446,7 @@ export class FileHandler {
             const cacheKey = `${notebookId}:${normalizedPath}`;
             if (this.documentCache.has(cacheKey)) {
                 const cachedId = this.documentCache.get(cacheKey);
-                logger.info(`[getDocumentByPath] Found in cache: ${cachedId} for path: ${normalizedPath}`);
+                logger.debug(`[getDocumentByPath] Found in cache: ${cachedId} for path: ${normalizedPath}`);
                 return cachedId;
             }
 
@@ -454,7 +454,7 @@ export class FileHandler {
             const filename = normalizedPath.split('/').pop() || '';
             const filenameWithoutExt = filename.replace(/\.md$/i, '');
 
-            logger.info(`[getDocumentByPath] Searching for document:`, {
+            logger.debug(`[getDocumentByPath] Searching for document:`, {
                 notebookId,
                 originalPath: docPath,
                 normalizedPath: normalizedPath,
@@ -502,14 +502,14 @@ export class FileHandler {
 
             const data = await response.json();
 
-            logger.info(`[getDocumentByPath] SQL response:`, {
+            logger.debug(`[getDocumentByPath] SQL response:`, {
                 code: data.code,
                 dataLength: data.data ? data.data.length : 0
             });
 
             if (data.code !== 0 || !data.data || data.data.length === 0) {
                 // 方法2：如果精确匹配失败，尝试使用原API
-                logger.info(`[getDocumentByPath] SQL query found no results, trying filetree API`);
+                logger.debug(`[getDocumentByPath] SQL query found no results, trying filetree API`);
 
                 // 确保路径以 .md 结尾（思源API查询要求）
                 if (!normalizedPath.endsWith('.md')) {
@@ -527,21 +527,21 @@ export class FileHandler {
 
                 const apiData = await apiResponse.json();
 
-                logger.info(`[getDocumentByPath] Filetree API response:`, {
+                logger.debug(`[getDocumentByPath] Filetree API response:`, {
                     code: apiData.code,
                     dataLength: apiData.data ? apiData.data.length : 0,
                     data: apiData.data
                 });
 
                 if (apiData.code !== 0 || !apiData.data || apiData.data.length === 0) {
-                    logger.info(`[getDocumentByPath] Document not found: ${normalizedPath}`);
+                    logger.debug(`[getDocumentByPath] Document not found: ${normalizedPath}`);
                     return null;
                 }
 
                 const apiDocId = apiData.data[0];
 
                 // 添加详细日志以诊断问题
-                logger.info(`[getDocumentByPath] API data array:`, {
+                logger.debug(`[getDocumentByPath] API data array:`, {
                     dataType: typeof apiData.data,
                     isArray: Array.isArray(apiData.data),
                     dataLength: apiData.data.length,
@@ -557,7 +557,7 @@ export class FileHandler {
                     return null; // 返回null表示文档不存在，避免使用错误的ID
                 }
 
-                logger.info(`[getDocumentByPath] Document found via API with ID: ${apiDocId}`);
+                logger.debug(`[getDocumentByPath] Document found via API with ID: ${apiDocId}`);
                 // 缓存结果
                 this.documentCache.set(cacheKey, apiDocId);
                 return apiDocId;
@@ -565,7 +565,7 @@ export class FileHandler {
 
             // SQL查询成功
             const docId = data.data[0].id;
-            logger.info(`[getDocumentByPath] Document found via SQL with ID: ${docId}`, {
+            logger.debug(`[getDocumentByPath] Document found via SQL with ID: ${docId}`, {
                 hpath: data.data[0].hpath,
                 content: data.data[0].content
             });
@@ -631,8 +631,8 @@ export class FileHandler {
 
             let content = data.data.kramdown || '';
 
-            logger.info(`[getDocumentContent] Original content length: ${content.length}`);
-            logger.info(`[getDocumentContent] Content starts with: ${content.substring(0, 100)}`);
+            logger.debug(`[getDocumentContent] Original content length: ${content.length}`);
+            logger.debug(`[getDocumentContent] Content starts with: ${content.substring(0, 100)}`);
 
             // 移除文档级别的IAL属性（思源的 Inline Attribute List）
             // 格式为：---\n{: attr1="value1" attr2="value2" ...}\n
@@ -641,8 +641,8 @@ export class FileHandler {
             const originalLength = content.length;
             content = this.removeDocumentIAL(content);
 
-            logger.info(`[getDocumentContent] After IAL removal - length: ${content.length}, removed: ${originalLength - content.length} chars`);
-            logger.info(`[getDocumentContent] Content now starts with: ${content.substring(0, 100)}`);
+            logger.debug(`[getDocumentContent] After IAL removal - length: ${content.length}, removed: ${originalLength - content.length} chars`);
+            logger.debug(`[getDocumentContent] Content now starts with: ${content.substring(0, 100)}`);
 
             return content;
         } catch (error) {
@@ -664,7 +664,7 @@ export class FileHandler {
         const docIALPattern = /^---\s*\n\{:[^}]*\}\s*\n+/;
         if (docIALPattern.test(cleaned)) {
             cleaned = cleaned.replace(docIALPattern, '');
-            logger.info('[removeDocumentIAL] Removed document-level IAL with --- prefix');
+            logger.debug('[removeDocumentIAL] Removed document-level IAL with --- prefix');
         }
 
         // 步骤2: 移除所有块级IAL（{: ...}\n格式）
@@ -673,25 +673,25 @@ export class FileHandler {
         const blockIALPattern = /\n\{:[^}]*\}\s*\n/g;
         const blockIALMatches = cleaned.match(blockIALPattern);
         if (blockIALMatches) {
-            logger.info(`[removeDocumentIAL] Found ${blockIALMatches.length} block-level IAL attributes`);
+            logger.debug(`[removeDocumentIAL] Found ${blockIALMatches.length} block-level IAL attributes`);
             cleaned = cleaned.replace(blockIALPattern, '\n');
-            logger.info('[removeDocumentIAL] Removed all block-level IAL attributes');
+            logger.debug('[removeDocumentIAL] Removed all block-level IAL attributes');
         }
 
         // 步骤3: 移除可能在行末的IAL（例如：## 标题{: id="xxx"}）
         const inlineIALPattern = /\{:[^}]*\}/g;
         const inlineIALMatches = cleaned.match(inlineIALPattern);
         if (inlineIALMatches) {
-            logger.info(`[removeDocumentIAL] Found ${inlineIALMatches.length} inline IAL attributes`);
+            logger.debug(`[removeDocumentIAL] Found ${inlineIALMatches.length} inline IAL attributes`);
             cleaned = cleaned.replace(inlineIALPattern, '');
-            logger.info('[removeDocumentIAL] Removed all inline IAL attributes');
+            logger.debug('[removeDocumentIAL] Removed all inline IAL attributes');
         }
 
         const removedChars = originalLength - cleaned.length;
         if (removedChars > 0) {
-            logger.info(`[removeDocumentIAL] Total removed: ${removedChars} chars`);
+            logger.debug(`[removeDocumentIAL] Total removed: ${removedChars} chars`);
         } else {
-            logger.info('[removeDocumentIAL] No IAL attributes found');
+            logger.debug('[removeDocumentIAL] No IAL attributes found');
         }
 
         return cleaned;
@@ -879,7 +879,7 @@ export class FileHandler {
                 throw new Error(`Failed to add merged ID: ${data.msg}`);
             }
 
-            logger.info(`[addMergedId] Successfully added article ${articleId} to merged list (total: ${mergedIds.length})`);
+            logger.debug(`[addMergedId] Successfully added article ${articleId} to merged list (total: ${mergedIds.length})`);
         } catch (error) {
             logger.error('Failed to add merged ID:', error);
             throw error;

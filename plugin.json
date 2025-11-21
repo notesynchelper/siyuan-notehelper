@@ -1,36 +1,19 @@
 {
-  "name": "notehelper",
+  "name": "siyuan-notehelper",
   "author": "notesynchelper",
   "url": "https://github.com/notesynchelper/siyuan-notehelper",
   "version": "1.1.0",
   "minAppVersion": "3.3.0",
-  "backends": [
-    "windows",
-    "linux",
-    "darwin",
-    "ios",
-    "android",
-    "harmony",
-    "docker"
-  ],
-  "frontends": [
-    "desktop",
-    "mobile",
-    "browser-desktop",
-    "browser-mobile",
-    "desktop-window"
-  ],
+  "backends": ["all"],
+  "frontends": ["all"],
   "disabledInPublish": false,
   "displayName": {
-    "default": "Note Sync Helper",
     "zh_CN": "笔记同步助手"
   },
   "description": {
-    "default": "Sync notes and articles from cloud to SiYuan, with support for images, WeChat messages, and custom templates",
     "zh_CN": "从微信同步到思源笔记，支持文字、图片、聊天记录、文章"
   },
   "readme": {
-    "default": "README.md",
     "zh_CN": "README_zh_CN.md"
   },
   "funding": {
@@ -40,13 +23,20 @@
     "custom": []
   },
   "keywords": [
-    "sync",
-    "notes",
     "wechat",
     "template",
-    "同步",
-    "笔记",
     "企微",
-    "模板"
+    "模板",
+    "微信",
+    "速记",
+    "剪藏",
+    "搜集",
+    "日记",
+    "闪念",
+    "memo",
+    "备忘",
+    "公众号",
+    "小红书",
+    "得到"
   ]
 }
