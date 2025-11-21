@@ -166,12 +166,16 @@ export default class NoteHelperPlugin extends Plugin {
     private imageLocalizer: ImageLocalizer;
     private statusBarElement: HTMLElement;
     private dockElement: HTMLElement;
-    private i18n: typeof zhCN = zhCN; // 使用中文文本对象
 
     async onload() {
         // 先设置默认日志级别（生产环境使用INFO）
         logger.setLevel(LogLevel.INFO);
         logger.debug('Loading Note Sync Helper plugin...');
+
+        // 设置 i18n 为 SiYuan 期望的格式
+        this.i18n = {
+            zh_CN: zhCN
+        };
 
         // 注册自定义图标
         this.addIcons(`
@@ -236,7 +240,7 @@ export default class NoteHelperPlugin extends Plugin {
     private addTopBarIcon() {
         const topBarElement = this.addTopBar({
             icon: 'iconRefresh',
-            title: this.i18n.sync,
+            title: this.i18n.zh_CN.sync,
             position: 'right',
             callback: () => {
                 let rect = topBarElement.getBoundingClientRect();
@@ -279,15 +283,15 @@ export default class NoteHelperPlugin extends Plugin {
         if (!this.statusBarElement) return;
 
         if (this.settings.syncing) {
-            this.statusBarElement.textContent = this.i18n.syncing;
-            this.statusBarElement.setAttribute('aria-label', this.i18n.syncing);
+            this.statusBarElement.textContent = this.i18n.zh_CN.syncing;
+            this.statusBarElement.setAttribute('aria-label', this.i18n.zh_CN.syncing);
         } else if (this.settings.syncAt) {
             const lastSync = formatDate(this.settings.syncAt, 'yyyy-MM-dd HH:mm');
-            this.statusBarElement.textContent = `${this.i18n.lastSyncAt}: ${lastSync}`;
-            this.statusBarElement.setAttribute('aria-label', `${this.i18n.lastSyncAt}: ${lastSync}`);
+            this.statusBarElement.textContent = `${this.i18n.zh_CN.lastSyncAt}: ${lastSync}`;
+            this.statusBarElement.setAttribute('aria-label', `${this.i18n.zh_CN.lastSyncAt}: ${lastSync}`);
         } else {
-            this.statusBarElement.textContent = this.i18n.noSyncYet;
-            this.statusBarElement.setAttribute('aria-label', this.i18n.noSyncYet);
+            this.statusBarElement.textContent = this.i18n.zh_CN.noSyncYet;
+            this.statusBarElement.setAttribute('aria-label', this.i18n.zh_CN.noSyncYet);
         }
 
         // 同时更新dock状态
@@ -324,15 +328,15 @@ export default class NoteHelperPlugin extends Plugin {
                         <div style="padding: 12px 8px; border-bottom: 1px solid var(--b3-border-color);">
                             <div style="margin-bottom: 12px;">
                                 <div style="color: var(--b3-theme-on-surface); margin-bottom: 4px; font-size: 12px;">
-                                    ${this.i18n.dock?.status || "状态"}:
+                                    ${this.i18n.zh_CN.dock?.status || "状态"}:
                                 </div>
                                 <div id="dockSyncStatus" style="font-size: 12px; color: var(--b3-theme-on-background);">
-                                    ${this.i18n.noSyncYet}
+                                    ${this.i18n.zh_CN.noSyncYet}
                                 </div>
                             </div>
                             <button class="b3-button b3-button--outline fn__block" id="dockQuickSync">
                                 <svg class="b3-button__icon"><use xlink:href="#iconNoteSync"></use></svg>
-                                ${this.i18n.dock?.quickSync || "立即同步"}
+                                ${this.i18n.zh_CN.dock?.quickSync || "立即同步"}
                             </button>
                         </div>
 
@@ -360,7 +364,7 @@ export default class NoteHelperPlugin extends Plugin {
                     if (settingsArea) {
                         settingsArea.innerHTML = `
                             <div style="margin-bottom: 8px; font-weight: bold; color: var(--b3-theme-on-surface);">
-                                ${this.i18n.settings}
+                                ${this.i18n.zh_CN.settings}
                             </div>
                             ${SettingsForm.renderSettingsForm(this.settings, this.i18n, () => this.formatSyncTimeForInput())}
                         `;
@@ -403,12 +407,12 @@ export default class NoteHelperPlugin extends Plugin {
         if (!statusElement) return;
 
         if (this.settings.syncing) {
-            statusElement.textContent = this.i18n.syncing;
+            statusElement.textContent = this.i18n.zh_CN.syncing;
         } else if (this.settings.syncAt) {
             const lastSync = formatDate(this.settings.syncAt, 'yyyy-MM-dd HH:mm');
-            statusElement.textContent = `${this.i18n.lastSyncAt}: ${lastSync}`;
+            statusElement.textContent = `${this.i18n.zh_CN.lastSyncAt}: ${lastSync}`;
         } else {
-            statusElement.textContent = this.i18n.noSyncYet;
+            statusElement.textContent = this.i18n.zh_CN.noSyncYet;
         }
 
         // 同时更新设置表单中的同步时间输入框
@@ -426,7 +430,7 @@ export default class NoteHelperPlugin extends Plugin {
 
         menu.addItem({
             icon: 'iconRefresh',
-            label: this.i18n.syncNow,
+            label: this.i18n.zh_CN.syncNow,
             click: () => {
                 this.performSync();
             },
@@ -434,7 +438,7 @@ export default class NoteHelperPlugin extends Plugin {
 
         menu.addItem({
             icon: 'iconUndo',
-            label: this.i18n.resetSync,
+            label: this.i18n.zh_CN.resetSync,
             click: () => {
                 this.resetSyncTime();
             },
@@ -444,7 +448,7 @@ export default class NoteHelperPlugin extends Plugin {
 
         menu.addItem({
             icon: 'iconInfo',
-            label: this.i18n.viewArticleCount,
+            label: this.i18n.zh_CN.viewArticleCount,
             click: () => {
                 this.viewArticleCount();
             },
@@ -452,7 +456,7 @@ export default class NoteHelperPlugin extends Plugin {
 
         menu.addItem({
             icon: 'iconTrash',
-            label: this.i18n.clearAllArticles,
+            label: this.i18n.zh_CN.clearAllArticles,
             click: () => {
                 this.clearAllArticles();
             },
@@ -462,7 +466,7 @@ export default class NoteHelperPlugin extends Plugin {
 
         menu.addItem({
             icon: 'iconSettings',
-            label: this.i18n.settings,
+            label: this.i18n.zh_CN.settings,
             click: () => {
                 this.openSettings();
             },
@@ -512,23 +516,23 @@ export default class NoteHelperPlugin extends Plugin {
      */
     private async performSync() {
         if (this.syncManager.isCurrentlySyncing()) {
-            showMessage(this.i18n.errors?.syncInProgress || 'Sync in progress', 3000, 'info');
+            showMessage(this.i18n.zh_CN.errors?.syncInProgress || 'Sync in progress', 3000, 'info');
             return;
         }
 
         if (!this.settings.apiKey) {
-            showMessage(this.i18n.errors?.noApiKey || 'No API key configured', 5000, 'error');
+            showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
             return;
         }
 
         try {
             this.updateStatusBar();
-            showMessage(this.i18n.syncing, 3000, 'info');
+            showMessage(this.i18n.zh_CN.syncing, 3000, 'info');
 
             const result = await this.syncManager.sync();
 
             if (result.success) {
-                let message = (this.i18n.success?.syncCompleted || 'Sync completed, processed {count} articles')
+                let message = (this.i18n.zh_CN.success?.syncCompleted || 'Sync completed, processed {count} articles')
                     .replace('{count}', String(result.count));
 
                 // 添加跳过数量信息
@@ -539,7 +543,7 @@ export default class NoteHelperPlugin extends Plugin {
                 showMessage(message, 5000, 'info');
             } else {
                 showMessage(
-                    this.i18n.syncFailed + ': ' + (result.errors?.join(', ') || ''),
+                    this.i18n.zh_CN.syncFailed + ': ' + (result.errors?.join(', ') || ''),
                     5000,
                     'error'
                 );
@@ -548,7 +552,7 @@ export default class NoteHelperPlugin extends Plugin {
             this.updateStatusBar();
         } catch (error) {
             logger.error('Sync error:', error);
-            showMessage(this.i18n.syncFailed + ': ' + error, 5000, 'error');
+            showMessage(this.i18n.zh_CN.syncFailed + ': ' + error, 5000, 'error');
             this.updateStatusBar();
         }
     }
@@ -558,15 +562,15 @@ export default class NoteHelperPlugin extends Plugin {
      */
     private async resetSyncTime() {
         const confirmed = await confirm(
-            this.i18n.confirm,
-            this.i18n.resetSyncConfirm,
+            this.i18n.zh_CN.confirm,
+            this.i18n.zh_CN.resetSyncConfirm,
             null
         );
 
         if (confirmed) {
             await this.syncManager.resetSyncTime();
             this.updateStatusBar();
-            showMessage(this.i18n.success?.settingsSaved || 'Settings saved', 3000, 'info');
+            showMessage(this.i18n.zh_CN.success?.settingsSaved || 'Settings saved', 3000, 'info');
         }
     }
 
@@ -575,7 +579,7 @@ export default class NoteHelperPlugin extends Plugin {
      */
     private async viewArticleCount() {
         if (!this.settings.apiKey) {
-            showMessage(this.i18n.errors?.noApiKey || 'No API key configured', 5000, 'error');
+            showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
             return;
         }
 
@@ -585,12 +589,12 @@ export default class NoteHelperPlugin extends Plugin {
                 this.settings.apiKey
             );
 
-            const message = (this.i18n.articleCount || 'Total {count} articles in cloud')
+            const message = (this.i18n.zh_CN.articleCount || 'Total {count} articles in cloud')
                 .replace('{count}', String(count));
             showMessage(message, 5000, 'info');
         } catch (error) {
             logger.error('Failed to get article count:', error);
-            showMessage(this.i18n.errors?.apiError || 'API call failed', 5000, 'error');
+            showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
         }
     }
 
@@ -599,24 +603,24 @@ export default class NoteHelperPlugin extends Plugin {
      */
     private async clearAllArticles() {
         const confirmed = await confirm(
-            this.i18n.confirm,
-            this.i18n.clearAllArticlesConfirm,
+            this.i18n.zh_CN.confirm,
+            this.i18n.zh_CN.clearAllArticlesConfirm,
             null
         );
 
         if (!confirmed) return;
 
         if (!this.settings.apiKey) {
-            showMessage(this.i18n.errors?.noApiKey || 'No API key configured', 5000, 'error');
+            showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
             return;
         }
 
         try {
             await clearAllArticles(this.settings.endpoint, this.settings.apiKey);
-            showMessage(this.i18n.success?.articlesCleared || 'Articles cleared', 5000, 'info');
+            showMessage(this.i18n.zh_CN.success?.articlesCleared || 'Articles cleared', 5000, 'info');
         } catch (error) {
             logger.error('Failed to clear articles:', error);
-            showMessage(this.i18n.errors?.apiError || 'API call failed', 5000, 'error');
+            showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
         }
     }
 
