@@ -42,7 +42,7 @@ export class SyncManager {
         this.settings.syncing = true;
 
         try {
-            logger.info('Starting sync...');
+            logger.debug('Starting sync...');
 
             // 清除文档缓存，确保每次同步都是新的开始
             this.fileHandler.clearDocumentCache();
@@ -68,7 +68,7 @@ export class SyncManager {
             let offset = 0;
 
             while (hasMore) {
-                logger.info(`Fetching batch ${offset / batchSize + 1}...`);
+                logger.debug(`Fetching batch ${offset / batchSize + 1}...`);
 
                 const [articles, hasNextPage] = await getItems(
                     this.settings.endpoint,
@@ -91,7 +91,7 @@ export class SyncManager {
                 }
             }
 
-            logger.info(`Total articles to process: ${allArticles.length}`);
+            logger.debug(`Total articles to process: ${allArticles.length}`);
 
             // 处理每篇文章
             const errors: string[] = [];
@@ -118,7 +118,7 @@ export class SyncManager {
             this.settings.syncAt = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
             await this.plugin.saveData(this.settings);
 
-            logger.info(`Sync completed. Created: ${createdCount}, Skipped: ${skippedCount}, Errors: ${errors.length}`);
+            logger.debug(`Sync completed. Created: ${createdCount}, Skipped: ${skippedCount}, Errors: ${errors.length}`);
 
             return {
                 success: errors.length === 0,
@@ -145,7 +145,7 @@ export class SyncManager {
     async resetSyncTime(): Promise<void> {
         this.settings.syncAt = '';
         await this.plugin.saveData(this.settings);
-        logger.info('Sync time reset');
+        logger.debug('Sync time reset');
     }
 
     /**
@@ -157,11 +157,11 @@ export class SyncManager {
         if (this.settings.frequency > 0) {
             const intervalMs = this.settings.frequency * 60 * 1000;
             this.settings.intervalId = window.setInterval(() => {
-                logger.info('Running scheduled sync...');
+                logger.debug('Running scheduled sync...');
                 this.sync();
             }, intervalMs) as unknown as number;
 
-            logger.info(`Scheduled sync started: every ${this.settings.frequency} minutes`);
+            logger.debug(`Scheduled sync started: every ${this.settings.frequency} minutes`);
         }
     }
 
@@ -172,7 +172,7 @@ export class SyncManager {
         if (this.settings.intervalId) {
             window.clearInterval(this.settings.intervalId);
             this.settings.intervalId = 0;
-            logger.info('Scheduled sync stopped');
+            logger.debug('Scheduled sync stopped');
         }
     }
 

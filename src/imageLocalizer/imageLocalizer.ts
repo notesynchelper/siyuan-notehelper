@@ -42,7 +42,7 @@ export class ImageLocalizer {
             });
         });
 
-        logger.info(`Added ${imageUrls.length} images to queue for doc ${docId}`);
+        logger.debug(`Added ${imageUrls.length} images to queue for doc ${docId}`);
     }
 
     /**
@@ -54,7 +54,7 @@ export class ImageLocalizer {
         }
 
         this.processing = true;
-        logger.info(`Processing ${this.queue.length} images...`);
+        logger.debug(`Processing ${this.queue.length} images...`);
 
         while (this.queue.length > 0) {
             const task = this.queue.shift();
@@ -64,7 +64,7 @@ export class ImageLocalizer {
         }
 
         this.processing = false;
-        logger.info('Image processing completed');
+        logger.debug('Image processing completed');
     }
 
     /**
@@ -193,7 +193,7 @@ export class ImageLocalizer {
                 throw new Error('Failed to update document');
             }
 
-            logger.info(`Updated image reference in doc ${docId}`);
+            logger.debug(`Updated image reference in doc ${docId}`);
         } catch (error) {
             logger.error('Failed to update image reference:', error);
         }

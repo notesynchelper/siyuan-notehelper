@@ -60,10 +60,10 @@ async function fetchGraphQL<T>(
 
     // 记录请求信息
     const queryPreview = query.substring(0, 100).replace(/\s+/g, ' ').trim();
-    logger.info(`GraphQL Request: POST ${endpoint}`);
-    logger.info(`Query: ${queryPreview}...`);
-    logger.info(`Variables: ${JSON.stringify(variables)}`);
-    logger.info(`API Key: ${maskApiKey(apiKey)}`);
+    logger.debug(`GraphQL Request: POST ${endpoint}`);
+    logger.debug(`Query: ${queryPreview}...`);
+    logger.debug(`Variables: ${JSON.stringify(variables)}`);
+    logger.debug(`API Key: ${maskApiKey(apiKey)}`);
 
     try {
         const startTime = Date.now();
@@ -77,7 +77,7 @@ async function fetchGraphQL<T>(
         });
 
         const responseTime = Date.now() - startTime;
-        logger.info(`Response received: ${response.status} ${response.statusText} (${responseTime}ms)`);
+        logger.debug(`Response received: ${response.status} ${response.statusText} (${responseTime}ms)`);
 
         if (!response.ok) {
             const errorText = await response.text().catch(() => 'Unable to read response');
@@ -91,7 +91,7 @@ async function fetchGraphQL<T>(
         }
 
         const responseText = await response.text();
-        logger.info(`Response size: ${responseText.length} bytes`);
+        logger.debug(`Response size: ${responseText.length} bytes`);
 
         let result: GraphQLResponse<T>;
         try {
@@ -122,11 +122,11 @@ async function fetchGraphQL<T>(
             if (result.data.search !== undefined) {
                 // 完整的标准格式：data.search 包含实际数据
                 responseData = result.data.search as T;
-                logger.info('Standard GraphQL response with search wrapper');
+                logger.debug('Standard GraphQL response with search wrapper');
             } else {
                 // 标准格式但没有 search 包装：data 直接包含实际数据
                 responseData = result.data;
-                logger.info('Standard GraphQL response without search wrapper');
+                logger.debug('Standard GraphQL response without search wrapper');
             }
         } else if (result.edges !== undefined && result.pageInfo !== undefined) {
             // 非标准响应：服务端直接返回 search 的内容（edges + pageInfo）
@@ -146,7 +146,7 @@ async function fetchGraphQL<T>(
             throw new Error('Unexpected response structure');
         }
 
-        logger.info(`GraphQL request successful`);
+        logger.debug(`GraphQL request successful`);
         return responseData;
     } catch (error) {
         logger.error('GraphQL request failed:', {
@@ -184,7 +184,7 @@ export async function getItems(
         searchQuery += ` updated:${updatedAt}`;
     }
 
-    logger.info(`getItems called with params:`, {
+    logger.debug(`getItems called with params:`, {
         endpoint,
         after,
         first,
@@ -275,7 +275,7 @@ export async function getItems(
         const hasNextPage = data.pageInfo?.hasNextPage || false;
         const totalCount = data.pageInfo?.totalCount || 0;
 
-        logger.info(`getItems result:`, {
+        logger.debug(`getItems result:`, {
             itemsCount: items.length,
             hasNextPage,
             totalCount,
@@ -328,7 +328,7 @@ export async function deleteItem(
             apiKey
         );
 
-        logger.info(`Deleted article: ${articleId}`);
+        logger.debug(`Deleted article: ${articleId}`);
         return true;
     } catch (error) {
         logger.error('Failed to delete article:', error);
@@ -364,7 +364,7 @@ export async function getArticleCount(
         }
 
         const data: ArticleCountResponse = await response.json();
-        logger.info(`Article count: ${data.count}`);
+        logger.debug(`Article count: ${data.count}`);
 
         return data.count;
     } catch (error) {
@@ -399,7 +399,7 @@ export async function clearAllArticles(
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        logger.info('All articles cleared');
+        logger.debug('All articles cleared');
         return true;
     } catch (error) {
         logger.error('Failed to clear all articles:', error);
@@ -440,7 +440,7 @@ export async function fetchContentForItems(
         const data: Record<string, string> = await response.json();
         const contentMap = new Map<string, string>(Object.entries(data));
 
-        logger.info(`Fetched content for ${contentMap.size} items`);
+        logger.debug(`Fetched content for ${contentMap.size} items`);
 
         return contentMap;
     } catch (error) {

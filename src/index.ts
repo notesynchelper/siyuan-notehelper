@@ -171,7 +171,7 @@ export default class NoteHelperPlugin extends Plugin {
     async onload() {
         // 先设置默认日志级别（生产环境使用INFO）
         logger.setLevel(LogLevel.INFO);
-        logger.info('Loading Note Sync Helper plugin...');
+        logger.debug('Loading Note Sync Helper plugin...');
 
         // 注册自定义图标
         this.addIcons(`
@@ -205,11 +205,11 @@ export default class NoteHelperPlugin extends Plugin {
             this.syncManager.startScheduledSync();
         }
 
-        logger.info('Note Sync Helper plugin loaded successfully');
+        logger.debug('Note Sync Helper plugin loaded successfully');
     }
 
     async onLayoutReady() {
-        logger.info('Layout ready');
+        logger.debug('Layout ready');
 
         // 添加顶栏图标
         this.addTopBarIcon();
@@ -224,7 +224,7 @@ export default class NoteHelperPlugin extends Plugin {
     }
 
     async onunload() {
-        logger.info('Unloading Note Sync Helper plugin...');
+        logger.debug('Unloading Note Sync Helper plugin...');
 
         // 停止定时同步
         this.syncManager.stopScheduledSync();
@@ -699,7 +699,7 @@ export default class NoteHelperPlugin extends Plugin {
             ...DEFAULT_SETTINGS,
             ...savedSettings,
         };
-        logger.info('Settings loaded');
+        logger.debug('Settings loaded');
     }
 
     /**
@@ -707,7 +707,7 @@ export default class NoteHelperPlugin extends Plugin {
      */
     async saveSettings() {
         await this.saveData(SETTINGS_KEY, this.settings);
-        logger.info('Settings saved');
+        logger.debug('Settings saved');
         // 更新日志级别
         this.updateLogLevel();
     }
@@ -725,6 +725,6 @@ export default class NoteHelperPlugin extends Plugin {
 
         const level = levelMap[this.settings.logLevel] || LogLevel.INFO;
         logger.setLevel(level);
-        logger.info(`Log level set to: ${this.settings.logLevel}`);
+        logger.debug(`Log level set to: ${this.settings.logLevel}`);
     }
 }

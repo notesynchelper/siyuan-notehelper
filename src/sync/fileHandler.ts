@@ -119,7 +119,7 @@ export class FileHandler {
         // 设置自定义属性，用于后续去重
         await this.setBlockAttributes(docId, article.id);
 
-        logger.info(`Created document: ${docPath}`);
+        logger.debug(`Created document: ${docPath}`);
         return { docId, skipped: false };
     }
 
