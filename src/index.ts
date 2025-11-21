@@ -26,6 +26,7 @@ const DOCK_TYPE = 'notehelper_sync_dock';
 
 // 中文文本定义（替代i18n）
 const zhCN = {
+    name: "笔记同步助手",  // SiYuan 可能期望的 name 属性
     pluginName: "笔记同步助手",
     pluginDescription: "从微信同步到思源笔记,支持文字、图片、聊天记录、文章",
 
@@ -167,15 +168,15 @@ export default class NoteHelperPlugin extends Plugin {
     private statusBarElement: HTMLElement;
     private dockElement: HTMLElement;
 
+    // 初始化 i18n - 在类定义时就设置，避免 SiYuan 访问时为 null
+    public i18n = {
+        zh_CN: zhCN
+    };
+
     async onload() {
         // 先设置默认日志级别（生产环境使用INFO）
         logger.setLevel(LogLevel.INFO);
         logger.debug('Loading Note Sync Helper plugin...');
-
-        // 设置 i18n 为 SiYuan 期望的格式
-        this.i18n = {
-            zh_CN: zhCN
-        };
 
         // 注册自定义图标
         this.addIcons(`
