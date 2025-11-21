@@ -152,6 +152,8 @@ export class SettingsForm {
 
                 <div class="fn__hr"></div>
 
+                <!-- 图片处理部分暂时不上线 -->
+                <!--
                 <div class="b3-label">
                     <div class="fn__flex">
                         <div class="fn__flex-1">
@@ -172,6 +174,7 @@ export class SettingsForm {
                         </select>
                     </div>
                 </div>
+                -->
             </div>
         `;
     }
@@ -191,7 +194,8 @@ export class SettingsForm {
         const filenameInput = container.querySelector('#filename') as HTMLInputElement;
         const mergeFolderTemplateInput = container.querySelector('#mergeFolderTemplate') as HTMLInputElement;
         const mergeMessageTemplateInput = container.querySelector('#mergeMessageTemplate') as HTMLTextAreaElement;
-        const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
+        // 图片处理部分暂时不上线
+        // const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
 
         const values: Partial<PluginSettings> = {};
 
@@ -219,7 +223,8 @@ export class SettingsForm {
         if (filenameInput) values.filename = filenameInput.value;
         if (mergeFolderTemplateInput) values.mergeFolderTemplate = mergeFolderTemplateInput.value;
         if (mergeMessageTemplateInput) values.mergeMessageTemplate = mergeMessageTemplateInput.value;
-        if (imageModeSelect) values.imageMode = imageModeSelect.value as any;
+        // 图片处理部分暂时不上线
+        // if (imageModeSelect) values.imageMode = imageModeSelect.value as any;
 
         return values;
     }

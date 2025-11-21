@@ -153,5 +153,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 
     // 其他
     version: '0.1.0',
-    logLevel: 'DEBUG',  // 默认开启DEBUG级别以便调试
+    logLevel: 'INFO',  // 生产环境使用INFO级别
 };
