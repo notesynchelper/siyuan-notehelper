@@ -2,11 +2,11 @@
   "name": "siyuan-notehelper",
   "author": "notesynchelper",
   "url": "https://github.com/notesynchelper/siyuan-notehelper",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "minAppVersion": "3.3.0",
   "backends": ["all"],
   "frontends": ["all"],
-  "disabledInPublish": false,
+  "disabledInPublish": true,
   "displayName": {
     "default": "笔记同步助手"
   },
