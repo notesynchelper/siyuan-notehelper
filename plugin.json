@@ -2,19 +2,19 @@
   "name": "siyuan-notehelper",
   "author": "notesynchelper",
   "url": "https://github.com/notesynchelper/siyuan-notehelper",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "minAppVersion": "3.3.0",
   "backends": ["all"],
   "frontends": ["all"],
   "disabledInPublish": false,
   "displayName": {
-    "zh_CN": "笔记同步助手"
+    "default": "笔记同步助手"
   },
   "description": {
-    "zh_CN": "从微信同步到思源笔记，支持文字、图片、聊天记录、文章"
+    "default": "从微信同步到思源笔记，支持文字、图片、聊天记录、文章"
   },
   "readme": {
-    "zh_CN": "README_zh_CN.md"
+    "default": "README.md"
   },
   "funding": {
     "openCollective": "",

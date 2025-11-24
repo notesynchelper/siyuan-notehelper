@@ -236,6 +236,19 @@ export default class NoteHelperPlugin extends Plugin {
     }
 
     /**
+     * 卸载插件时的清理操作
+     * 删除插件配置数据
+     */
+    async uninstall() {
+        logger.debug('Uninstalling Note Sync Helper plugin...');
+
+        // 删除插件配置文件
+        await this.removeData(SETTINGS_KEY);
+
+        logger.info('Plugin configuration removed');
+    }
+
+    /**
      * 添加顶栏图标
      */
     private addTopBarIcon() {
