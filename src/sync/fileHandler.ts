@@ -128,6 +128,9 @@ export class FileHandler {
         // 设置自定义属性，用于后续去重
         await this.setBlockAttributes(docId, article.id);
 
+        // 设置笔记同步助手默认属性
+        await this.setNoteHelperAttributes(docId, '链接');
+
         logger.debug(`Created document: ${docPath}`);
         return { docId, skipped: false };
     }
@@ -354,6 +357,9 @@ export class FileHandler {
                     attrs: attrs,
                 }),
             });
+
+            // 设置笔记同步助手默认属性
+            await this.setNoteHelperAttributes(docId, '消息');
 
             logger.debug(`[createMergedDocument] Successfully created merged document: ${docPath}`);
             return { docId, skipped: false };
@@ -774,6 +780,38 @@ export class FileHandler {
         } catch (error) {
             logger.error('Failed to check document by source ID:', error);
             return null;
+        }
+    }
+
+    /**
+     * 设置笔记同步助手默认属性
+     * @param docId 文档 ID
+     * @param type 类型："链接" 或 "消息"
+     */
+    private async setNoteHelperAttributes(docId: string, type: '链接' | '消息'): Promise<void> {
+        try {
+            const response = await fetch('/api/attr/setBlockAttrs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: docId,
+                    attrs: {
+                        'custom-note-helper': '笔记同步助手',
+                        'custom-note-helper-type': type,
+                    },
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.code !== 0) {
+                throw new Error(`Failed to set note-helper attributes: ${data.msg}`);
+            }
+
+            logger.debug(`Set note-helper attributes for doc ${docId}: type=${type}`);
+        } catch (error) {
+            logger.error('Failed to set note-helper attributes:', error);
+            // 不抛出错误，因为这是非关键属性
         }
     }
 

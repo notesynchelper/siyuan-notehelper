@@ -9,10 +9,7 @@ import { formatDate, isWeChatMessage } from '../utils/util';
 import { PluginSettings } from './index';
 
 // 默认模板
-export const DEFAULT_TEMPLATE = `# {{{title}}}
-#笔记同步助手
-
-## 来源
+export const DEFAULT_TEMPLATE = `## 来源
 [原文链接]({{{originalUrl}}})
 
 ## 正文
@@ -143,8 +140,15 @@ export function renderFilename(
 ): string {
     try {
         const view = articleToView(article, settings);
+
+        // 添加 date 变量用于文件名模板
+        const viewWithDate = {
+            ...view,
+            date: formatDate(article.savedAt, settings.filenameDateFormat),
+        };
+
         const template = settings.filename || '{{{title}}}';
-        let filename = Mustache.render(template, view);
+        let filename = Mustache.render(template, viewWithDate);
 
         // 清理文件名中的非法字符
         filename = filename.replace(/[<>:"/\\|?*]/g, '-');

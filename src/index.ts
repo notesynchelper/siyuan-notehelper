@@ -16,8 +16,8 @@ import './index.scss';
 import { logger, LogLevel } from './utils/logger';
 import { PluginSettings, DEFAULT_SETTINGS } from './settings';
 import { SyncManager } from './sync/syncManager';
-import { ImageLocalizer } from './imageLocalizer/imageLocalizer';
-import { getArticleCount, clearAllArticles } from './api';
+// import { ImageLocalizer } from './imageLocalizer/imageLocalizer';  // 图片处理已禁用
+import { getArticleCount, clearAllArticles, fetchVipStatus, getQrCodeUrl, VipStatus } from './api';
 import { formatDate } from './utils/util';
 import { SettingsForm } from './ui/SettingsForm';
 
@@ -89,7 +89,7 @@ const zhCN = {
     template: "内容模板",
     templateDesc: "使用 Mustache 语法自定义文章渲染模板",
     frontMatterTemplate: "前言模板",
-    frontMatterVariables: "前言变量",
+    frontMatterVariables: "笔记自定义属性",
     wechatMessageTemplate: "企微消息模板",
     sectionSeparator: "消息分隔符开始",
     sectionSeparatorEnd: "消息分隔符结束",
@@ -157,14 +157,47 @@ const zhCN = {
         dateFormat: "日期格式使用 Luxon 语法，如：yyyy-MM-dd HH:mm:ss",
         mergeMode: "合并模式决定如何组织文章：独立文件、按日期合并企微消息、或全部合并",
         wechatMessage: "企微消息格式：同步助手_yyyyMMdd_xxx_类型"
-    }
+    },
+
+    // 新增：会员中心
+    vipCenter: "会员中心",
+    vipStatusLoading: "加载中...",
+    vipBuyLabel: "购买高级权益",
+    vipGroupLabel: "加入交流群",
+
+    // 新增：文章管理增强
+    articleCountDesc: "显示云空间中文章和消息的总数量",
+    refreshing: "刷新中...",
+    clearing: "清空中...",
+
+    // 新增：高级设置
+    advancedSettings: "高级设置",
+    frontMatterVariablesDesc: "自定义思源文档属性。默认包含 note-helper（笔记同步助手）和 note-helper-type（链接/消息）",
+    wechatMessageTemplateDesc: "可用变量：{{{dateSaved}}}, {{{content}}}, {{{title}}}, {{{id}}}",
+    frontMatterTemplateDesc: "输入 YAML 模板来渲染前置元数据",
+    dateSavedFormatDesc: "dateSaved 变量的日期格式",
+
+    // 新增：图片处理
+    imageModeDesc: "选择如何处理笔记中的图片",
+    enablePngToJpegDesc: "将PNG图片转换为JPEG格式以节省空间",
+    jpegQualityDesc: "设置JPEG压缩质量（0-100），默认85",
+    imageDownloadRetriesDesc: "图片下载失败时的重试次数",
+    imageAttachmentFolderDesc: "本地化图片的存储路径，支持 {{{date}}} 变量",
+
+    // 新增：版本检查
+    currentVersion: "当前版本",
+    checkUpdate: "检查更新",
+    checkingUpdate: "检查中...",
+    latestVersion: "已是最新版本",
+    newVersionAvailable: "发现新版本",
+    updateCheckFailed: "检查失败"
 };
 
 export default class NoteHelperPlugin extends Plugin {
 
     private settings: PluginSettings;
     private syncManager: SyncManager;
-    private imageLocalizer: ImageLocalizer;
+    // private imageLocalizer: ImageLocalizer;  // 图片处理已禁用
     private statusBarElement: HTMLElement;
     private dockElement: HTMLElement;
 
@@ -195,7 +228,7 @@ export default class NoteHelperPlugin extends Plugin {
 
         // 初始化管理器
         this.syncManager = new SyncManager(this, this.settings);
-        this.imageLocalizer = new ImageLocalizer(this, this.settings);
+        // this.imageLocalizer = new ImageLocalizer(this, this.settings);  // 图片处理已禁用
 
         // 注册命令
         this.registerCommands();
@@ -381,6 +414,33 @@ export default class NoteHelperPlugin extends Plugin {
                         </div>
                         ${SettingsForm.renderSettingsForm(this.settings, this.i18n.zh_CN, () => this.formatSyncTimeForInput())}
                     `;
+
+                    // 设置当前版本（已禁用）
+                    // SettingsForm.setCurrentVersion(settingsArea as HTMLElement, this.manifest?.version || '1.0.0');
+
+                    // 绑定动态交互事件
+                    SettingsForm.bindEvents(settingsArea as HTMLElement, {
+                        onApiKeyChange: async (apiKey: string) => {
+                            await this.updateVipStatusDisplay(settingsArea as HTMLElement);
+                        },
+                        onRefreshArticleCount: async () => {
+                            await this.refreshArticleCount(settingsArea as HTMLElement);
+                        },
+                        onClearAllArticles: async () => {
+                            await this.handleClearAllArticles(settingsArea as HTMLElement);
+                        },
+                        // onCheckUpdate: async () => {  // 检查更新已禁用
+                        //     await this.checkForUpdates(settingsArea as HTMLElement);
+                        // },
+                        onResetTemplate: (type) => {
+                            this.resetTemplate(settingsArea as HTMLElement, type);
+                        }
+                    });
+
+                    // 初始化VIP状态
+                    if (this.settings.apiKey) {
+                        this.updateVipStatusDisplay(settingsArea as HTMLElement);
+                    }
 
                     // 为所有输入框添加自动保存功能（使用防抖减少频繁保存）
                     let saveTimeout: any = null;
@@ -742,5 +802,208 @@ export default class NoteHelperPlugin extends Plugin {
         const level = levelMap[this.settings.logLevel] || LogLevel.INFO;
         logger.setLevel(level);
         logger.debug(`Log level set to: ${this.settings.logLevel}`);
+    }
+
+    /**
+     * 更新VIP状态显示
+     */
+    private async updateVipStatusDisplay(container: HTMLElement) {
+        if (!this.settings.apiKey) {
+            return;
+        }
+
+        try {
+            const vipStatus = await fetchVipStatus(this.settings.apiKey);
+
+            // 根据VIP状态决定显示哪个二维码
+            const qrType = vipStatus.isValid &&
+                (vipStatus.vipType === 'obvip' || vipStatus.vipType === 'obvvip')
+                ? 'group' : 'vip';
+
+            const qrCodeUrl = getQrCodeUrl(qrType);
+            const qrLabel = qrType === 'group'
+                ? this.i18n.zh_CN.vipGroupLabel
+                : this.i18n.zh_CN.vipBuyLabel;
+
+            SettingsForm.updateVipStatus(container, vipStatus, qrCodeUrl, qrLabel);
+        } catch (error) {
+            logger.error('Failed to update VIP status:', error);
+        }
+    }
+
+    /**
+     * 刷新文章数量
+     */
+    private async refreshArticleCount(container: HTMLElement) {
+        if (!this.settings.apiKey) {
+            showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
+            return;
+        }
+
+        const refreshBtn = container.querySelector('#refreshArticleCount') as HTMLButtonElement;
+        if (refreshBtn) {
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = this.i18n.zh_CN.refreshing || '刷新中...';
+        }
+
+        try {
+            const count = await getArticleCount(
+                this.settings.endpoint,
+                this.settings.apiKey
+            );
+            SettingsForm.updateArticleCount(container, count);
+            showMessage(`当前有 ${count} 篇内容`, 3000, 'info');
+        } catch (error) {
+            logger.error('Failed to get article count:', error);
+            SettingsForm.updateArticleCount(container, '获取失败');
+            showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
+        } finally {
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '刷新';
+            }
+        }
+    }
+
+    /**
+     * 处理清空云空间
+     */
+    private async handleClearAllArticles(container: HTMLElement) {
+        const confirmed = await confirm(
+            this.i18n.zh_CN.confirm,
+            this.i18n.zh_CN.clearAllArticlesConfirm,
+            null
+        );
+
+        if (!confirmed) return;
+
+        if (!this.settings.apiKey) {
+            showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
+            return;
+        }
+
+        const clearBtn = container.querySelector('#clearAllArticlesBtn') as HTMLButtonElement;
+        if (clearBtn) {
+            clearBtn.disabled = true;
+            clearBtn.textContent = this.i18n.zh_CN.clearing || '清空中...';
+        }
+
+        try {
+            await clearAllArticles(this.settings.endpoint, this.settings.apiKey);
+            SettingsForm.updateArticleCount(container, 0);
+            showMessage(this.i18n.zh_CN.success?.articlesCleared || 'Articles cleared', 5000, 'info');
+        } catch (error) {
+            logger.error('Failed to clear articles:', error);
+            showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
+        } finally {
+            if (clearBtn) {
+                clearBtn.disabled = false;
+                clearBtn.textContent = '清空云空间';
+            }
+        }
+    }
+
+    /**
+     * 检查更新
+     */
+    private async checkForUpdates(container: HTMLElement) {
+        const checkBtn = container.querySelector('#checkUpdateBtn') as HTMLButtonElement;
+        if (checkBtn) {
+            checkBtn.disabled = true;
+            checkBtn.textContent = this.i18n.zh_CN.checkingUpdate || '检查中...';
+        }
+
+        SettingsForm.updateVersionStatus(container, '检查中...');
+
+        try {
+            const response = await fetch('https://siyuan.notebooksyncer.com/plugversion', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const latestVersion = data.version;
+            const currentVersion = this.manifest?.version || '1.0.0';
+
+            if (this.isNewerVersion(latestVersion, currentVersion)) {
+                SettingsForm.updateVersionStatus(container, `${this.i18n.zh_CN.newVersionAvailable}: ${latestVersion}`);
+                showMessage(`发现新版本 ${latestVersion}！`, 5000, 'info');
+            } else {
+                SettingsForm.updateVersionStatus(container, this.i18n.zh_CN.latestVersion);
+            }
+        } catch (error) {
+            logger.error('Failed to check for updates:', error);
+            SettingsForm.updateVersionStatus(container, this.i18n.zh_CN.updateCheckFailed);
+        } finally {
+            if (checkBtn) {
+                checkBtn.disabled = false;
+                checkBtn.textContent = this.i18n.zh_CN.checkUpdate;
+            }
+        }
+    }
+
+    /**
+     * 比较版本号
+     */
+    private isNewerVersion(latestVersion: string, currentVersion: string): boolean {
+        const parseVersion = (version: string) => {
+            return version.split('.').map(num => parseInt(num, 10));
+        };
+
+        const latest = parseVersion(latestVersion);
+        const current = parseVersion(currentVersion);
+
+        for (let i = 0; i < Math.max(latest.length, current.length); i++) {
+            const latestNum = latest[i] || 0;
+            const currentNum = current[i] || 0;
+
+            if (latestNum > currentNum) {
+                return true;
+            } else if (latestNum < currentNum) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 重置模板
+     */
+    private resetTemplate(container: HTMLElement, type: 'template' | 'wechatMessageTemplate' | 'frontMatterTemplate') {
+        const templateMap: Record<string, { inputId: string; defaultValue: string; message: string }> = {
+            template: {
+                inputId: '#template',
+                defaultValue: DEFAULT_SETTINGS.template,
+                message: '文章模板已重置'
+            },
+            wechatMessageTemplate: {
+                inputId: '#wechatMessageTemplate',
+                defaultValue: DEFAULT_SETTINGS.wechatMessageTemplate,
+                message: '企微消息模板已重置'
+            },
+            frontMatterTemplate: {
+                inputId: '#frontMatterTemplate',
+                defaultValue: DEFAULT_SETTINGS.frontMatterTemplate,
+                message: '前置元数据模板已重置'
+            }
+        };
+
+        const config = templateMap[type];
+        if (!config) return;
+
+        const input = container.querySelector(config.inputId) as HTMLTextAreaElement;
+        if (input) {
+            input.value = config.defaultValue;
+            // 触发change事件以保存
+            input.dispatchEvent(new Event('change'));
+            showMessage(config.message, 3000, 'info');
+        }
     }
 }
