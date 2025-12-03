@@ -2,7 +2,7 @@
   "name": "siyuan-notehelper",
   "author": "notesynchelper",
   "url": "https://github.com/notesynchelper/siyuan-notehelper",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "minAppVersion": "3.3.0",
   "backends": ["all"],
   "frontends": ["all"],

@@ -29,9 +29,10 @@ export enum HighlightManagerId {
 
 // 图片模式
 export enum ImageMode {
-    LOCAL = 'local',        // 本地缓存
-    REMOTE = 'remote',      // 远程保留
-    DISABLED = 'disabled',  // 禁用
+    LOCAL = 'local',        // 本地缓存（保留但不在UI展示）
+    REMOTE = 'remote',      // 远程保留（默认）
+    DISABLED = 'disabled',  // 禁用（保留但不在UI展示）
+    PROXY = 'proxy',        // 使用在线图床代理
 }
 
 // 合并模式

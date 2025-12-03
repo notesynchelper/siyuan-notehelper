@@ -207,7 +207,7 @@ export class SettingsForm {
 
                 <div class="fn__hr"></div>
 
-                <!-- 图片处理（已禁用）
+                <!-- 图片处理 -->
                 <div class="b3-label">
                     <div class="fn__flex">
                         <div class="fn__flex-1" style="font-weight: bold;">
@@ -222,57 +222,19 @@ export class SettingsForm {
                     </div>
                     <div class="fn__flex">
                         <select class="b3-select fn__flex-1" id="imageMode">
-                            <option value="local" ${settings.imageMode === 'local' ? 'selected' : ''}>${i18n.imageModeLocal || '缓存到本地'}</option>
-                            <option value="remote" ${settings.imageMode === 'remote' ? 'selected' : ''}>${i18n.imageModeRemote || '保留原始链接'}</option>
-                            <option value="disabled" ${settings.imageMode === 'disabled' ? 'selected' : ''}>${i18n.imageModeDisabled || '不加载图片'}</option>
+                            <option value="remote" ${settings.imageMode === 'remote' ? 'selected' : ''}>${i18n.imageModeRemote || '保留原始链接（默认）'}</option>
+                            <option value="proxy" ${settings.imageMode === 'proxy' ? 'selected' : ''}>${i18n.imageModeProxy || '使用在线图床'}</option>
                         </select>
                     </div>
                     <div class="b3-label__text">${i18n.imageModeDesc || '选择如何处理笔记中的图片'}</div>
                 </div>
 
-                <div id="imageAdvancedOptions" style="display: ${settings.imageMode === 'local' ? 'block' : 'none'};">
-                    <div class="b3-label">
-                        <label class="fn__flex">
-                            <input type="checkbox" id="enablePngToJpeg" ${settings.enablePngToJpeg ? 'checked' : ''} />
-                            <span class="fn__space"></span>
-                            <span>${i18n.enablePngToJpeg || 'PNG 转 JPEG'}</span>
-                        </label>
-                        <div class="b3-label__text">${i18n.enablePngToJpegDesc || '将PNG图片转换为JPEG格式以节省空间'}</div>
-                    </div>
-
-                    <div id="jpegQualityContainer" style="display: ${settings.enablePngToJpeg ? 'block' : 'none'};">
-                        <div class="b3-label">
-                            <div class="fn__flex">
-                                <span class="fn__flex-1">${i18n.jpegQuality || 'JPEG 质量'}: <span id="jpegQualityValue">${settings.jpegQuality}</span></span>
-                            </div>
-                            <div class="fn__flex">
-                                <input type="range" id="jpegQuality" class="fn__flex-1" min="0" max="100" step="5" value="${settings.jpegQuality}" style="width: 100%;" />
-                            </div>
-                            <div class="b3-label__text">${i18n.jpegQualityDesc || '设置JPEG压缩质量（0-100），默认85'}</div>
-                        </div>
-                    </div>
-
-                    <div class="b3-label">
-                        <div class="fn__flex">
-                            <span class="fn__flex-1">${i18n.imageDownloadRetries || '下载重试次数'}</span>
-                        </div>
-                        <div class="fn__flex">
-                            <input class="b3-text-field fn__flex-1" type="number" id="imageDownloadRetries" value="${settings.imageDownloadRetries}" min="0" max="10" />
-                        </div>
-                        <div class="b3-label__text">${i18n.imageDownloadRetriesDesc || '图片下载失败时的重试次数'}</div>
-                    </div>
-
-                    <div class="b3-label">
-                        <div class="fn__flex">
-                            <span class="fn__flex-1">${i18n.imageAttachmentFolder || '图片存储文件夹'}</span>
-                        </div>
-                        <div class="fn__flex">
-                            <input class="b3-text-field fn__flex-1" id="imageAttachmentFolder" value="${settings.imageAttachmentFolder}" />
-                        </div>
-                        <div class="b3-label__text">${i18n.imageAttachmentFolderDesc || '本地化图片的存储路径，支持 {{{date}}} 变量'}</div>
+                <!-- 在线图床警告提示 -->
+                <div id="proxyWarning" style="display: ${settings.imageMode === 'proxy' ? 'block' : 'none'};">
+                    <div class="b3-label" style="background: var(--b3-card-warning-background, #fff3cd); padding: 8px; border-radius: 4px; margin-top: 4px;">
+                        <span style="color: var(--b3-card-warning-color, #856404);">${i18n.imageModeProxyWarning || '⚠️ 开启后需要海外网络环境才能正常加载图片'}</span>
                     </div>
                 </div>
-                -->
 
                 <div class="fn__hr"></div>
 
@@ -389,12 +351,8 @@ export class SettingsForm {
         const mergeFolderTemplateInput = container.querySelector('#mergeFolderTemplate') as HTMLInputElement;
         const mergeMessageTemplateInput = container.querySelector('#mergeMessageTemplate') as HTMLTextAreaElement;
 
-        // 图片处理相关（已禁用）
-        // const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
-        // const enablePngToJpegInput = container.querySelector('#enablePngToJpeg') as HTMLInputElement;
-        // const jpegQualityInput = container.querySelector('#jpegQuality') as HTMLInputElement;
-        // const imageDownloadRetriesInput = container.querySelector('#imageDownloadRetries') as HTMLInputElement;
-        // const imageAttachmentFolderInput = container.querySelector('#imageAttachmentFolder') as HTMLInputElement;
+        // 图片处理相关
+        const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
 
         // 高级设置相关
         const frontMatterVariablesInput = container.querySelector('#frontMatterVariables') as HTMLTextAreaElement;
@@ -430,12 +388,8 @@ export class SettingsForm {
         if (mergeFolderTemplateInput) values.mergeFolderTemplate = mergeFolderTemplateInput.value;
         if (mergeMessageTemplateInput) values.mergeMessageTemplate = mergeMessageTemplateInput.value;
 
-        // 图片处理（已禁用）
-        // if (imageModeSelect) values.imageMode = imageModeSelect.value as any;
-        // if (enablePngToJpegInput) values.enablePngToJpeg = enablePngToJpegInput.checked;
-        // if (jpegQualityInput) values.jpegQuality = parseInt(jpegQualityInput.value) || 85;
-        // if (imageDownloadRetriesInput) values.imageDownloadRetries = parseInt(imageDownloadRetriesInput.value) || 3;
-        // if (imageAttachmentFolderInput) values.imageAttachmentFolder = imageAttachmentFolderInput.value;
+        // 图片处理
+        if (imageModeSelect) values.imageMode = imageModeSelect.value as any;
 
         // 高级设置
         if (frontMatterVariablesInput) {
@@ -522,32 +476,14 @@ export class SettingsForm {
         //     });
         // }
 
-        // 图片模式变化时显示/隐藏高级选项（已禁用）
-        // const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
-        // const imageAdvancedOptions = container.querySelector('#imageAdvancedOptions') as HTMLElement;
-        // if (imageModeSelect && imageAdvancedOptions) {
-        //     imageModeSelect.addEventListener('change', () => {
-        //         imageAdvancedOptions.style.display = imageModeSelect.value === 'local' ? 'block' : 'none';
-        //     });
-        // }
-
-        // PNG转JPEG开关变化时显示/隐藏质量设置（已禁用）
-        // const enablePngToJpegInput = container.querySelector('#enablePngToJpeg') as HTMLInputElement;
-        // const jpegQualityContainer = container.querySelector('#jpegQualityContainer') as HTMLElement;
-        // if (enablePngToJpegInput && jpegQualityContainer) {
-        //     enablePngToJpegInput.addEventListener('change', () => {
-        //         jpegQualityContainer.style.display = enablePngToJpegInput.checked ? 'block' : 'none';
-        //     });
-        // }
-
-        // JPEG质量滑块实时显示数值（已禁用）
-        // const jpegQualityInput = container.querySelector('#jpegQuality') as HTMLInputElement;
-        // const jpegQualityValue = container.querySelector('#jpegQualityValue') as HTMLSpanElement;
-        // if (jpegQualityInput && jpegQualityValue) {
-        //     jpegQualityInput.addEventListener('input', () => {
-        //         jpegQualityValue.textContent = jpegQualityInput.value;
-        //     });
-        // }
+        // 图片模式变化时显示/隐藏警告提示
+        const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
+        const proxyWarning = container.querySelector('#proxyWarning') as HTMLElement;
+        if (imageModeSelect && proxyWarning) {
+            imageModeSelect.addEventListener('change', () => {
+                proxyWarning.style.display = imageModeSelect.value === 'proxy' ? 'block' : 'none';
+            });
+        }
     }
 
     /**

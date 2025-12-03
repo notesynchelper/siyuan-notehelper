@@ -4,9 +4,12 @@
 
 import Mustache from 'mustache';
 import { logger } from '../utils/logger';
-import { Article, Highlight } from '../utils/types';
+import { Article, Highlight, ImageMode } from '../utils/types';
 import { formatDate, isWeChatMessage } from '../utils/util';
 import { PluginSettings } from './index';
+
+// 图床代理URL
+const IMAGE_PROXY_URL = 'https://images.weserv.nl/?url=';
 
 // 默认模板
 export const DEFAULT_TEMPLATE = `## 来源
@@ -107,7 +110,12 @@ export function renderArticleContent(
     try {
         const view = articleToView(article, settings);
         const template = settings.template || DEFAULT_TEMPLATE;
-        return Mustache.render(template, view);
+        let content = Mustache.render(template, view);
+
+        // 处理图片URL
+        content = processImageUrls(content, settings);
+
+        return content;
     } catch (error) {
         logger.error('Template rendering error:', error);
         return `# ${article.title}\n\n${article.content}`;
@@ -124,7 +132,12 @@ export function renderWeChatMessage(
     try {
         const view = articleToView(article, settings);
         const template = settings.wechatMessageTemplate;
-        return Mustache.render(template, view);
+        let content = Mustache.render(template, view);
+
+        // 处理图片URL
+        content = processImageUrls(content, settings);
+
+        return content;
     } catch (error) {
         logger.error('WeChat message template rendering error:', error);
         return renderArticleContent(article, settings);
@@ -326,6 +339,41 @@ export function processContentTimestamps(content: string): string {
 }
 
 /**
+ * 处理内容中的图片URL
+ * 如果启用了图床代理，将图片URL替换为代理URL
+ */
+export function processImageUrls(content: string, settings: PluginSettings): string {
+    if (settings.imageMode !== ImageMode.PROXY) {
+        return content;
+    }
+
+    // 匹配 Markdown 图片语法: ![alt](url)
+    const markdownImageRegex = /!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g;
+
+    content = content.replace(markdownImageRegex, (match, alt, url) => {
+        // 避免重复代理
+        if (url.startsWith(IMAGE_PROXY_URL)) {
+            return match;
+        }
+        const proxyUrl = IMAGE_PROXY_URL + encodeURIComponent(url);
+        return `![${alt}](${proxyUrl})`;
+    });
+
+    // 匹配 HTML img 标签: <img src="url">
+    const htmlImageRegex = /<img([^>]*)\ssrc=["'](https?:\/\/[^"']+)["']([^>]*)>/gi;
+
+    content = content.replace(htmlImageRegex, (match, before, url, after) => {
+        if (url.startsWith(IMAGE_PROXY_URL)) {
+            return match;
+        }
+        const proxyUrl = IMAGE_PROXY_URL + encodeURIComponent(url);
+        return `<img${before} src="${proxyUrl}"${after}>`;
+    });
+
+    return content;
+}
+
+/**
  * 渲染企微消息简洁内容（用于合并模式）
  * 与 renderWeChatMessage 不同，这个函数专门用于合并文件中的追加内容
  * 使用简洁样式，不包含 Front Matter，只渲染核心内容
@@ -349,7 +397,12 @@ export function renderWeChatMessageSimple(
 
         // 使用用户自定义的合并消息模板，如果没有则使用企微消息模板
         const template = settings.mergeMessageTemplate || settings.wechatMessageTemplate || '---\n## 📅 {{{dateSaved}}}\n{{{content}}}';
-        return Mustache.render(template, articleView);
+        let content = Mustache.render(template, articleView);
+
+        // 处理图片URL
+        content = processImageUrls(content, settings);
+
+        return content;
     } catch (error) {
         logger.error('WeChat message simple rendering error:', error);
         return `## 📅 ${formatDate(article.savedAt, settings.dateSavedFormat)}\n${article.content}`;
