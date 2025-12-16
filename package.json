@@ -1,6 +1,6 @@
 {
   "name": "siyuan-notehelper",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Sync notes and articles from cloud to SiYuan",
   "main": ".src/index.js",
   "scripts": {
