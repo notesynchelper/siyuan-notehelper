@@ -143,6 +143,15 @@ export class SettingsForm {
                     </div>
                 </div>
 
+                <div class="b3-label">
+                    <label class="fn__flex">
+                        <input type="checkbox" id="refreshIndexAfterSync" ${settings.refreshIndexAfterSync ? 'checked' : ''} />
+                        <span class="fn__space"></span>
+                        <span>${i18n.refreshIndexAfterSync || '同步后刷新索引'}</span>
+                    </label>
+                    <div class="b3-label__text">${i18n.refreshIndexAfterSyncDesc || '勾选后同步完成时会强制刷新文件树索引，解决新笔记不显示的问题'}</div>
+                </div>
+
                 <div class="fn__hr"></div>
 
                 <!-- 笔记同步位置 -->
@@ -248,8 +257,9 @@ export class SettingsForm {
                         <div class="fn__flex">
                             <span class="fn__flex-1">${i18n.imageAttachmentFolder || '图片存储文件夹'}</span>
                         </div>
-                        <div class="fn__flex">
+                        <div class="fn__flex" style="gap: 8px;">
                             <input class="b3-text-field fn__flex-1" id="imageAttachmentFolder" value="${settings.imageAttachmentFolder}" />
+                            <button class="b3-button b3-button--outline" id="resetImageFolder" title="恢复默认值">↺</button>
                         </div>
                         <div class="b3-label__text">${i18n.imageAttachmentFolderDesc || '本地缓存模式下图片的存储路径，支持 {{{date}}} 变量'}</div>
                     </div>
@@ -277,8 +287,9 @@ export class SettingsForm {
                     <div class="fn__flex">
                         <span class="fn__flex-1">${i18n.attachmentFolder || '附件存储位置'}</span>
                     </div>
-                    <div class="fn__flex">
+                    <div class="fn__flex" style="gap: 8px;">
                         <input class="b3-text-field fn__flex-1" id="attachmentFolder" value="${settings.attachmentFolder}" />
+                        <button class="b3-button b3-button--outline" id="resetAttachmentFolder" title="恢复默认值">↺</button>
                     </div>
                     <div class="b3-label__text">${i18n.attachmentFolderDesc || '文件附件的默认存储路径'}</div>
                 </div>
@@ -392,6 +403,7 @@ export class SettingsForm {
         const syncAtInput = container.querySelector('#syncAt') as HTMLInputElement;
         const frequencyInput = container.querySelector('#frequency') as HTMLInputElement;
         const syncOnStartInput = container.querySelector('#syncOnStart') as HTMLInputElement;
+        const refreshIndexAfterSyncInput = container.querySelector('#refreshIndexAfterSync') as HTMLInputElement;
         const mergeModeSelect = container.querySelector('#mergeMode') as HTMLSelectElement;
         const targetNotebookSelect = container.querySelector('#targetNotebook') as HTMLSelectElement;
         const folderInput = container.querySelector('#folder') as HTMLInputElement;
@@ -434,6 +446,7 @@ export class SettingsForm {
 
         if (frequencyInput) values.frequency = parseInt(frequencyInput.value) || 0;
         if (syncOnStartInput) values.syncOnStart = syncOnStartInput.checked;
+        if (refreshIndexAfterSyncInput) values.refreshIndexAfterSync = refreshIndexAfterSyncInput.checked;
         if (mergeModeSelect) values.mergeMode = mergeModeSelect.value as any;
         if (targetNotebookSelect) values.targetNotebook = targetNotebookSelect.value;
         if (folderInput) values.folder = folderInput.value;
@@ -547,6 +560,23 @@ export class SettingsForm {
                 if (imageLocalSettings) {
                     imageLocalSettings.style.display = imageModeSelect.value === 'local' ? 'block' : 'none';
                 }
+            });
+        }
+
+        // 恢复默认值按钮事件
+        const resetImageFolderBtn = container.querySelector('#resetImageFolder') as HTMLButtonElement;
+        const imageAttachmentFolderInput = container.querySelector('#imageAttachmentFolder') as HTMLInputElement;
+        if (resetImageFolderBtn && imageAttachmentFolderInput) {
+            resetImageFolderBtn.addEventListener('click', () => {
+                imageAttachmentFolderInput.value = 'assets/笔记同步助手/images/{{{date}}}';
+            });
+        }
+
+        const resetAttachmentFolderBtn = container.querySelector('#resetAttachmentFolder') as HTMLButtonElement;
+        const attachmentFolderInput = container.querySelector('#attachmentFolder') as HTMLInputElement;
+        if (resetAttachmentFolderBtn && attachmentFolderInput) {
+            resetAttachmentFolderBtn.addEventListener('click', () => {
+                attachmentFolderInput.value = 'assets/笔记同步助手/attachments';
             });
         }
     }

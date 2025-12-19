@@ -5,7 +5,7 @@
 | 属性 | 值 |
 |------|-----|
 | **项目名称** | 笔记同步助手 (siyuan-notehelper) |
-| **版本** | 1.5.2 |
+| **版本** | 1.6.0 |
 | **类型** | 思源笔记 SiYuan 插件 |
 | **功能** | 将微信、企微、公众号、小红书、得到等平台的内容同步到思源笔记 |
 
@@ -388,7 +388,7 @@ index.ts: 更新 UI 和同步时间
 ```json
 {
   "name": "siyuan-notehelper",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "minAppVersion": "3.3.0",
   "backends": ["all"],
   "frontends": ["all"],

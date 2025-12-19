@@ -125,7 +125,10 @@ export class SyncManager {
             // 更新同步时间（去掉毫秒以匹配服务端格式）
             const now = new Date();
             this.settings.syncAt = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
-            await this.plugin.saveData(this.settings);
+            await this.plugin.saveSettings();
+
+            // 刷新文件树，确保新笔记立即显示
+            await this.refreshFiletree();
 
             logger.debug(`Sync completed. Created: ${createdCount}, Skipped: ${skippedCount}, Errors: ${errors.length}`);
 
@@ -153,8 +156,48 @@ export class SyncManager {
      */
     async resetSyncTime(): Promise<void> {
         this.settings.syncAt = '';
-        await this.plugin.saveData(this.settings);
+        await this.plugin.saveSettings();
         logger.debug('Sync time reset');
+    }
+
+    /**
+     * 刷新文件树，确保新创建的笔记立即显示
+     */
+    private async refreshFiletree(): Promise<void> {
+        try {
+            if (this.settings.refreshIndexAfterSync) {
+                // 方案2：强制刷新索引（用户勾选了"同步后刷新索引"）
+                // 第一次刷新文件树
+                await fetch('/api/filetree/refreshFiletree', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                // 等待一小段时间让索引完成
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // 重新加载文件树 UI
+                await fetch('/api/ui/reloadFiletree', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                logger.debug('Filetree refreshed with reloadFiletree');
+            } else {
+                // 方案1：默认只刷新文件树（不勾选）
+                await fetch('/api/filetree/refreshFiletree', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                logger.debug('Filetree refreshed');
+            }
+        } catch (error) {
+            logger.warn('Failed to refresh filetree:', error);
+        }
     }
 
     /**

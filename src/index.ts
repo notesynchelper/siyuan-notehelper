@@ -644,11 +644,12 @@ export default class NoteHelperPlugin extends Plugin {
                     'error'
                 );
             }
-
-            this.updateStatusBar();
         } catch (error) {
             logger.error('Sync error:', error);
             showMessage(this.i18n.zh_CN.syncFailed + ': ' + error, 5000, 'error');
+        } finally {
+            // 确保状态重置并更新UI
+            this.settings.syncing = false;
             this.updateStatusBar();
         }
     }

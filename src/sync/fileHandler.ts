@@ -16,7 +16,7 @@ import {
     renderFrontMatter,
     renderWeChatMessageSimple,
 } from '../settings/template';
-import { MergeMode } from '../utils/types';
+import { MergeMode, ImageMode } from '../utils/types';
 import {
     isWeChatMessage,
     extractDateFromWeChatTitle,
@@ -128,8 +128,13 @@ export class FileHandler {
             ? renderWeChatMessage(article, this.settings)
             : renderArticleContent(article, this.settings);
 
+        logger.debug(`[createSeparateFile] 渲染后的内容长度: ${content.length}`);
+        logger.debug(`[createSeparateFile] 原始文章内容: ${article.content?.substring(0, 300)}...`);
+
         // 5.1 处理附件链接（自动下载到本地）
+        logger.debug(`[createSeparateFile] 调用 processAttachments...`);
         content = await this.processAttachments(content);
+        logger.debug(`[createSeparateFile] processAttachments 完成`);
 
         const fullContent = frontMatter + content;
 
@@ -251,8 +256,13 @@ export class FileHandler {
                 ? renderWeChatMessageSimple(article, this.settings)
                 : renderArticleContent(article, this.settings);
 
+            logger.debug(`[mergeToExistingDocument] 渲染后的内容长度: ${newContentPart.length}`);
+            logger.debug(`[mergeToExistingDocument] 原始文章内容: ${article.content?.substring(0, 300)}...`);
+
             // 处理附件链接（自动下载到本地）
+            logger.debug(`[mergeToExistingDocument] 调用 processAttachments...`);
             newContentPart = await this.processAttachments(newContentPart);
+            logger.debug(`[mergeToExistingDocument] processAttachments 完成`);
 
             // 添加分隔符
             const separator = existingContent.trim() ? '\n\n---\n\n' : '';
@@ -313,8 +323,13 @@ export class FileHandler {
                 ? renderWeChatMessageSimple(article, this.settings)
                 : renderArticleContent(article, this.settings);
 
+            logger.debug(`[createMergedDocument] 渲染后的内容长度: ${contentPart.length}`);
+            logger.debug(`[createMergedDocument] 原始文章内容: ${article.content?.substring(0, 300)}...`);
+
             // 处理附件链接（自动下载到本地）
+            logger.debug(`[createMergedDocument] 调用 processAttachments...`);
             contentPart = await this.processAttachments(contentPart);
+            logger.debug(`[createMergedDocument] processAttachments 完成`);
 
             logger.debug(`[createMergedDocument] Generated content length: ${contentPart.length}`);
 
@@ -1168,15 +1183,64 @@ export class FileHandler {
     }
 
     /**
-     * 处理内容中的附件链接，下载附件并替换链接
+     * 处理内容中的附件和图片链接，下载到本地并替换链接
      * @param content 原始内容
      * @returns 处理后的内容
      */
     async processAttachments(content: string): Promise<string> {
-        // 匹配 markdown 链接: [文件名](url)
-        // 使用负向前瞻排除图片链接 ![alt](url)
-        const attachmentRegex = /(?<!!)\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+        logger.info(`[资源处理] ========== 开始处理文章资源 ==========`);
+        logger.info(`[资源处理] 内容长度: ${content.length} 字符`);
+        logger.info(`[资源处理] 图片模式: ${this.settings.imageMode}`);
+        logger.debug(`[资源处理] 内容预览: ${content.substring(0, 500)}...`);
 
+        // 1. 处理图片链接 ![alt](url) - 仅在 LOCAL 模式下
+        if (this.settings.imageMode === ImageMode.LOCAL) {
+            const imageRegex = /!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g;
+            const imageMatches: Array<{full: string, alt: string, url: string}> = [];
+            let imageMatch;
+
+            while ((imageMatch = imageRegex.exec(content)) !== null) {
+                imageMatches.push({
+                    full: imageMatch[0],
+                    alt: imageMatch[1],
+                    url: imageMatch[2]
+                });
+            }
+
+            logger.info(`[图片处理] 检测到 ${imageMatches.length} 个图片链接`);
+
+            if (imageMatches.length > 0) {
+                for (let i = 0; i < imageMatches.length; i++) {
+                    const item = imageMatches[i];
+                    logger.info(`[图片处理] [${i + 1}/${imageMatches.length}] 开始处理图片`);
+                    logger.info(`[图片处理] 原始链接: ${item.full}`);
+                    logger.info(`[图片处理] 图片URL: ${item.url}`);
+
+                    try {
+                        const localPath = await this.downloadImage(item.url);
+                        if (localPath) {
+                            const newLink = `![${item.alt}](${localPath})`;
+                            content = content.replace(item.full, newLink);
+                            logger.info(`[图片处理] ✓ 下载成功`);
+                            logger.info(`[图片处理] 本地路径: ${localPath}`);
+                            logger.info(`[图片处理] 替换后链接: ${newLink}`);
+                            logger.info(`[图片处理] 替换状态: 成功`);
+                        } else {
+                            logger.warn(`[图片处理] ✗ 下载失败，保留原链接`);
+                            logger.info(`[图片处理] 替换状态: 跳过（下载失败）`);
+                        }
+                    } catch (error) {
+                        logger.error(`[图片处理] ✗ 处理异常: ${error}`);
+                        logger.info(`[图片处理] 替换状态: 跳过（异常）`);
+                    }
+                }
+            }
+        } else {
+            logger.info(`[图片处理] 图片模式为 ${this.settings.imageMode}，跳过图片本地化`);
+        }
+
+        // 2. 处理附件链接 [文件名](url) - 排除图片链接
+        const attachmentRegex = /(?<!!)\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
         const matches: Array<{full: string, displayName: string, url: string}> = [];
         let match;
 
@@ -1188,27 +1252,37 @@ export class FileHandler {
             });
         }
 
-        if (matches.length === 0) {
-            return content;
-        }
+        logger.info(`[附件处理] 检测到 ${matches.length} 个附件链接`);
 
-        logger.debug(`Found ${matches.length} attachments to download`);
+        if (matches.length > 0) {
+            for (let i = 0; i < matches.length; i++) {
+                const item = matches[i];
+                logger.info(`[附件处理] [${i + 1}/${matches.length}] 开始处理附件`);
+                logger.info(`[附件处理] 原始链接: ${item.full}`);
+                logger.info(`[附件处理] 文件名: ${item.displayName}`);
+                logger.info(`[附件处理] 附件URL: ${item.url}`);
 
-        // 处理每个附件
-        for (const item of matches) {
-            try {
-                const localPath = await this.downloadAttachment(item.url, item.displayName);
-                if (localPath) {
-                    // 替换链接为本地路径
-                    content = content.replace(item.full, `[${item.displayName}](${localPath})`);
-                    logger.debug(`Downloaded attachment: ${item.displayName} -> ${localPath}`);
+                try {
+                    const localPath = await this.downloadAttachment(item.url, item.displayName);
+                    if (localPath) {
+                        const newLink = `[${item.displayName}](${localPath})`;
+                        content = content.replace(item.full, newLink);
+                        logger.info(`[附件处理] ✓ 下载成功`);
+                        logger.info(`[附件处理] 本地路径: ${localPath}`);
+                        logger.info(`[附件处理] 替换后链接: ${newLink}`);
+                        logger.info(`[附件处理] 替换状态: 成功`);
+                    } else {
+                        logger.warn(`[附件处理] ✗ 下载失败，保留原链接`);
+                        logger.info(`[附件处理] 替换状态: 跳过（下载失败）`);
+                    }
+                } catch (error) {
+                    logger.error(`[附件处理] ✗ 处理异常: ${error}`);
+                    logger.info(`[附件处理] 替换状态: 跳过（异常）`);
                 }
-            } catch (error) {
-                logger.error(`Failed to download attachment ${item.displayName}:`, error);
-                // 下载失败时保持原链接不变
             }
         }
 
+        logger.info(`[资源处理] ========== 资源处理完成 ==========`);
         return content;
     }
 
@@ -1221,13 +1295,16 @@ export class FileHandler {
     private async downloadAttachment(url: string, displayName: string): Promise<string | null> {
         try {
             // 1. 下载文件
+            logger.info(`[附件下载] 发起网络请求...`);
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
+            logger.info(`[附件下载] 网络请求成功，状态码: ${response.status}`);
 
             const blob = await response.blob();
             const arrayBuffer = await blob.arrayBuffer();
+            logger.info(`[附件下载] 文件大小: ${(arrayBuffer.byteLength / 1024).toFixed(2)} KB`);
 
             // 2. 使用 displayName 作为文件名（确保有扩展名）
             let filename = sanitizeFileName(displayName);
@@ -1239,11 +1316,20 @@ export class FileHandler {
                     filename = `${filename}.${urlExtension}`;
                 }
             }
+            logger.info(`[附件下载] 保存文件名: ${filename}`);
 
             // 3. 上传到思源
+            // 验证路径必须以 assets/ 开头，否则使用默认路径
+            let attachmentFolder = this.settings.attachmentFolder;
+            if (!attachmentFolder.startsWith('assets/')) {
+                attachmentFolder = 'assets/笔记同步助手/attachments';
+                logger.warn(`[附件下载] 路径未以 assets/ 开头，使用默认路径: ${attachmentFolder}`);
+            }
+
             const formData = new FormData();
             formData.append('file[]', new Blob([arrayBuffer]), filename);
-            formData.append('assetsDirPath', this.settings.attachmentFolder);
+            formData.append('assetsDirPath', attachmentFolder);
+            logger.info(`[附件下载] 上传目录: ${attachmentFolder}`);
 
             const uploadResponse = await fetch('/api/asset/upload', {
                 method: 'POST',
@@ -1251,16 +1337,144 @@ export class FileHandler {
             });
 
             const result = await uploadResponse.json();
+            logger.info(`[附件下载] 思源API响应: code=${result.code}, succMap=${JSON.stringify(result.data?.succMap)}`);
 
             if (result.code !== 0) {
-                throw new Error(`Upload failed: ${result.msg}`);
+                throw new Error(`上传失败: ${result.msg}`);
             }
 
-            return result.data.succMap[filename];
+            // 从 succMap 中获取路径（思源可能会修改文件名，所以遍历找到正确的）
+            const succMap = result.data.succMap || {};
+            let localPath = succMap[filename];
+
+            // 如果直接匹配不到，取 succMap 中包含原文件名的项
+            if (!localPath) {
+                const keys = Object.keys(succMap);
+                for (const key of keys) {
+                    // 尝试找到包含原始文件名的 key
+                    if (key.includes(filename.replace(/\.[^.]+$/, ''))) {
+                        localPath = succMap[key];
+                        logger.info(`[附件下载] 文件名被思源修改: ${filename} -> ${key}`);
+                        break;
+                    }
+                }
+                // 如果还是找不到，取第一个
+                if (!localPath && keys.length > 0) {
+                    localPath = succMap[keys[0]];
+                    logger.warn(`[附件下载] 无法匹配文件名，使用第一个结果: ${keys[0]}`);
+                }
+            }
+
+            logger.info(`[附件下载] 思源返回路径: ${localPath}`);
+            return localPath;
         } catch (error) {
-            logger.error(`Attachment download failed: ${url}`, error);
+            logger.error(`[附件下载] 失败: ${error}`);
             return null;
         }
+    }
+
+    /**
+     * 下载图片到本地
+     * @param url 图片 URL
+     * @returns 本地路径
+     */
+    private async downloadImage(url: string): Promise<string | null> {
+        try {
+            // 1. 下载图片
+            logger.info(`[图片下载] 发起网络请求...`);
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            logger.info(`[图片下载] 网络请求成功，状态码: ${response.status}`);
+
+            const blob = await response.blob();
+            const arrayBuffer = await blob.arrayBuffer();
+            logger.info(`[图片下载] 文件大小: ${(arrayBuffer.byteLength / 1024).toFixed(2)} KB`);
+
+            // 2. 生成文件名（从 URL 提取或生成唯一名）
+            let filename = this.getFilenameFromUrl(url);
+            if (!filename) {
+                // 生成唯一文件名
+                const ext = this.getExtensionFromUrl(url) || 'jpg';
+                filename = `image-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+            }
+            filename = sanitizeFileName(filename);
+            logger.info(`[图片下载] 保存文件名: ${filename}`);
+
+            // 3. 上传到思源（使用图片专用目录）
+            // 渲染目录模板中的日期变量
+            let imageFolder = this.settings.imageAttachmentFolder || this.settings.attachmentFolder;
+            const today = formatDate(new Date().toISOString(), this.settings.folderDateFormat);
+            imageFolder = imageFolder.replace(/\{\{\{date\}\}\}/g, today);
+
+            // 验证路径必须以 assets/ 开头，否则使用默认路径
+            if (!imageFolder.startsWith('assets/')) {
+                imageFolder = `assets/笔记同步助手/images/${today}`;
+                logger.warn(`[图片下载] 路径未以 assets/ 开头，使用默认路径: ${imageFolder}`);
+            }
+            logger.info(`[图片下载] 上传目录: ${imageFolder}`);
+
+            const formData = new FormData();
+            formData.append('file[]', new Blob([arrayBuffer]), filename);
+            formData.append('assetsDirPath', imageFolder);
+
+            const uploadResponse = await fetch('/api/asset/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await uploadResponse.json();
+            logger.info(`[图片下载] 思源API响应: code=${result.code}, succMap=${JSON.stringify(result.data?.succMap)}`);
+
+            if (result.code !== 0) {
+                throw new Error(`上传失败: ${result.msg}`);
+            }
+
+            // 从 succMap 中获取路径（思源可能会修改文件名，所以遍历找到正确的）
+            const succMap = result.data.succMap || {};
+            let localPath = succMap[filename];
+
+            // 如果直接匹配不到，取 succMap 中包含原文件名的项
+            if (!localPath) {
+                const keys = Object.keys(succMap);
+                for (const key of keys) {
+                    if (key.includes(filename.replace(/\.[^.]+$/, ''))) {
+                        localPath = succMap[key];
+                        logger.info(`[图片下载] 文件名被思源修改: ${filename} -> ${key}`);
+                        break;
+                    }
+                }
+                if (!localPath && keys.length > 0) {
+                    localPath = succMap[keys[0]];
+                    logger.warn(`[图片下载] 无法匹配文件名，使用第一个结果: ${keys[0]}`);
+                }
+            }
+
+            logger.info(`[图片下载] 思源返回路径: ${localPath}`);
+            return localPath;
+        } catch (error) {
+            logger.error(`[图片下载] 失败: ${error}`);
+            return null;
+        }
+    }
+
+    /**
+     * 从 URL 中提取文件名
+     */
+    private getFilenameFromUrl(url: string): string | null {
+        try {
+            const urlObj = new URL(url);
+            const pathname = urlObj.pathname;
+            const filename = pathname.split('/').pop();
+            // 只返回有扩展名的文件名
+            if (filename && filename.includes('.')) {
+                return filename;
+            }
+        } catch {
+            // URL 解析失败
+        }
+        return null;
     }
 
     /**

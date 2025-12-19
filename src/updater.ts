@@ -10,6 +10,9 @@ const VERSION_URL = 'https://siyuan.notebooksyncer.com/plugversion';
 const BASE_URL = 'https://siyuan.notebooksyncer.com/sy';
 const PLUGIN_PATH = '/data/plugins/siyuan-notehelper';
 
+// 本次运行期间是否已检查过更新（内存标记，重启后自动重置）
+let hasCheckedThisSession = false;
+
 // 需要下载的文件列表
 const FILES = [
     { remote: `${BASE_URL}/plugin.json`, local: `${PLUGIN_PATH}/plugin.json` },
@@ -91,14 +94,27 @@ async function writeFile(path: string, data: ArrayBuffer): Promise<void> {
 /**
  * 检查并更新插件
  * 在打开设置页或同步时调用
+ * 每次思源运行期间只检查一次
  */
 export async function checkAndUpdate(): Promise<void> {
+    // 本次运行期间已检查过，直接返回
+    if (hasCheckedThisSession) {
+        logger.debug('本次运行已检查过更新，跳过');
+        return;
+    }
+
+    // 标记为已检查（无论结果如何）
+    hasCheckedThisSession = true;
+
     try {
         const remoteVersion = await getRemoteVersion();
         if (!remoteVersion) return;
 
         const localVersion = await getLocalVersion();
-        if (!compareVersions(remoteVersion, localVersion)) return;
+        if (!compareVersions(remoteVersion, localVersion)) {
+            logger.debug(`当前版本 ${localVersion} 已是最新`);
+            return;
+        }
 
         logger.info(`发现新版本: ${localVersion} -> ${remoteVersion}`);
 

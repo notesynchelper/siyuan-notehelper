@@ -48,6 +48,7 @@ export interface PluginSettings {
     mergeMode: MergeMode;  // 合并模式
     syncing: boolean;  // 同步中标志
     intervalId: number;  // 定时器 ID
+    refreshIndexAfterSync: boolean;  // 同步后刷新索引
 
     // 笔记同步位置
     targetNotebook: string;  // 目标笔记本 ID
@@ -108,6 +109,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     mergeMode: MergeMode.MESSAGES,
     syncing: false,
     intervalId: 0,
+    refreshIndexAfterSync: true,  // 默认刷新索引
 
     // 笔记同步位置
     targetNotebook: '',  // 空字符串表示使用默认笔记本
@@ -120,7 +122,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     mergeFolderTemplate: '笔记同步助手/微信消息/{{{date}}}',  // 用户可自定义的路径模板
     singleFileName: '同步助手_{{{date}}}',
     singleFileDateFormat: 'yyyy-MM-dd',
-    attachmentFolder: '笔记同步助手/attachments',
+    attachmentFolder: 'assets/笔记同步助手/attachments',
 
     // 模板设置
     template: DEFAULT_TEMPLATE,
@@ -148,12 +150,12 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 
     // 图片处理
     imageMode: ImageMode.LOCAL,
-    imageAttachmentFolder: '笔记同步助手/images/{{{date}}}',
+    imageAttachmentFolder: 'assets/笔记同步助手/images/{{{date}}}',
     enablePngToJpeg: false,
     jpegQuality: 85,
     imageDownloadRetries: 3,
 
     // 其他
     version: '0.1.0',
-    logLevel: 'INFO',  // 生产环境
+    logLevel: 'INFO',  // 生产模式
 };
