@@ -391,7 +391,7 @@ export async function clearAllArticles(
 
     try {
         const response = await fetch(clearUrl, {
-            method: 'POST',
+            method: 'DELETE',
             headers,
         });
 

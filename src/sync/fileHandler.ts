@@ -98,40 +98,51 @@ export class FileHandler {
      * @returns 返回 { docId: string, skipped: boolean }
      */
     private async createSeparateFile(article: Article, notebookId: string): Promise<{ docId: string, skipped: boolean }> {
-        // 检查文档是否已存在（通过服务端 ID 去重）
-        const existingDocId = await this.checkDocumentBySourceId(article.id);
-        if (existingDocId) {
-            logger.debug(`Document already exists for article ${article.id}, skipping`);
-            return { docId: existingDocId, skipped: true };
+        // 1. 先生成路径（提前计算，用于路径去重）
+        const folderPath = renderFolderPath(article, this.settings);
+        const filename = sanitizeFileName(renderFilename(article, this.settings));
+        const docPath = `${folderPath}/${filename}`;
+
+        logger.debug(`[createSeparateFile] Checking for duplicate: ${docPath}`);
+
+        // 2. 路径优先去重：直接查文件系统（不依赖索引，解决重启后索引延迟问题）
+        const existingByPath = await this.getDocumentByHPath(notebookId, docPath);
+        if (existingByPath) {
+            logger.debug(`[createSeparateFile] Document exists at path: ${docPath}, skipping`);
+            return { docId: existingByPath, skipped: true };
         }
 
-        // 生成文件夹路径
-        const folderPath = renderFolderPath(article, this.settings);
+        // 3. 属性备选去重：通过 source-id 属性检查（索引可用时的双重保险）
+        const existingByAttr = await this.checkDocumentBySourceId(article.id);
+        if (existingByAttr) {
+            logger.debug(`[createSeparateFile] Document found by source-id: ${article.id}, skipping`);
+            return { docId: existingByAttr, skipped: true };
+        }
 
-        // 确保文件夹存在
+        // 4. 确保文件夹存在
         await this.ensureFolder(notebookId, folderPath);
 
-        // 生成文件名
-        let filename = sanitizeFileName(renderFilename(article, this.settings));
-
-        // 生成内容
+        // 5. 生成内容
         const frontMatter = renderFrontMatter(article, this.settings);
-        const content = isWeChatMessage(article.title)
+        let content = isWeChatMessage(article.title)
             ? renderWeChatMessage(article, this.settings)
             : renderArticleContent(article, this.settings);
+
+        // 5.1 处理附件链接（自动下载到本地）
+        content = await this.processAttachments(content);
+
         const fullContent = frontMatter + content;
 
-        // 创建文档
-        const docPath = `${folderPath}/${filename}`;
+        // 6. 创建文档
         const docId = await this.createDocument(notebookId, docPath, fullContent);
 
-        // 设置自定义属性，用于后续去重
+        // 7. 设置自定义属性，用于后续去重（关键属性，必须成功）
         await this.setBlockAttributes(docId, article.id);
 
-        // 设置笔记同步助手默认属性
+        // 8. 设置笔记同步助手默认属性
         await this.setNoteHelperAttributes(docId, '链接');
 
-        logger.debug(`Created document: ${docPath}`);
+        logger.debug(`[createSeparateFile] Created document: ${docPath}`);
         return { docId, skipped: false };
     }
 
@@ -236,9 +247,12 @@ export class FileHandler {
             logger.debug(`[mergeToExistingDocument] Existing content length: ${existingContent.length}`);
 
             // 生成新内容（根据消息类型使用不同渲染）
-            const newContentPart = isWeChatMessage(article.title)
+            let newContentPart = isWeChatMessage(article.title)
                 ? renderWeChatMessageSimple(article, this.settings)
                 : renderArticleContent(article, this.settings);
+
+            // 处理附件链接（自动下载到本地）
+            newContentPart = await this.processAttachments(newContentPart);
 
             // 添加分隔符
             const separator = existingContent.trim() ? '\n\n---\n\n' : '';
@@ -258,17 +272,10 @@ export class FileHandler {
             const existingMergeDate = await this.getBlockAttribute(docId, 'custom-merge-date');
             if (!existingMergeDate) {
                 logger.debug(`[mergeToExistingDocument] Document missing custom-merge-date, adding: ${mergeDate}`);
-                await fetch('/api/attr/setBlockAttrs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: docId,
-                        attrs: {
-                            'custom-merge-doc': 'true',
-                            'custom-merge-date': mergeDate,
-                            'custom-merge-path': docPath,
-                        },
-                    }),
+                await this.setBlockAttrsWithRetry(docId, {
+                    'custom-merge-doc': 'true',
+                    'custom-merge-date': mergeDate,
+                    'custom-merge-path': docPath,
                 });
                 logger.debug(`[mergeToExistingDocument] Added custom-merge-date attribute: ${mergeDate}`);
             }
@@ -302,9 +309,12 @@ export class FileHandler {
 
         try {
             // 生成内容（根据消息类型使用不同渲染）
-            const contentPart = isWeChatMessage(article.title)
+            let contentPart = isWeChatMessage(article.title)
                 ? renderWeChatMessageSimple(article, this.settings)
                 : renderArticleContent(article, this.settings);
+
+            // 处理附件链接（自动下载到本地）
+            contentPart = await this.processAttachments(contentPart);
 
             logger.debug(`[createMergedDocument] Generated content length: ${contentPart.length}`);
 
@@ -349,14 +359,7 @@ export class FileHandler {
             };
             logger.debug('[createMergedDocument] Setting attributes:', attrs);
 
-            await fetch('/api/attr/setBlockAttrs', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: docId,
-                    attrs: attrs,
-                }),
-            });
+            await this.setBlockAttrsWithRetry(docId, attrs);
 
             // 设置笔记同步助手默认属性
             await this.setNoteHelperAttributes(docId, '消息');
@@ -757,6 +760,60 @@ export class FileHandler {
     }
 
     /**
+     * 通过人类可读路径获取文档ID（不依赖索引，直接查文件系统）
+     * 用于解决思源重启后索引延迟导致的重复问题
+     * @param notebookId 笔记本 ID
+     * @param hpath 人类可读路径（如 "笔记同步助手/2024-12-19/文章标题"）
+     * @returns 文档 ID，如果不存在返回 null
+     */
+    private async getDocumentByHPath(notebookId: string, hpath: string): Promise<string | null> {
+        try {
+            // 规范化路径
+            let normalizedPath = hpath
+                .replace(/\\/g, '/')
+                .replace(/\/+/g, '/')
+                .replace(/^\//, '');
+
+            // 思源 API 需要 .md 后缀
+            if (!normalizedPath.endsWith('.md')) {
+                normalizedPath = `${normalizedPath}.md`;
+            }
+
+            logger.debug(`[getDocumentByHPath] Checking path: ${normalizedPath}`);
+
+            const response = await fetch('/api/filetree/getIDsByHPath', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    notebook: notebookId,
+                    path: normalizedPath,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.code !== 0 || !data.data || data.data.length === 0) {
+                logger.debug(`[getDocumentByHPath] Document not found at path: ${normalizedPath}`);
+                return null;
+            }
+
+            const docId = data.data[0];
+
+            // 验证返回的是有效的文档 ID，而不是时间戳
+            if (typeof docId === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(docId)) {
+                logger.warn(`[getDocumentByHPath] Invalid ID (timestamp format): ${docId}`);
+                return null;
+            }
+
+            logger.debug(`[getDocumentByHPath] Found document: ${docId}`);
+            return docId;
+        } catch (error) {
+            logger.error('[getDocumentByHPath] Failed:', error);
+            return null;
+        }
+    }
+
+    /**
      * 通过服务端文章 ID 检查文档是否已存在
      * @param sourceId 服务端文章 ID
      * @returns 文档 ID，如果不存在返回 null
@@ -853,6 +910,57 @@ export class FileHandler {
             logger.error('Failed to set block attributes:', error);
             throw error;
         }
+    }
+
+    /**
+     * 带重试机制的属性设置（用于关键属性）
+     * @param blockId 块 ID
+     * @param attrs 属性对象
+     * @param maxRetries 最大重试次数，默认 2
+     */
+    private async setBlockAttrsWithRetry(
+        blockId: string,
+        attrs: Record<string, string>,
+        maxRetries: number = 2
+    ): Promise<void> {
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const response = await fetch('/api/attr/setBlockAttrs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: blockId, attrs }),
+                });
+
+                const data = await response.json();
+
+                if (data.code === 0) {
+                    logger.debug(`[setBlockAttrsWithRetry] Success on attempt ${attempt + 1}`);
+                    return;
+                }
+
+                logger.warn(`[setBlockAttrsWithRetry] Failed attempt ${attempt + 1}: ${data.msg}`);
+
+                if (attempt < maxRetries) {
+                    // 递增延迟：100ms, 200ms, 300ms...
+                    await this.sleep(100 * (attempt + 1));
+                }
+            } catch (error) {
+                logger.error(`[setBlockAttrsWithRetry] Error on attempt ${attempt + 1}:`, error);
+                if (attempt === maxRetries) {
+                    throw error;
+                }
+                await this.sleep(100 * (attempt + 1));
+            }
+        }
+
+        throw new Error(`Failed to set block attributes after ${maxRetries + 1} attempts`);
+    }
+
+    /**
+     * 延迟函数
+     */
+    private sleep(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     /**
@@ -978,7 +1086,7 @@ export class FileHandler {
     }
 
     /**
-     * 获取默认笔记本 ID
+     * 获取默认笔记本 ID（第一个未关闭的笔记本）
      */
     async getDefaultNotebook(): Promise<string> {
         try {
@@ -1006,5 +1114,169 @@ export class FileHandler {
             logger.error('Failed to get default notebook:', error);
             throw error;
         }
+    }
+
+    /**
+     * 获取目标笔记本 ID
+     * 优先使用用户设置的笔记本，如果未设置则使用默认笔记本
+     * @returns {Promise<{notebookId: string, isDefault: boolean}>} 笔记本ID和是否为默认
+     */
+    async getTargetNotebook(): Promise<{notebookId: string, isDefault: boolean}> {
+        // 如果用户已设置目标笔记本，直接使用
+        if (this.settings.targetNotebook) {
+            return {
+                notebookId: this.settings.targetNotebook,
+                isDefault: false
+            };
+        }
+
+        // 未设置时使用默认笔记本
+        const defaultNotebook = await this.getDefaultNotebook();
+        return {
+            notebookId: defaultNotebook,
+            isDefault: true
+        };
+    }
+
+    /**
+     * 获取所有未关闭的笔记本列表
+     * @returns {Promise<Array<{id: string, name: string}>>} 笔记本列表
+     */
+    async getAllNotebooks(): Promise<Array<{id: string, name: string}>> {
+        try {
+            const response = await fetch('/api/notebook/lsNotebooks', {
+                method: 'POST',
+            });
+
+            const data = await response.json();
+
+            if (data.code !== 0 || !data.data || !data.data.notebooks) {
+                throw new Error('Failed to get notebooks');
+            }
+
+            // 过滤出未关闭的笔记本，只返回 id 和 name
+            return data.data.notebooks
+                .filter((nb: any) => !nb.closed)
+                .map((nb: any) => ({
+                    id: nb.id,
+                    name: nb.name
+                }));
+        } catch (error) {
+            logger.error('Failed to get notebooks:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 处理内容中的附件链接，下载附件并替换链接
+     * @param content 原始内容
+     * @returns 处理后的内容
+     */
+    async processAttachments(content: string): Promise<string> {
+        // 匹配 markdown 链接: [文件名](url)
+        // 使用负向前瞻排除图片链接 ![alt](url)
+        const attachmentRegex = /(?<!!)\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+
+        const matches: Array<{full: string, displayName: string, url: string}> = [];
+        let match;
+
+        while ((match = attachmentRegex.exec(content)) !== null) {
+            matches.push({
+                full: match[0],
+                displayName: match[1],
+                url: match[2]
+            });
+        }
+
+        if (matches.length === 0) {
+            return content;
+        }
+
+        logger.debug(`Found ${matches.length} attachments to download`);
+
+        // 处理每个附件
+        for (const item of matches) {
+            try {
+                const localPath = await this.downloadAttachment(item.url, item.displayName);
+                if (localPath) {
+                    // 替换链接为本地路径
+                    content = content.replace(item.full, `[${item.displayName}](${localPath})`);
+                    logger.debug(`Downloaded attachment: ${item.displayName} -> ${localPath}`);
+                }
+            } catch (error) {
+                logger.error(`Failed to download attachment ${item.displayName}:`, error);
+                // 下载失败时保持原链接不变
+            }
+        }
+
+        return content;
+    }
+
+    /**
+     * 下载附件到本地
+     * @param url 附件 URL
+     * @param displayName markdown 链接中的显示名称（用作文件名）
+     * @returns 本地路径
+     */
+    private async downloadAttachment(url: string, displayName: string): Promise<string | null> {
+        try {
+            // 1. 下载文件
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const blob = await response.blob();
+            const arrayBuffer = await blob.arrayBuffer();
+
+            // 2. 使用 displayName 作为文件名（确保有扩展名）
+            let filename = sanitizeFileName(displayName);
+
+            // 如果 displayName 没有扩展名，尝试从 URL 获取
+            if (!filename.includes('.')) {
+                const urlExtension = this.getExtensionFromUrl(url);
+                if (urlExtension) {
+                    filename = `${filename}.${urlExtension}`;
+                }
+            }
+
+            // 3. 上传到思源
+            const formData = new FormData();
+            formData.append('file[]', new Blob([arrayBuffer]), filename);
+            formData.append('assetsDirPath', this.settings.attachmentFolder);
+
+            const uploadResponse = await fetch('/api/asset/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await uploadResponse.json();
+
+            if (result.code !== 0) {
+                throw new Error(`Upload failed: ${result.msg}`);
+            }
+
+            return result.data.succMap[filename];
+        } catch (error) {
+            logger.error(`Attachment download failed: ${url}`, error);
+            return null;
+        }
+    }
+
+    /**
+     * 从 URL 中提取文件扩展名
+     */
+    private getExtensionFromUrl(url: string): string | null {
+        try {
+            const urlObj = new URL(url);
+            const pathname = urlObj.pathname;
+            const lastDotIndex = pathname.lastIndexOf('.');
+            if (lastDotIndex !== -1) {
+                return pathname.substring(lastDotIndex + 1).toLowerCase();
+            }
+        } catch {
+            // URL 解析失败
+        }
+        return null;
     }
 }

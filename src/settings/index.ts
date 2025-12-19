@@ -49,7 +49,8 @@ export interface PluginSettings {
     syncing: boolean;  // 同步中标志
     intervalId: number;  // 定时器 ID
 
-    // 文件夹和文件名
+    // 笔记同步位置
+    targetNotebook: string;  // 目标笔记本 ID
     folder: string;  // 目标文件夹（普通文章）
     folderDateFormat: string;  // 文件夹日期格式
     filename: string;  // 文件名模板
@@ -108,7 +109,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     syncing: false,
     intervalId: 0,
 
-    // 文件夹和文件名
+    // 笔记同步位置
+    targetNotebook: '',  // 空字符串表示使用默认笔记本
     folder: '笔记同步助手/{{{date}}}',
     folderDateFormat: 'yyyy-MM-dd',
     filename: '{{{title}}}',

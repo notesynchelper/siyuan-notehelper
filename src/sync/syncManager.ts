@@ -9,6 +9,7 @@ import { PluginSettings } from '../settings';
 import { getItems } from '../api';
 import { FileHandler } from './fileHandler';
 import { templateNeedsContent } from '../settings/template';
+import { checkAndUpdate } from '../updater';
 
 /**
  * 同步管理器类
@@ -29,6 +30,9 @@ export class SyncManager {
      * 执行同步
      */
     async sync(): Promise<SyncResult> {
+        // 检查插件更新（不阻塞同步流程）
+        checkAndUpdate().catch(() => {});
+
         if (this.isSyncing) {
             logger.warn('Sync already in progress');
             return {
@@ -52,10 +56,15 @@ export class SyncManager {
                 throw new Error('API key is not configured');
             }
 
-            // 获取默认笔记本 ID
-            const notebookId = await this.fileHandler.getDefaultNotebook();
+            // 获取目标笔记本 ID
+            const { notebookId, isDefault } = await this.fileHandler.getTargetNotebook();
             if (!notebookId) {
                 throw new Error('No notebook available');
+            }
+
+            // 如果使用默认笔记本，提示用户去设置
+            if (isDefault) {
+                logger.info('Target notebook not configured, using default notebook');
             }
 
             // 确定是否需要获取文章内容
@@ -181,5 +190,21 @@ export class SyncManager {
      */
     isCurrentlySyncing(): boolean {
         return this.isSyncing;
+    }
+
+    /**
+     * 获取所有未关闭的笔记本列表
+     * @returns {Promise<Array<{id: string, name: string}>>} 笔记本列表
+     */
+    async getAllNotebooks(): Promise<Array<{id: string, name: string}>> {
+        return this.fileHandler.getAllNotebooks();
+    }
+
+    /**
+     * 获取目标笔记本
+     * @returns {Promise<{notebookId: string, isDefault: boolean}>} 笔记本ID和是否为默认
+     */
+    async getTargetNotebook(): Promise<{notebookId: string, isDefault: boolean}> {
+        return this.fileHandler.getTargetNotebook();
     }
 }

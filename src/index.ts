@@ -16,10 +16,11 @@ import './index.scss';
 import { logger, LogLevel } from './utils/logger';
 import { PluginSettings, DEFAULT_SETTINGS } from './settings';
 import { SyncManager } from './sync/syncManager';
-// import { ImageLocalizer } from './imageLocalizer/imageLocalizer';  // 图片处理已禁用
+import { ImageLocalizer } from './imageLocalizer/imageLocalizer';
 import { getArticleCount, clearAllArticles, fetchVipStatus, getQrCodeUrl, VipStatus } from './api';
 import { formatDate } from './utils/util';
 import { SettingsForm } from './ui/SettingsForm';
+import { checkAndUpdate } from './updater';
 
 const SETTINGS_KEY = 'notehelper-settings';
 const DOCK_TYPE = 'notehelper_sync_dock';
@@ -68,7 +69,9 @@ const zhCN = {
     mergeModeMessages: "仅合并企微消息",
     mergeModeAll: "合并所有文章到单个文件",
 
-    folderSettings: "文件夹和文件名",
+    folderSettings: "笔记同步位置",
+    targetNotebook: "目标笔记本",
+    targetNotebookDesc: "选择同步内容保存到哪个笔记本",
     folder: "目标文件夹",
     folderDesc: "文章保存的文件夹路径（支持模板变量）",
     folderDateFormat: "文件夹日期格式",
@@ -117,6 +120,12 @@ const zhCN = {
     enablePngToJpeg: "PNG 转 JPEG",
     jpegQuality: "JPEG 质量",
     imageDownloadRetries: "图片下载重试次数",
+    imageAttachmentFolderDesc: "本地缓存模式下图片的存储路径，支持 {{{date}}} 变量",
+
+    // 附件设置
+    attachmentSettings: "附件设置",
+    attachmentFolder: "附件存储位置",
+    attachmentFolderDesc: "文件附件的默认存储路径",
 
     articleManagement: "文章管理",
     viewArticleCount: "查看云空间文章数量",
@@ -200,7 +209,7 @@ export default class NoteHelperPlugin extends Plugin {
 
     private settings: PluginSettings;
     private syncManager: SyncManager;
-    // private imageLocalizer: ImageLocalizer;  // 图片处理已禁用
+    private imageLocalizer: ImageLocalizer;
     private statusBarElement: HTMLElement;
     private dockElement: HTMLElement;
 
@@ -231,7 +240,7 @@ export default class NoteHelperPlugin extends Plugin {
 
         // 初始化管理器
         this.syncManager = new SyncManager(this, this.settings);
-        // this.imageLocalizer = new ImageLocalizer(this, this.settings);  // 图片处理已禁用
+        this.imageLocalizer = new ImageLocalizer(this, this.settings);
 
         // 注册命令
         this.registerCommands();
@@ -364,6 +373,9 @@ export default class NoteHelperPlugin extends Plugin {
             init: (dock) => {
                 this.dockElement = dock.element;
 
+                // 检查插件更新
+                checkAndUpdate();
+
                 // 先渲染基础UI，延迟加载设置表单
                 dock.element.innerHTML = `
                     <div class="fn__flex-1 fn__flex-column" style="padding: 8px; overflow-y: auto;">
@@ -444,6 +456,9 @@ export default class NoteHelperPlugin extends Plugin {
                     if (this.settings.apiKey) {
                         this.updateVipStatusDisplay(settingsArea as HTMLElement);
                     }
+
+                    // 加载笔记本列表
+                    this.loadNotebookOptions(settingsArea as HTMLElement);
 
                     // 为所有输入框添加自动保存功能（使用防抖减少频繁保存）
                     let saveTimeout: any = null;
@@ -602,6 +617,12 @@ export default class NoteHelperPlugin extends Plugin {
 
         try {
             this.updateStatusBar();
+
+            // 检查是否设置了目标笔记本
+            if (!this.settings.targetNotebook) {
+                showMessage('请在设置中选择目标笔记本，当前使用默认笔记本', 5000, 'info');
+            }
+
             showMessage(this.i18n.zh_CN.syncing, 3000, 'info');
 
             const result = await this.syncManager.sync();
@@ -635,18 +656,20 @@ export default class NoteHelperPlugin extends Plugin {
     /**
      * 重置同步时间
      */
-    private async resetSyncTime() {
-        const confirmed = await confirm(
+    private resetSyncTime() {
+        confirm(
             this.i18n.zh_CN.confirm,
             this.i18n.zh_CN.resetSyncConfirm,
-            null
+            () => {
+                this.syncManager.resetSyncTime().then(() => {
+                    this.updateStatusBar();
+                    showMessage(this.i18n.zh_CN.success?.settingsSaved || 'Settings saved', 3000, 'info');
+                }).catch((error) => {
+                    logger.error('Failed to reset sync time:', error);
+                    showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
+                });
+            }
         );
-
-        if (confirmed) {
-            await this.syncManager.resetSyncTime();
-            this.updateStatusBar();
-            showMessage(this.i18n.zh_CN.success?.settingsSaved || 'Settings saved', 3000, 'info');
-        }
     }
 
     /**
@@ -676,27 +699,26 @@ export default class NoteHelperPlugin extends Plugin {
     /**
      * 清空所有文章
      */
-    private async clearAllArticles() {
-        const confirmed = await confirm(
+    private clearAllArticles() {
+        confirm(
             this.i18n.zh_CN.confirm,
             this.i18n.zh_CN.clearAllArticlesConfirm,
-            null
+            () => {
+                if (!this.settings.apiKey) {
+                    showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
+                    return;
+                }
+
+                clearAllArticles(this.settings.endpoint, this.settings.apiKey)
+                    .then(() => {
+                        showMessage(this.i18n.zh_CN.success?.articlesCleared || 'Articles cleared', 5000, 'info');
+                    })
+                    .catch((error) => {
+                        logger.error('Failed to clear articles:', error);
+                        showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
+                    });
+            }
         );
-
-        if (!confirmed) return;
-
-        if (!this.settings.apiKey) {
-            showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
-            return;
-        }
-
-        try {
-            await clearAllArticles(this.settings.endpoint, this.settings.apiKey);
-            showMessage(this.i18n.zh_CN.success?.articlesCleared || 'Articles cleared', 5000, 'info');
-        } catch (error) {
-            logger.error('Failed to clear articles:', error);
-            showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
-        }
     }
 
     /**
@@ -808,6 +830,22 @@ export default class NoteHelperPlugin extends Plugin {
     }
 
     /**
+     * 加载笔记本选项列表
+     */
+    private async loadNotebookOptions(container: HTMLElement) {
+        try {
+            const notebooks = await this.syncManager.getAllNotebooks();
+            SettingsForm.updateNotebookOptions(
+                container,
+                notebooks,
+                this.settings.targetNotebook
+            );
+        } catch (error) {
+            logger.error('Failed to load notebooks:', error);
+        }
+    }
+
+    /**
      * 更新VIP状态显示
      */
     private async updateVipStatusDisplay(container: HTMLElement) {
@@ -871,39 +909,39 @@ export default class NoteHelperPlugin extends Plugin {
     /**
      * 处理清空云空间
      */
-    private async handleClearAllArticles(container: HTMLElement) {
-        const confirmed = await confirm(
+    private handleClearAllArticles(container: HTMLElement) {
+        confirm(
             this.i18n.zh_CN.confirm,
             this.i18n.zh_CN.clearAllArticlesConfirm,
-            null
-        );
+            () => {
+                if (!this.settings.apiKey) {
+                    showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
+                    return;
+                }
 
-        if (!confirmed) return;
+                const clearBtn = container.querySelector('#clearAllArticlesBtn') as HTMLButtonElement;
+                if (clearBtn) {
+                    clearBtn.disabled = true;
+                    clearBtn.textContent = this.i18n.zh_CN.clearing || '清空中...';
+                }
 
-        if (!this.settings.apiKey) {
-            showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
-            return;
-        }
-
-        const clearBtn = container.querySelector('#clearAllArticlesBtn') as HTMLButtonElement;
-        if (clearBtn) {
-            clearBtn.disabled = true;
-            clearBtn.textContent = this.i18n.zh_CN.clearing || '清空中...';
-        }
-
-        try {
-            await clearAllArticles(this.settings.endpoint, this.settings.apiKey);
-            SettingsForm.updateArticleCount(container, 0);
-            showMessage(this.i18n.zh_CN.success?.articlesCleared || 'Articles cleared', 5000, 'info');
-        } catch (error) {
-            logger.error('Failed to clear articles:', error);
-            showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
-        } finally {
-            if (clearBtn) {
-                clearBtn.disabled = false;
-                clearBtn.textContent = '清空云空间';
+                clearAllArticles(this.settings.endpoint, this.settings.apiKey)
+                    .then(() => {
+                        SettingsForm.updateArticleCount(container, 0);
+                        showMessage(this.i18n.zh_CN.success?.articlesCleared || 'Articles cleared', 5000, 'info');
+                    })
+                    .catch((error) => {
+                        logger.error('Failed to clear articles:', error);
+                        showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
+                    })
+                    .finally(() => {
+                        if (clearBtn) {
+                            clearBtn.disabled = false;
+                            clearBtn.textContent = '清空云空间';
+                        }
+                    });
             }
-        }
+        );
     }
 
     /**

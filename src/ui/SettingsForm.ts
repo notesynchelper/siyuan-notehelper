@@ -145,13 +145,25 @@ export class SettingsForm {
 
                 <div class="fn__hr"></div>
 
-                <!-- 文件夹和文件名 -->
+                <!-- 笔记同步位置 -->
                 <div class="b3-label">
                     <div class="fn__flex">
                         <div class="fn__flex-1" style="font-weight: bold;">
                             ${i18n.folderSettings}
                         </div>
                     </div>
+                </div>
+
+                <div class="b3-label">
+                    <div class="fn__flex">
+                        <span class="fn__flex-1">${i18n.targetNotebook || '目标笔记本'}</span>
+                    </div>
+                    <div class="fn__flex">
+                        <select class="b3-select fn__flex-1" id="targetNotebook">
+                            <option value="">加载中...</option>
+                        </select>
+                    </div>
+                    <div class="b3-label__text">${i18n.targetNotebookDesc || '选择同步内容保存到哪个笔记本'}</div>
                 </div>
 
                 <div class="b3-label">
@@ -223,10 +235,24 @@ export class SettingsForm {
                     <div class="fn__flex">
                         <select class="b3-select fn__flex-1" id="imageMode">
                             <option value="remote" ${settings.imageMode === 'remote' ? 'selected' : ''}>${i18n.imageModeRemote || '保留原始链接（默认）'}</option>
+                            <option value="local" ${settings.imageMode === 'local' ? 'selected' : ''}>${i18n.imageModeLocal || '本地缓存（下载到本地）'}</option>
                             <option value="proxy" ${settings.imageMode === 'proxy' ? 'selected' : ''}>${i18n.imageModeProxy || '使用在线图床'}</option>
                         </select>
                     </div>
                     <div class="b3-label__text">${i18n.imageModeDesc || '选择如何处理笔记中的图片'}</div>
+                </div>
+
+                <!-- 图片存储路径（仅 local 模式显示） -->
+                <div id="imageLocalSettings" style="display: ${settings.imageMode === 'local' ? 'block' : 'none'};">
+                    <div class="b3-label">
+                        <div class="fn__flex">
+                            <span class="fn__flex-1">${i18n.imageAttachmentFolder || '图片存储文件夹'}</span>
+                        </div>
+                        <div class="fn__flex">
+                            <input class="b3-text-field fn__flex-1" id="imageAttachmentFolder" value="${settings.imageAttachmentFolder}" />
+                        </div>
+                        <div class="b3-label__text">${i18n.imageAttachmentFolderDesc || '本地缓存模式下图片的存储路径，支持 {{{date}}} 变量'}</div>
+                    </div>
                 </div>
 
                 <!-- 在线图床警告提示 -->
@@ -234,6 +260,27 @@ export class SettingsForm {
                     <div class="b3-label" style="background: var(--b3-card-warning-background, #fff3cd); padding: 8px; border-radius: 4px; margin-top: 4px;">
                         <span style="color: var(--b3-card-warning-color, #856404);">${i18n.imageModeProxyWarning || '⚠️ 开启后需要海外网络环境才能正常加载图片'}</span>
                     </div>
+                </div>
+
+                <div class="fn__hr"></div>
+
+                <!-- 附件设置 -->
+                <div class="b3-label">
+                    <div class="fn__flex">
+                        <div class="fn__flex-1" style="font-weight: bold;">
+                            ${i18n.attachmentSettings || '附件设置'}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="b3-label">
+                    <div class="fn__flex">
+                        <span class="fn__flex-1">${i18n.attachmentFolder || '附件存储位置'}</span>
+                    </div>
+                    <div class="fn__flex">
+                        <input class="b3-text-field fn__flex-1" id="attachmentFolder" value="${settings.attachmentFolder}" />
+                    </div>
+                    <div class="b3-label__text">${i18n.attachmentFolderDesc || '文件附件的默认存储路径'}</div>
                 </div>
 
                 <div class="fn__hr"></div>
@@ -346,6 +393,7 @@ export class SettingsForm {
         const frequencyInput = container.querySelector('#frequency') as HTMLInputElement;
         const syncOnStartInput = container.querySelector('#syncOnStart') as HTMLInputElement;
         const mergeModeSelect = container.querySelector('#mergeMode') as HTMLSelectElement;
+        const targetNotebookSelect = container.querySelector('#targetNotebook') as HTMLSelectElement;
         const folderInput = container.querySelector('#folder') as HTMLInputElement;
         const filenameInput = container.querySelector('#filename') as HTMLInputElement;
         const mergeFolderTemplateInput = container.querySelector('#mergeFolderTemplate') as HTMLInputElement;
@@ -353,6 +401,10 @@ export class SettingsForm {
 
         // 图片处理相关
         const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
+        const imageAttachmentFolderInput = container.querySelector('#imageAttachmentFolder') as HTMLInputElement;
+
+        // 附件相关
+        const attachmentFolderInput = container.querySelector('#attachmentFolder') as HTMLInputElement;
 
         // 高级设置相关
         const frontMatterVariablesInput = container.querySelector('#frontMatterVariables') as HTMLTextAreaElement;
@@ -383,6 +435,7 @@ export class SettingsForm {
         if (frequencyInput) values.frequency = parseInt(frequencyInput.value) || 0;
         if (syncOnStartInput) values.syncOnStart = syncOnStartInput.checked;
         if (mergeModeSelect) values.mergeMode = mergeModeSelect.value as any;
+        if (targetNotebookSelect) values.targetNotebook = targetNotebookSelect.value;
         if (folderInput) values.folder = folderInput.value;
         if (filenameInput) values.filename = filenameInput.value;
         if (mergeFolderTemplateInput) values.mergeFolderTemplate = mergeFolderTemplateInput.value;
@@ -390,6 +443,10 @@ export class SettingsForm {
 
         // 图片处理
         if (imageModeSelect) values.imageMode = imageModeSelect.value as any;
+        if (imageAttachmentFolderInput) values.imageAttachmentFolder = imageAttachmentFolderInput.value;
+
+        // 附件
+        if (attachmentFolderInput) values.attachmentFolder = attachmentFolderInput.value;
 
         // 高级设置
         if (frontMatterVariablesInput) {
@@ -476,12 +533,20 @@ export class SettingsForm {
         //     });
         // }
 
-        // 图片模式变化时显示/隐藏警告提示
+        // 图片模式变化时显示/隐藏相关设置
         const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
         const proxyWarning = container.querySelector('#proxyWarning') as HTMLElement;
-        if (imageModeSelect && proxyWarning) {
+        const imageLocalSettings = container.querySelector('#imageLocalSettings') as HTMLElement;
+        if (imageModeSelect) {
             imageModeSelect.addEventListener('change', () => {
-                proxyWarning.style.display = imageModeSelect.value === 'proxy' ? 'block' : 'none';
+                // 显示/隐藏 proxy 警告
+                if (proxyWarning) {
+                    proxyWarning.style.display = imageModeSelect.value === 'proxy' ? 'block' : 'none';
+                }
+                // 显示/隐藏 local 模式的图片路径设置
+                if (imageLocalSettings) {
+                    imageLocalSettings.style.display = imageModeSelect.value === 'local' ? 'block' : 'none';
+                }
             });
         }
     }
@@ -554,6 +619,31 @@ export class SettingsForm {
         const currentVersionDisplay = container.querySelector('#currentVersionDisplay') as HTMLElement;
         if (currentVersionDisplay) {
             currentVersionDisplay.textContent = version;
+        }
+    }
+
+    /**
+     * 更新笔记本下拉框选项
+     * @param container 容器元素
+     * @param notebooks 笔记本列表
+     * @param selectedId 当前选中的笔记本ID
+     */
+    public static updateNotebookOptions(
+        container: HTMLElement,
+        notebooks: Array<{id: string, name: string}>,
+        selectedId: string
+    ): void {
+        const select = container.querySelector('#targetNotebook') as HTMLSelectElement;
+        if (!select) return;
+
+        // 生成选项HTML
+        select.innerHTML = notebooks.map(nb =>
+            `<option value="${nb.id}" ${nb.id === selectedId ? 'selected' : ''}>${nb.name}</option>`
+        ).join('');
+
+        // 如果没有选中的值且有笔记本，默认选择第一个
+        if (!selectedId && notebooks.length > 0) {
+            select.value = notebooks[0].id;
         }
     }
 }
