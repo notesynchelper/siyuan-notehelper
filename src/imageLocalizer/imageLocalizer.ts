@@ -4,6 +4,7 @@
  */
 
 import { logger } from '../utils/logger';
+import { uploadAsset } from '../utils/assetUploader';
 import { ImageMode } from '../utils/types';
 import { PluginSettings } from '../settings';
 import { ImageDownloadTask, ImageDownloadResult } from './types';
@@ -126,30 +127,24 @@ export class ImageLocalizer {
     }
 
     /**
-     * 上传图片到思源
+     * 上传图片到思源（使用三层降级策略）
      */
     private async uploadToSiyuan(data: Uint8Array, originalUrl: string): Promise<string> {
         // 生成文件名
         const filename = this.generateFilename(originalUrl);
 
-        // 使用思源 API 上传
-        const formData = new FormData();
-        const blob = new Blob([data]);
-        formData.append('file[]', blob, filename);
-        formData.append('assetsDirPath', this.settings.imageAttachmentFolder);
+        // 使用三层降级上传策略
+        const uploadResult = await uploadAsset(
+            data.buffer,
+            filename,
+            this.settings.imageAttachmentFolder
+        );
 
-        const response = await fetch('/api/asset/upload', {
-            method: 'POST',
-            body: formData,
-        });
-
-        const result = await response.json();
-
-        if (result.code !== 0) {
-            throw new Error(`Upload failed: ${result.msg}`);
+        if (!uploadResult.success) {
+            throw new Error(`Upload failed: ${uploadResult.error}`);
         }
 
-        return result.data.succMap[filename];
+        return uploadResult.path!;
     }
 
     /**

@@ -4,6 +4,7 @@
  */
 
 import { logger } from '../utils/logger';
+import { uploadAsset } from '../utils/assetUploader';
 import { Article } from '../utils/types';
 import { PluginSettings } from '../settings';
 import {
@@ -25,6 +26,13 @@ import {
     normalizePath,
     joinPath,
 } from '../utils/util';
+import { DateTime } from 'luxon';
+
+// 星期映射（用于图片路径变量替换）
+const WEEKDAY_MAP: Record<number, string> = {
+    1: '周一', 2: '周二', 3: '周三', 4: '周四',
+    5: '周五', 6: '周六', 7: '周日'
+};
 
 /**
  * 文件处理器类
@@ -1326,47 +1334,18 @@ export class FileHandler {
                 logger.warn(`[附件下载] 路径未以 assets/ 开头，使用默认路径: ${attachmentFolder}`);
             }
 
-            const formData = new FormData();
-            formData.append('file[]', new Blob([arrayBuffer]), filename);
-            formData.append('assetsDirPath', attachmentFolder);
             logger.info(`[附件下载] 上传目录: ${attachmentFolder}`);
 
-            const uploadResponse = await fetch('/api/asset/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            // 使用三层降级上传策略
+            const uploadResult = await uploadAsset(arrayBuffer, filename, attachmentFolder);
 
-            const result = await uploadResponse.json();
-            logger.info(`[附件下载] 思源API响应: code=${result.code}, succMap=${JSON.stringify(result.data?.succMap)}`);
-
-            if (result.code !== 0) {
-                throw new Error(`上传失败: ${result.msg}`);
+            if (!uploadResult.success) {
+                logger.error(`[附件下载] 上传失败: ${uploadResult.error}`);
+                return null;  // 返回 null 但不抛异常，不阻塞流程
             }
 
-            // 从 succMap 中获取路径（思源可能会修改文件名，所以遍历找到正确的）
-            const succMap = result.data.succMap || {};
-            let localPath = succMap[filename];
-
-            // 如果直接匹配不到，取 succMap 中包含原文件名的项
-            if (!localPath) {
-                const keys = Object.keys(succMap);
-                for (const key of keys) {
-                    // 尝试找到包含原始文件名的 key
-                    if (key.includes(filename.replace(/\.[^.]+$/, ''))) {
-                        localPath = succMap[key];
-                        logger.info(`[附件下载] 文件名被思源修改: ${filename} -> ${key}`);
-                        break;
-                    }
-                }
-                // 如果还是找不到，取第一个
-                if (!localPath && keys.length > 0) {
-                    localPath = succMap[keys[0]];
-                    logger.warn(`[附件下载] 无法匹配文件名，使用第一个结果: ${keys[0]}`);
-                }
-            }
-
-            logger.info(`[附件下载] 思源返回路径: ${localPath}`);
-            return localPath;
+            logger.info(`[附件下载] 上传成功，路径: ${uploadResult.path}`);
+            return uploadResult.path || null;
         } catch (error) {
             logger.error(`[附件下载] 失败: ${error}`);
             return null;
@@ -1405,8 +1384,29 @@ export class FileHandler {
             // 3. 上传到思源（使用图片专用目录）
             // 渲染目录模板中的日期变量
             let imageFolder = this.settings.imageAttachmentFolder || this.settings.attachmentFolder;
-            const today = formatDate(new Date().toISOString(), this.settings.folderDateFormat);
-            imageFolder = imageFolder.replace(/\{\{\{date\}\}\}/g, today);
+            const now = new Date().toISOString();
+            const today = formatDate(now, this.settings.folderDateFormat);
+
+            // 生成分开的时间变量
+            const dt = DateTime.fromISO(now);
+            const year = dt.toFormat('yyyy');
+            const month = dt.toFormat('MM');
+            const day = dt.toFormat('dd');
+            const hour = dt.toFormat('HH');
+            const minute = dt.toFormat('mm');
+            const weekday = WEEKDAY_MAP[dt.weekday] || '';
+            const quarter = `Q${dt.quarter}`;
+
+            // 替换所有时间变量
+            imageFolder = imageFolder
+                .replace(/\{\{\{date\}\}\}/g, today)
+                .replace(/\{\{\{year\}\}\}/g, year)
+                .replace(/\{\{\{month\}\}\}/g, month)
+                .replace(/\{\{\{day\}\}\}/g, day)
+                .replace(/\{\{\{hour\}\}\}/g, hour)
+                .replace(/\{\{\{minute\}\}\}/g, minute)
+                .replace(/\{\{\{weekday\}\}\}/g, weekday)
+                .replace(/\{\{\{quarter\}\}\}/g, quarter);
 
             // 验证路径必须以 assets/ 开头，否则使用默认路径
             if (!imageFolder.startsWith('assets/')) {
@@ -1415,44 +1415,16 @@ export class FileHandler {
             }
             logger.info(`[图片下载] 上传目录: ${imageFolder}`);
 
-            const formData = new FormData();
-            formData.append('file[]', new Blob([arrayBuffer]), filename);
-            formData.append('assetsDirPath', imageFolder);
+            // 使用三层降级上传策略
+            const uploadResult = await uploadAsset(arrayBuffer, filename, imageFolder);
 
-            const uploadResponse = await fetch('/api/asset/upload', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const result = await uploadResponse.json();
-            logger.info(`[图片下载] 思源API响应: code=${result.code}, succMap=${JSON.stringify(result.data?.succMap)}`);
-
-            if (result.code !== 0) {
-                throw new Error(`上传失败: ${result.msg}`);
+            if (!uploadResult.success) {
+                logger.error(`[图片下载] 上传失败: ${uploadResult.error}`);
+                return null;  // 返回 null 但不抛异常，不阻塞流程
             }
 
-            // 从 succMap 中获取路径（思源可能会修改文件名，所以遍历找到正确的）
-            const succMap = result.data.succMap || {};
-            let localPath = succMap[filename];
-
-            // 如果直接匹配不到，取 succMap 中包含原文件名的项
-            if (!localPath) {
-                const keys = Object.keys(succMap);
-                for (const key of keys) {
-                    if (key.includes(filename.replace(/\.[^.]+$/, ''))) {
-                        localPath = succMap[key];
-                        logger.info(`[图片下载] 文件名被思源修改: ${filename} -> ${key}`);
-                        break;
-                    }
-                }
-                if (!localPath && keys.length > 0) {
-                    localPath = succMap[keys[0]];
-                    logger.warn(`[图片下载] 无法匹配文件名，使用第一个结果: ${keys[0]}`);
-                }
-            }
-
-            logger.info(`[图片下载] 思源返回路径: ${localPath}`);
-            return localPath;
+            logger.info(`[图片下载] 上传成功，路径: ${uploadResult.path}`);
+            return uploadResult.path || null;
         } catch (error) {
             logger.error(`[图片下载] 失败: ${error}`);
             return null;

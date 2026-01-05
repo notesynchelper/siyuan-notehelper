@@ -3,6 +3,7 @@
  */
 
 import Mustache from 'mustache';
+import { DateTime } from 'luxon';
 import { logger } from '../utils/logger';
 import { Article, Highlight, ImageMode } from '../utils/types';
 import { formatDate, isWeChatMessage } from '../utils/util';
@@ -10,6 +11,43 @@ import { PluginSettings } from './index';
 
 // 图床代理URL
 const IMAGE_PROXY_URL = 'https://images.weserv.nl/?url=';
+
+// 星期映射
+const WEEKDAY_MAP: Record<number, string> = {
+    1: '周一', 2: '周二', 3: '周三', 4: '周四',
+    5: '周五', 6: '周六', 7: '周日'
+};
+
+/**
+ * 从日期字符串生成分开的时间变量
+ */
+function getDateComponents(dateStr: string): {
+    year: string;
+    month: string;
+    day: string;
+    hour: string;
+    minute: string;
+    weekday: string;
+    quarter: string;
+} {
+    try {
+        const dt = DateTime.fromISO(dateStr);
+        return {
+            year: dt.toFormat('yyyy'),
+            month: dt.toFormat('MM'),
+            day: dt.toFormat('dd'),
+            hour: dt.toFormat('HH'),
+            minute: dt.toFormat('mm'),
+            weekday: WEEKDAY_MAP[dt.weekday] || '',
+            quarter: `Q${dt.quarter}`,
+        };
+    } catch (error) {
+        logger.error('Date components extraction error:', error);
+        return {
+            year: '', month: '', day: '', hour: '', minute: '', weekday: '', quarter: ''
+        };
+    }
+}
 
 // 默认模板
 export const DEFAULT_TEMPLATE = `## 来源
@@ -154,10 +192,12 @@ export function renderFilename(
     try {
         const view = articleToView(article, settings);
 
-        // 添加 date 变量用于文件名模板
+        // 添加 date 和时间组件变量用于文件名模板
+        const dateComponents = getDateComponents(article.savedAt);
         const viewWithDate = {
             ...view,
             date: formatDate(article.savedAt, settings.filenameDateFormat),
+            ...dateComponents,
         };
 
         const template = settings.filename || '{{{title}}}';
@@ -188,10 +228,12 @@ export function renderFolderPath(
     try {
         const view = articleToView(article, settings);
 
-        // 添加 date 变量用于文件夹模板
+        // 添加 date 和时间组件变量用于文件夹模板
+        const dateComponents = getDateComponents(article.savedAt);
         const viewWithDate = {
             ...view,
             date: formatDate(article.savedAt, settings.folderDateFormat),
+            ...dateComponents,
         };
 
         const template = settings.folder || '笔记同步助手';
@@ -212,10 +254,12 @@ export function renderMergeFolderPath(
     try {
         const view = articleToView(article, settings);
 
-        // 添加 date 变量用于文件夹模板（使用合并模式的日期格式）
+        // 添加 date 和时间组件变量用于文件夹模板（使用合并模式的日期格式）
+        const dateComponents = getDateComponents(article.savedAt);
         const viewWithDate = {
             ...view,
             date: formatDate(article.savedAt, settings.mergeFolderDateFormat),
+            ...dateComponents,
         };
 
         const template = settings.mergeFolderTemplate || settings.mergeFolder || '笔记同步助手/微信消息/{{{date}}}';
@@ -247,8 +291,12 @@ export function renderSingleFilename(
 ): string {
     try {
         const formattedDate = formatDate(date, settings.singleFileDateFormat);
+        const dateComponents = getDateComponents(date);
         const template = settings.singleFileName || '同步助手_{{{date}}}';
-        let filename = Mustache.render(template, { date: formattedDate });
+        let filename = Mustache.render(template, {
+            date: formattedDate,
+            ...dateComponents,
+        });
 
         // 确保文件名不包含路径分隔符或其他不合法字符
         // 1. 移除路径分隔符

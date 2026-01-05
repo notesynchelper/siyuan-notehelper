@@ -182,7 +182,7 @@ export class SettingsForm {
                     <div class="fn__flex">
                         <input class="b3-text-field fn__flex-1" id="folder" value="${settings.folder}" />
                     </div>
-                    <div class="b3-label__text">${i18n.folderDesc}</div>
+                    <div class="b3-label__text">${i18n.folderDesc}<br/><span style="color: var(--b3-theme-on-surface-light);">时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{weekday}}}, {{{quarter}}}</span></div>
                 </div>
 
                 <div class="b3-label">
@@ -192,7 +192,7 @@ export class SettingsForm {
                     <div class="fn__flex">
                         <input class="b3-text-field fn__flex-1" id="filename" value="${settings.filename}" />
                     </div>
-                    <div class="b3-label__text">${i18n.filenameDesc}</div>
+                    <div class="b3-label__text">${i18n.filenameDesc}<br/><span style="color: var(--b3-theme-on-surface-light);">时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{weekday}}}, {{{quarter}}}</span></div>
                 </div>
 
                 <div class="fn__hr"></div>
@@ -213,7 +213,7 @@ export class SettingsForm {
                     <div class="fn__flex">
                         <input class="b3-text-field fn__flex-1" id="mergeFolderTemplate" value="${settings.mergeFolderTemplate}" />
                     </div>
-                    <div class="b3-label__text">${i18n.mergeFolderTemplateDesc || '支持 {{{date}}} 占位符，日期格式根据 mergeFolderDateFormat 设置'}</div>
+                    <div class="b3-label__text">${i18n.mergeFolderTemplateDesc || '时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{weekday}}}, {{{quarter}}}'}</div>
                 </div>
 
                 <div class="b3-label">
@@ -261,7 +261,7 @@ export class SettingsForm {
                             <input class="b3-text-field fn__flex-1" id="imageAttachmentFolder" value="${settings.imageAttachmentFolder}" />
                             <button class="b3-button b3-button--outline" id="resetImageFolder" title="恢复默认值">↺</button>
                         </div>
-                        <div class="b3-label__text">${i18n.imageAttachmentFolderDesc || '本地缓存模式下图片的存储路径，支持 {{{date}}} 变量'}</div>
+                        <div class="b3-label__text">${i18n.imageAttachmentFolderDesc || '本地缓存模式下图片的存储路径。时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}'}</div>
                     </div>
                 </div>
 
@@ -371,6 +371,43 @@ export class SettingsForm {
                                 <input class="b3-text-field fn__flex-1" id="dateSavedFormat" value="${settings.dateSavedFormat}" />
                             </div>
                             <div class="b3-label__text">${i18n.dateSavedFormatDesc || 'dateSaved 变量的日期格式'}</div>
+                        </div>
+
+                        <!-- 模板变量参考 -->
+                        <div class="b3-label" style="background: var(--b3-theme-surface); border-radius: 8px; padding: 12px; margin-top: 8px;">
+                            <div class="fn__flex" style="margin-bottom: 8px;">
+                                <span class="fn__flex-1" style="font-weight: bold;">📋 模板变量参考</span>
+                            </div>
+                            <div style="font-size: 12px; line-height: 1.8; color: var(--b3-theme-on-surface);">
+                                <div style="margin-bottom: 8px;">
+                                    <strong>时间变量</strong>（用于路径和文件名）<br/>
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{date}}}</code> 格式化日期 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{year}}}</code> 年份 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{month}}}</code> 月份 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{day}}}</code> 日期<br/>
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{hour}}}</code> 小时 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{minute}}}</code> 分钟 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{weekday}}}</code> 周几 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{quarter}}}</code> 季度
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    <strong>文章变量</strong>（用于模板）<br/>
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{title}}}</code> 标题 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{content}}}</code> 正文 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{author}}}</code> 作者 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{originalUrl}}}</code> 原文链接<br/>
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{dateSaved}}}</code> 保存日期 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{datePublished}}}</code> 发布日期 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{siteName}}}</code> 站点名<br/>
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{description}}}</code> 描述 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{note}}}</code> 笔记 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{wordsCount}}}</code> 字数 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{labels}}}</code> 标签
+                                </div>
+                                <div style="color: var(--b3-theme-on-surface-light); font-size: 11px;">
+                                    示例：<code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">笔记/{{{year}}}/{{{month}}}</code> → 笔记/2025/01
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </details>
