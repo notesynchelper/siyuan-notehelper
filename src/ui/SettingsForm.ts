@@ -113,6 +113,18 @@ export class SettingsForm {
 
                 <div class="b3-label">
                     <div class="fn__flex">
+                        <span class="fn__flex-1">${i18n.syncTimeOffset || '同步时间回溯'}</span>
+                    </div>
+                    <div class="fn__flex" style="align-items: center;">
+                        <input class="b3-text-field" type="number" id="syncTimeOffset" min="0" max="168" value="${settings.syncTimeOffset ?? 12}" style="width: 80px;" />
+                        <span class="fn__space"></span>
+                        <span>小时</span>
+                    </div>
+                    <div class="b3-label__text">${i18n.syncTimeOffsetDesc || '每次同步时自动往前回溯指定小时数，避免遗漏边界时间的内容。例如设置为 24，则每次同步会多拉取前一天的更新'}</div>
+                </div>
+
+                <div class="b3-label">
+                    <div class="fn__flex">
                         <span class="fn__flex-1">${i18n.frequency}</span>
                     </div>
                     <div class="fn__flex">
@@ -482,6 +494,13 @@ export class SettingsForm {
         }
 
         if (frequencyInput) values.frequency = parseInt(frequencyInput.value) || 0;
+
+        // 同步时间回溯
+        const syncTimeOffsetInput = container.querySelector('#syncTimeOffset') as HTMLInputElement;
+        if (syncTimeOffsetInput) {
+            values.syncTimeOffset = parseInt(syncTimeOffsetInput.value) || 0;
+        }
+
         if (syncOnStartInput) values.syncOnStart = syncOnStartInput.checked;
         if (refreshIndexAfterSyncInput) values.refreshIndexAfterSync = refreshIndexAfterSyncInput.checked;
         if (mergeModeSelect) values.mergeMode = mergeModeSelect.value as any;

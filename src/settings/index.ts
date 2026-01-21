@@ -43,6 +43,7 @@ export interface PluginSettings {
 
     // 同步设置
     syncAt: string;  // 最后同步时间
+    syncTimeOffset: number;  // 同步时间回溯（小时）
     frequency: number;  // 定时同步频率（分钟）
     syncOnStart: boolean;  // 启动时同步
     mergeMode: MergeMode;  // 合并模式
@@ -104,6 +105,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 
     // 同步设置
     syncAt: '',
+    syncTimeOffset: 12,  // 默认回溯 12 小时
     frequency: 0,
     syncOnStart: false,
     mergeMode: MergeMode.MESSAGES,

@@ -79,12 +79,27 @@ export class SyncManager {
             while (hasMore) {
                 logger.debug(`Fetching batch ${offset / batchSize + 1}...`);
 
+                // 计算有效的同步时间（应用时间回溯）
+                let effectiveSyncAt: string | undefined = undefined;
+                if (this.settings.syncAt) {
+                    const syncDate = new Date(this.settings.syncAt);
+                    const offsetHours = this.settings.syncTimeOffset || 0;
+                    if (offsetHours > 0) {
+                        // 往前回溯指定小时数
+                        syncDate.setHours(syncDate.getHours() - offsetHours);
+                        effectiveSyncAt = syncDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
+                        logger.debug(`应用时间回溯: ${this.settings.syncAt} -> ${effectiveSyncAt} (回溯 ${offsetHours} 小时)`);
+                    } else {
+                        effectiveSyncAt = this.settings.syncAt;
+                    }
+                }
+
                 const [articles, hasNextPage] = await getItems(
                     this.settings.endpoint,
                     this.settings.apiKey,
                     offset,
                     batchSize,
-                    this.settings.syncAt || undefined,
+                    effectiveSyncAt,
                     this.settings.customQuery || undefined,
                     includeContent
                 );
