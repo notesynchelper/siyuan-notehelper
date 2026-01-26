@@ -6,6 +6,9 @@
 import { logger } from './utils/logger';
 import { Article } from './utils/types';
 
+// 备用 GraphQL 端点
+const FALLBACK_GRAPHQL_ENDPOINT = 'https://graph.bijitongbu.site/api/graphql';
+
 // GraphQL 响应接口
 interface GraphQLResponse<T> {
     data: T;
@@ -42,9 +45,9 @@ function maskApiKey(apiKey?: string): string {
 }
 
 /**
- * 发送 GraphQL 请求
+ * 内部函数：执行单次 GraphQL 请求
  */
-async function fetchGraphQL<T>(
+async function doFetchGraphQL<T>(
     endpoint: string,
     query: string,
     variables: Record<string, any>,
@@ -65,90 +68,118 @@ async function fetchGraphQL<T>(
     logger.debug(`Variables: ${JSON.stringify(variables)}`);
     logger.debug(`API Key: ${maskApiKey(apiKey)}`);
 
-    try {
-        const startTime = Date.now();
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-                query,
-                variables,
-            }),
+    const startTime = Date.now();
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+            query,
+            variables,
+        }),
+    });
+
+    const responseTime = Date.now() - startTime;
+    logger.debug(`Response received: ${response.status} ${response.statusText} (${responseTime}ms)`);
+
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unable to read response');
+        logger.error(`HTTP error details:`, {
+            status: response.status,
+            statusText: response.statusText,
+            endpoint,
+            responseBody: errorText.substring(0, 500)
         });
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
+    }
 
-        const responseTime = Date.now() - startTime;
-        logger.debug(`Response received: ${response.status} ${response.statusText} (${responseTime}ms)`);
+    const responseText = await response.text();
+    logger.debug(`Response size: ${responseText.length} bytes`);
 
-        if (!response.ok) {
-            const errorText = await response.text().catch(() => 'Unable to read response');
-            logger.error(`HTTP error details:`, {
-                status: response.status,
-                statusText: response.statusText,
-                endpoint,
-                responseBody: errorText.substring(0, 500)
-            });
-            throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
-        }
+    let result: GraphQLResponse<T>;
+    try {
+        result = JSON.parse(responseText);
+    } catch (parseError) {
+        logger.error('Failed to parse JSON response:', {
+            error: parseError,
+            responsePreview: responseText.substring(0, 500)
+        });
+        throw new Error(`Invalid JSON response: ${parseError}`);
+    }
 
-        const responseText = await response.text();
-        logger.debug(`Response size: ${responseText.length} bytes`);
+    if (result.errors && result.errors.length > 0) {
+        logger.error('GraphQL errors:', {
+            endpoint,
+            query: queryPreview,
+            variables,
+            errors: result.errors
+        });
+        throw new Error(result.errors.map(e => e.message).join(', '));
+    }
 
-        let result: GraphQLResponse<T>;
-        try {
-            result = JSON.parse(responseText);
-        } catch (parseError) {
-            logger.error('Failed to parse JSON response:', {
-                error: parseError,
-                responsePreview: responseText.substring(0, 500)
-            });
-            throw new Error(`Invalid JSON response: ${parseError}`);
-        }
-
-        if (result.errors && result.errors.length > 0) {
-            logger.error('GraphQL errors:', {
-                endpoint,
-                query: queryPreview,
-                variables,
-                errors: result.errors
-            });
-            throw new Error(result.errors.map(e => e.message).join(', '));
-        }
-
-        // 检查响应格式
-        let responseData: T;
-        if (result.data !== undefined) {
-            // 标准 GraphQL 响应：{data: {search: {...}}}
-            // 需要进一步检查是否有 search 包装
-            if (result.data.search !== undefined) {
-                // 完整的标准格式：data.search 包含实际数据
-                responseData = result.data.search as T;
-                logger.debug('Standard GraphQL response with search wrapper');
-            } else {
-                // 标准格式但没有 search 包装：data 直接包含实际数据
-                responseData = result.data;
-                logger.debug('Standard GraphQL response without search wrapper');
-            }
-        } else if (result.edges !== undefined && result.pageInfo !== undefined) {
-            // 非标准响应：服务端直接返回 search 的内容（edges + pageInfo）
-            responseData = result as unknown as T;
-            logger.debug('Non-standard GraphQL response: server returns search content directly');
+    // 检查响应格式
+    let responseData: T;
+    if (result.data !== undefined) {
+        // 标准 GraphQL 响应：{data: {search: {...}}}
+        // 需要进一步检查是否有 search 包装
+        if (result.data.search !== undefined) {
+            // 完整的标准格式：data.search 包含实际数据
+            responseData = result.data.search as T;
+            logger.debug('Standard GraphQL response with search wrapper');
         } else {
-            logger.error('Unexpected response structure:', {
-                endpoint,
-                query: queryPreview,
-                variables,
-                hasData: result.data !== undefined,
-                hasEdges: result.edges !== undefined,
-                hasPageInfo: result.pageInfo !== undefined,
-                responseKeys: Object.keys(result),
-                fullResponse: JSON.stringify(result).substring(0, 1000)
-            });
-            throw new Error('Unexpected response structure');
+            // 标准格式但没有 search 包装：data 直接包含实际数据
+            responseData = result.data;
+            logger.debug('Standard GraphQL response without search wrapper');
         }
+    } else if (result.edges !== undefined && result.pageInfo !== undefined) {
+        // 非标准响应：服务端直接返回 search 的内容（edges + pageInfo）
+        responseData = result as unknown as T;
+        logger.debug('Non-standard GraphQL response: server returns search content directly');
+    } else {
+        logger.error('Unexpected response structure:', {
+            endpoint,
+            query: queryPreview,
+            variables,
+            hasData: result.data !== undefined,
+            hasEdges: result.edges !== undefined,
+            hasPageInfo: result.pageInfo !== undefined,
+            responseKeys: Object.keys(result),
+            fullResponse: JSON.stringify(result).substring(0, 1000)
+        });
+        throw new Error('Unexpected response structure');
+    }
 
-        logger.debug(`GraphQL request successful`);
-        return responseData;
+    logger.debug(`GraphQL request successful`);
+    return responseData;
+}
+
+/**
+ * 发送 GraphQL 请求（带备用域名支持）
+ */
+async function fetchGraphQL<T>(
+    endpoint: string,
+    query: string,
+    variables: Record<string, any>,
+    apiKey?: string
+): Promise<T> {
+    try {
+        return await doFetchGraphQL<T>(endpoint, query, variables, apiKey);
     } catch (error) {
+        // 如果是 GraphQL 端点且主端点失败，尝试备用域名
+        if (endpoint.includes('/api/graphql')) {
+            logger.info('主端点请求失败，尝试备用域名...');
+            logger.debug(`Primary endpoint failed: ${String(error)}`);
+            try {
+                return await doFetchGraphQL<T>(FALLBACK_GRAPHQL_ENDPOINT, query, variables, apiKey);
+            } catch (fallbackError) {
+                logger.error('备用域名请求也失败:', {
+                    endpoint: FALLBACK_GRAPHQL_ENDPOINT,
+                    error: String(fallbackError),
+                    apiKey: maskApiKey(apiKey)
+                });
+                // 抛出原始错误，因为它更有可能是问题根源
+                throw error;
+            }
+        }
         logger.error('GraphQL request failed:', {
             endpoint,
             error: String(error),
