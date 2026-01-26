@@ -238,6 +238,31 @@ export class SettingsForm {
                     <div class="b3-label__text">${i18n.mergeMessageTemplateDesc || '支持 Mustache 变量：{{{dateSaved}}}, {{{content}}}。使用 --- 作为消息分隔符'}</div>
                 </div>
 
+                <!-- 合并消息文件名模板 -->
+                <div class="b3-label">
+                    <div class="fn__flex" style="align-items: center;">
+                        <span class="fn__flex-1">${i18n.singleFileName || '合并消息文件名模板'}</span>
+                        <button class="b3-button b3-button--outline" id="resetSingleFileName" style="padding: 2px 8px; font-size: 11px;">
+                            重置
+                        </button>
+                    </div>
+                    <div class="fn__flex">
+                        <input class="b3-text-field fn__flex-1" id="singleFileName" value="${settings.singleFileName}" />
+                    </div>
+                    <div class="b3-label__text">支持时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{weekday}}}, {{{quarter}}}</div>
+                </div>
+
+                <!-- 合并消息文件名日期格式 -->
+                <div class="b3-label">
+                    <div class="fn__flex">
+                        <span class="fn__flex-1">${i18n.singleFileDateFormat || '文件名日期格式'}</span>
+                    </div>
+                    <div class="fn__flex">
+                        <input class="b3-text-field fn__flex-1" id="singleFileDateFormat" value="${settings.singleFileDateFormat}" />
+                    </div>
+                    <div class="b3-label__text">用于 {{{date}}} 变量的日期格式。示例：yyyy-MM-dd → 2025-01-26, yyyy-MM → 2025-01</div>
+                </div>
+
                 <div class="fn__hr"></div>
 
                 <!-- 图片处理 -->
@@ -460,6 +485,10 @@ export class SettingsForm {
         const mergeFolderTemplateInput = container.querySelector('#mergeFolderTemplate') as HTMLInputElement;
         const mergeMessageTemplateInput = container.querySelector('#mergeMessageTemplate') as HTMLTextAreaElement;
 
+        // 合并消息文件名设置
+        const singleFileNameInput = container.querySelector('#singleFileName') as HTMLInputElement;
+        const singleFileDateFormatInput = container.querySelector('#singleFileDateFormat') as HTMLInputElement;
+
         // 图片处理相关
         const imageModeSelect = container.querySelector('#imageMode') as HTMLSelectElement;
         const imageAttachmentFolderInput = container.querySelector('#imageAttachmentFolder') as HTMLInputElement;
@@ -509,6 +538,8 @@ export class SettingsForm {
         if (filenameInput) values.filename = filenameInput.value;
         if (mergeFolderTemplateInput) values.mergeFolderTemplate = mergeFolderTemplateInput.value;
         if (mergeMessageTemplateInput) values.mergeMessageTemplate = mergeMessageTemplateInput.value;
+        if (singleFileNameInput) values.singleFileName = singleFileNameInput.value;
+        if (singleFileDateFormatInput) values.singleFileDateFormat = singleFileDateFormatInput.value;
 
         // 图片处理
         if (imageModeSelect) values.imageMode = imageModeSelect.value as any;
@@ -591,6 +622,17 @@ export class SettingsForm {
         if (resetWechatTemplateBtn && callbacks.onResetTemplate) {
             resetWechatTemplateBtn.addEventListener('click', () => {
                 callbacks.onResetTemplate!('wechatMessageTemplate');
+            });
+        }
+
+        // 重置合并文件名模板按钮
+        const resetSingleFileNameBtn = container.querySelector('#resetSingleFileName') as HTMLButtonElement;
+        if (resetSingleFileNameBtn) {
+            resetSingleFileNameBtn.addEventListener('click', () => {
+                const singleFileNameInput = container.querySelector('#singleFileName') as HTMLInputElement;
+                if (singleFileNameInput) {
+                    singleFileNameInput.value = DEFAULT_SETTINGS.singleFileName;
+                }
             });
         }
 
