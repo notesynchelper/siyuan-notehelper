@@ -1,0 +1,109 @@
+name: Weekly Release
+
+on:
+  schedule:
+    # Every Monday at UTC 12:00
+    - cron: "0 12 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          NEW_VERSION=$(node -e "
+            const fs = require('fs');
+
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const parts = pkg.version.split('.').map(Number);
+            parts[2] += 1;
+            const newVersion = parts.join('.');
+
+            pkg.version = newVersion;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+
+            const pluginJson = JSON.parse(fs.readFileSync('plugin.json', 'utf8'));
+            pluginJson.version = newVersion;
+            fs.writeFileSync('plugin.json', JSON.stringify(pluginJson, null, 2) + '\n');
+
+            process.stdout.write(newVersion);
+          ")
+          echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Bumped version to ${NEW_VERSION}"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify build artifact
+        run: |
+          if [ ! -f package.zip ]; then
+            echo "ERROR: package.zip not found after build"
+            exit 1
+          fi
+          ls -lh package.zip
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LATEST_TAG" ]; then
+            COMMITS=$(git log "${LATEST_TAG}..HEAD" --oneline --no-merges --grep="chore: bump version" --invert-grep)
+          else
+            COMMITS=$(git log --oneline --no-merges --grep="chore: bump version" --invert-grep)
+          fi
+
+          if [ -z "$COMMITS" ]; then
+            echo "Scheduled release (no new commits)" > /tmp/changelog.txt
+          else
+            echo "$COMMITS" > /tmp/changelog.txt
+          fi
+
+          echo "--- Changelog ---"
+          cat /tmp/changelog.txt
+
+      - name: Commit, tag, and push
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json plugin.json
+          git commit -m "chore: bump version to v${VERSION}"
+          git tag "v${VERSION}"
+          git push origin main --tags
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          echo "## v${VERSION}" > /tmp/release_body.txt
+          echo "" >> /tmp/release_body.txt
+          cat /tmp/changelog.txt >> /tmp/release_body.txt
+          echo "" >> /tmp/release_body.txt
+          echo "---" >> /tmp/release_body.txt
+          echo "*Automated weekly release*" >> /tmp/release_body.txt
+
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --notes-file /tmp/release_body.txt \
+            package.zip
