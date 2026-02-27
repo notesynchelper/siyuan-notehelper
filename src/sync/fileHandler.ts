@@ -1428,6 +1428,7 @@ export class FileHandler {
             const day = dt.toFormat('dd');
             const hour = dt.toFormat('HH');
             const minute = dt.toFormat('mm');
+            const second = dt.toFormat('ss');
             const weekday = WEEKDAY_MAP[dt.weekday] || '';
             const quarter = `Q${dt.quarter}`;
 
@@ -1439,6 +1440,7 @@ export class FileHandler {
                 .replace(/\{\{\{day\}\}\}/g, day)
                 .replace(/\{\{\{hour\}\}\}/g, hour)
                 .replace(/\{\{\{minute\}\}\}/g, minute)
+                .replace(/\{\{\{second\}\}\}/g, second)
                 .replace(/\{\{\{weekday\}\}\}/g, weekday)
                 .replace(/\{\{\{quarter\}\}\}/g, quarter);
 

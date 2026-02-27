@@ -27,6 +27,7 @@ function getDateComponents(dateStr: string): {
     day: string;
     hour: string;
     minute: string;
+    second: string;
     weekday: string;
     quarter: string;
 } {
@@ -38,13 +39,14 @@ function getDateComponents(dateStr: string): {
             day: dt.toFormat('dd'),
             hour: dt.toFormat('HH'),
             minute: dt.toFormat('mm'),
+            second: dt.toFormat('ss'),
             weekday: WEEKDAY_MAP[dt.weekday] || '',
             quarter: `Q${dt.quarter}`,
         };
     } catch (error) {
         logger.error('Date components extraction error:', error);
         return {
-            year: '', month: '', day: '', hour: '', minute: '', weekday: '', quarter: ''
+            year: '', month: '', day: '', hour: '', minute: '', second: '', weekday: '', quarter: ''
         };
     }
 }

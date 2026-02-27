@@ -194,7 +194,7 @@ export class SettingsForm {
                     <div class="fn__flex">
                         <input class="b3-text-field fn__flex-1" id="folder" value="${settings.folder}" />
                     </div>
-                    <div class="b3-label__text">${i18n.folderDesc}<br/><span style="color: var(--b3-theme-on-surface-light);">时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{weekday}}}, {{{quarter}}}</span></div>
+                    <div class="b3-label__text">${i18n.folderDesc}<br/><span style="color: var(--b3-theme-on-surface-light);">时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{hour}}}, {{{minute}}}, {{{second}}}, {{{weekday}}}, {{{quarter}}}</span></div>
                 </div>
 
                 <div class="b3-label">
@@ -204,7 +204,7 @@ export class SettingsForm {
                     <div class="fn__flex">
                         <input class="b3-text-field fn__flex-1" id="filename" value="${settings.filename}" />
                     </div>
-                    <div class="b3-label__text">${i18n.filenameDesc}<br/><span style="color: var(--b3-theme-on-surface-light);">时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{weekday}}}, {{{quarter}}}</span></div>
+                    <div class="b3-label__text">${i18n.filenameDesc}<br/><span style="color: var(--b3-theme-on-surface-light);">时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{hour}}}, {{{minute}}}, {{{second}}}, {{{weekday}}}, {{{quarter}}}</span></div>
                 </div>
 
                 <div class="fn__hr"></div>
@@ -225,7 +225,7 @@ export class SettingsForm {
                     <div class="fn__flex">
                         <input class="b3-text-field fn__flex-1" id="mergeFolderTemplate" value="${settings.mergeFolderTemplate}" />
                     </div>
-                    <div class="b3-label__text">${i18n.mergeFolderTemplateDesc || '时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{weekday}}}, {{{quarter}}}'}</div>
+                    <div class="b3-label__text">${i18n.mergeFolderTemplateDesc || '时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{hour}}}, {{{minute}}}, {{{second}}}, {{{weekday}}}, {{{quarter}}}'}</div>
                 </div>
 
                 <div class="b3-label">
@@ -249,7 +249,7 @@ export class SettingsForm {
                     <div class="fn__flex">
                         <input class="b3-text-field fn__flex-1" id="singleFileName" value="${settings.singleFileName}" />
                     </div>
-                    <div class="b3-label__text">支持时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{weekday}}}, {{{quarter}}}</div>
+                    <div class="b3-label__text">支持时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{hour}}}, {{{minute}}}, {{{second}}}, {{{weekday}}}, {{{quarter}}}</div>
                 </div>
 
                 <!-- 合并消息文件名日期格式 -->
@@ -298,7 +298,7 @@ export class SettingsForm {
                             <input class="b3-text-field fn__flex-1" id="imageAttachmentFolder" value="${settings.imageAttachmentFolder}" />
                             <button class="b3-button b3-button--outline" id="resetImageFolder" title="恢复默认值">↺</button>
                         </div>
-                        <div class="b3-label__text">${i18n.imageAttachmentFolderDesc || '本地缓存模式下图片的存储路径。时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}'}</div>
+                        <div class="b3-label__text">${i18n.imageAttachmentFolderDesc || '本地缓存模式下图片的存储路径。时间变量：{{{date}}}, {{{year}}}, {{{month}}}, {{{day}}}, {{{hour}}}, {{{minute}}}, {{{second}}}'}</div>
                     </div>
                 </div>
 
@@ -424,6 +424,7 @@ export class SettingsForm {
                                     <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{day}}}</code> 日期<br/>
                                     <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{hour}}}</code> 小时 &nbsp;
                                     <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{minute}}}</code> 分钟 &nbsp;
+                                    <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{second}}}</code> 秒 &nbsp;
                                     <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{weekday}}}</code> 周几 &nbsp;
                                     <code style="background: var(--b3-theme-background); padding: 2px 4px; border-radius: 3px;">{{{quarter}}}</code> 季度
                                 </div>
