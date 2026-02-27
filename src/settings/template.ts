@@ -206,7 +206,7 @@ export function renderFilename(
         let filename = Mustache.render(template, viewWithDate);
 
         // 清理文件名中的非法字符（思源使用虚拟路径，只需排除路径分隔符和控制字符）
-        filename = filename.replace(/[<>:"\\/?*]/g, '-');
+        filename = filename.replace(/[<>"\\/?*]/g, '-');
 
         // 确保文件名不为空
         if (!filename.trim()) {

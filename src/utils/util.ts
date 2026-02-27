@@ -31,7 +31,7 @@ export function parseDateTime(dateStr: string): DateTime {
 export function sanitizeFileName(filename: string): string {
     // 移除或替换非法字符（思源使用虚拟路径，只需排除路径分隔符和控制字符）
     return filename
-        .replace(/[<>:"\\/?*]/g, '-')
+        .replace(/[<>"\\/?*]/g, '-')
         .replace(/\s+/g, ' ')
         .trim();
 }
