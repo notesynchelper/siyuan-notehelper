@@ -25,7 +25,7 @@ const FILES = [
 /**
  * 获取远程版本号
  */
-async function getRemoteVersion(): Promise<string | null> {
+export async function getRemoteVersion(): Promise<string | null> {
     const response = await fetch(VERSION_URL);
     if (!response.ok) return null;
     const data = await response.json();
@@ -49,7 +49,7 @@ async function getLocalVersion(): Promise<string> {
  * 比较版本号
  * @returns true 表示远程版本更新，需要更新
  */
-function compareVersions(remote: string, local: string): boolean {
+export function compareVersions(remote: string, local: string): boolean {
     const r = remote.split('.').map(Number);
     const l = local.split('.').map(Number);
     for (let i = 0; i < 3; i++) {
@@ -130,5 +130,16 @@ export async function checkAndUpdate(): Promise<void> {
         logger.info(`更新完成: ${remoteVersion}`);
     } catch (error) {
         logger.error('自动更新失败:', error);
+    }
+}
+
+/**
+ * 手动触发更新（无会话限制）
+ * 下载远程文件并写入插件目录，用于手动点击更新按钮
+ */
+export async function performUpdate(): Promise<void> {
+    const files = await downloadAllFiles();
+    for (const [path, data] of files) {
+        await writeFile(path, data);
     }
 }

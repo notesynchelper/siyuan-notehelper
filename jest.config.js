@@ -11,4 +11,7 @@ module.exports = {
             },
         }],
     },
+    moduleNameMapper: {
+        '^siyuan$': '<rootDir>/tests/__mocks__/siyuan.ts',
+    },
 };

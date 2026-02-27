@@ -20,7 +20,7 @@ import { ImageLocalizer } from './imageLocalizer/imageLocalizer';
 import { getArticleCount, clearAllArticles, fetchVipStatus, getQrCodeUrl, VipStatus } from './api';
 import { formatDate } from './utils/util';
 import { SettingsForm } from './ui/SettingsForm';
-import { checkAndUpdate } from './updater';
+import { checkAndUpdate, getRemoteVersion, compareVersions, performUpdate } from './updater';
 
 const SETTINGS_KEY = 'notehelper-settings';
 const DOCK_TYPE = 'notehelper_sync_dock';
@@ -399,6 +399,9 @@ export default class NoteHelperPlugin extends Plugin {
                         },
                         onCheckUpdate: async () => {
                             await this.checkForUpdates(settingsArea as HTMLElement);
+                        },
+                        onManualUpdate: async () => {
+                            await this.manualUpdate(settingsArea as HTMLElement);
                         },
                         onResetTemplate: (type) => {
                             this.resetTemplate(settingsArea as HTMLElement, type);
@@ -903,6 +906,7 @@ export default class NoteHelperPlugin extends Plugin {
      */
     private async checkForUpdates(container: HTMLElement) {
         const checkBtn = container.querySelector('#checkUpdateBtn') as HTMLButtonElement;
+        const updateBtn = container.querySelector('#manualUpdateBtn') as HTMLButtonElement;
         if (checkBtn) {
             checkBtn.disabled = true;
             checkBtn.textContent = this.i18n.zh_CN.checkingUpdate || '检查中...';
@@ -911,26 +915,23 @@ export default class NoteHelperPlugin extends Plugin {
         SettingsForm.updateVersionStatus(container, '检查中...');
 
         try {
-            const response = await fetch('https://siyuan.notebooksyncer.com/plugversion', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            const latestVersion = await getRemoteVersion();
+            if (!latestVersion) {
+                throw new Error('无法获取远程版本号');
             }
 
-            const data = await response.json();
-            const latestVersion = data.version;
             const currentVersion = this.manifest?.version || '1.0.0';
 
-            if (this.isNewerVersion(latestVersion, currentVersion)) {
+            if (compareVersions(latestVersion, currentVersion)) {
                 SettingsForm.updateVersionStatus(container, `${this.i18n.zh_CN.newVersionAvailable}: ${latestVersion}`);
-                showMessage(`发现新版本 ${latestVersion}！`, 5000, 'info');
+                if (updateBtn) {
+                    updateBtn.style.display = '';
+                }
             } else {
                 SettingsForm.updateVersionStatus(container, this.i18n.zh_CN.latestVersion);
+                if (updateBtn) {
+                    updateBtn.style.display = 'none';
+                }
             }
         } catch (error) {
             logger.error('Failed to check for updates:', error);
@@ -944,28 +945,30 @@ export default class NoteHelperPlugin extends Plugin {
     }
 
     /**
-     * 比较版本号
+     * 手动触发更新
      */
-    private isNewerVersion(latestVersion: string, currentVersion: string): boolean {
-        const parseVersion = (version: string) => {
-            return version.split('.').map(num => parseInt(num, 10));
-        };
-
-        const latest = parseVersion(latestVersion);
-        const current = parseVersion(currentVersion);
-
-        for (let i = 0; i < Math.max(latest.length, current.length); i++) {
-            const latestNum = latest[i] || 0;
-            const currentNum = current[i] || 0;
-
-            if (latestNum > currentNum) {
-                return true;
-            } else if (latestNum < currentNum) {
-                return false;
-            }
+    private async manualUpdate(container: HTMLElement) {
+        const updateBtn = container.querySelector('#manualUpdateBtn') as HTMLButtonElement;
+        if (updateBtn) {
+            updateBtn.disabled = true;
+            updateBtn.textContent = '更新中...';
         }
 
-        return false;
+        try {
+            await performUpdate();
+            SettingsForm.updateVersionStatus(container, '更新完成，重启思源笔记后生效');
+            showMessage('插件更新完成，重启思源笔记后生效。', 6000);
+            if (updateBtn) {
+                updateBtn.style.display = 'none';
+            }
+        } catch (error) {
+            logger.error('Manual update failed:', error);
+            SettingsForm.updateVersionStatus(container, '更新失败，请重试');
+            if (updateBtn) {
+                updateBtn.disabled = false;
+                updateBtn.textContent = '立即更新';
+            }
+        }
     }
 
     /**
