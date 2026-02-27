@@ -210,7 +210,6 @@ export default class NoteHelperPlugin extends Plugin {
     private settings: PluginSettings;
     private syncManager: SyncManager;
     private imageLocalizer: ImageLocalizer;
-    private statusBarElement: HTMLElement;
     private dockElement: HTMLElement;
 
     // 初始化 i18n - 在类定义时就设置，避免 SiYuan 访问时为 null
@@ -266,9 +265,6 @@ export default class NoteHelperPlugin extends Plugin {
         // 添加顶栏图标
         this.addTopBarIcon();
 
-        // 添加状态栏
-        this.addStatusBarIcon();
-
         // 立即添加左侧栏同步dock
         this.addSyncDock();
     }
@@ -313,48 +309,6 @@ export default class NoteHelperPlugin extends Plugin {
                 this.showMenu(rect);
             },
         });
-    }
-
-    /**
-     * 添加状态栏图标
-     */
-    private addStatusBarIcon() {
-        const statusElement = document.createElement('div');
-        statusElement.className = 'toolbar__item ariaLabel';
-        this.statusBarElement = statusElement;
-
-        this.statusBarElement.addEventListener('click', () => {
-            this.openSettings();
-        });
-
-        this.addStatusBar({
-            element: this.statusBarElement,
-            position: 'right',
-        });
-
-        this.updateStatusBar();
-    }
-
-    /**
-     * 更新状态栏
-     */
-    private updateStatusBar() {
-        if (!this.statusBarElement) return;
-
-        if (this.settings.syncing) {
-            this.statusBarElement.textContent = this.i18n.zh_CN.syncing;
-            this.statusBarElement.setAttribute('aria-label', this.i18n.zh_CN.syncing);
-        } else if (this.settings.syncAt) {
-            const lastSync = formatDate(this.settings.syncAt, 'yyyy-MM-dd HH:mm');
-            this.statusBarElement.textContent = `${this.i18n.zh_CN.lastSyncAt}: ${lastSync}`;
-            this.statusBarElement.setAttribute('aria-label', `${this.i18n.zh_CN.lastSyncAt}: ${lastSync}`);
-        } else {
-            this.statusBarElement.textContent = this.i18n.zh_CN.noSyncYet;
-            this.statusBarElement.setAttribute('aria-label', this.i18n.zh_CN.noSyncYet);
-        }
-
-        // 同时更新dock状态
-        this.updateDockStatus();
     }
 
     /**
@@ -615,7 +569,7 @@ export default class NoteHelperPlugin extends Plugin {
         }
 
         try {
-            this.updateStatusBar();
+            this.updateDockStatus();
 
             // 检查是否设置了目标笔记本
             if (!this.settings.targetNotebook) {
@@ -649,7 +603,7 @@ export default class NoteHelperPlugin extends Plugin {
         } finally {
             // 确保状态重置并更新UI
             this.settings.syncing = false;
-            this.updateStatusBar();
+            this.updateDockStatus();
         }
     }
 
@@ -662,7 +616,7 @@ export default class NoteHelperPlugin extends Plugin {
             this.i18n.zh_CN.resetSyncConfirm,
             () => {
                 this.syncManager.resetSyncTime().then(() => {
-                    this.updateStatusBar();
+                    this.updateDockStatus();
                     showMessage(this.i18n.zh_CN.success?.settingsSaved || 'Settings saved', 3000, 'info');
                 }).catch((error) => {
                     logger.error('Failed to reset sync time:', error);
@@ -781,7 +735,7 @@ export default class NoteHelperPlugin extends Plugin {
         await this.saveSettings();
 
         // 更新状态栏显示
-        this.updateStatusBar();
+        this.updateDockStatus();
     }
 
     /**
