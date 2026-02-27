@@ -6,7 +6,7 @@
 import { logger } from '../utils/logger';
 import { uploadAsset } from '../utils/assetUploader';
 import { Article } from '../utils/types';
-import { PluginSettings } from '../settings';
+import { PluginSettings, DEFAULT_SETTINGS } from '../settings';
 import {
     renderArticleContent,
     renderWeChatMessage,
@@ -33,6 +33,31 @@ const WEEKDAY_MAP: Record<number, string> = {
     1: '周一', 2: '周二', 3: '周三', 4: '周四',
     5: '周五', 6: '周六', 7: '周日'
 };
+
+// 可下载的文件附件扩展名（不含图片，图片由独立逻辑处理）
+const DOWNLOADABLE_FILE_EXTENSIONS = new Set([
+    // 文档
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+    'odt', 'ods', 'odp', 'rtf', 'txt', 'csv', 'tsv', 'md',
+    // 压缩包
+    'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz',
+    // 音频
+    'mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'm4a',
+    // 视频
+    'mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv', 'webm',
+    // 电子书
+    'epub', 'mobi', 'azw3',
+    // 其他
+    'apk', 'exe', 'dmg', 'iso', 'msi', 'deb', 'rpm',
+    'json', 'xml', 'yaml', 'yml', 'toml',
+    'sql', 'db', 'sqlite',
+]);
+
+// 服务端域名：来自这些域名的资源无条件本地化
+const SERVICE_DOMAINS = [
+    'clipfx.app',
+    'sync.bijitongbu.site',
+];
 
 /**
  * 文件处理器类
@@ -1247,20 +1272,29 @@ export class FileHandler {
             logger.info(`[图片处理] 图片模式为 ${this.settings.imageMode}，跳过图片本地化`);
         }
 
-        // 2. 处理附件链接 [文件名](url) - 排除图片链接
+        // 2. 处理附件链接 [文件名](url) - 排除图片链接，仅处理可下载文件
         const attachmentRegex = /(?<!!)\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
-        const matches: Array<{full: string, displayName: string, url: string}> = [];
+        const allLinks: Array<{full: string, displayName: string, url: string}> = [];
         let match;
 
         while ((match = attachmentRegex.exec(content)) !== null) {
-            matches.push({
+            allLinks.push({
                 full: match[0],
                 displayName: match[1],
                 url: match[2]
             });
         }
 
-        logger.info(`[附件处理] 检测到 ${matches.length} 个附件链接`);
+        // 过滤：服务端域名的链接无条件本地化，其他链接通过扩展名判断
+        const matches = allLinks.filter(item => this.shouldLocalizeUrl(item.url));
+
+        logger.info(`[附件处理] 检测到 ${allLinks.length} 个链接，其中 ${matches.length} 个需要本地化`);
+        if (allLinks.length > matches.length) {
+            const skipped = allLinks.filter(item => !this.shouldLocalizeUrl(item.url));
+            skipped.forEach(item => {
+                logger.debug(`[附件处理] 跳过普通链接: [${item.displayName}](${item.url})`);
+            });
+        }
 
         if (matches.length > 0) {
             for (let i = 0; i < matches.length; i++) {
@@ -1330,7 +1364,7 @@ export class FileHandler {
             // 验证路径必须以 assets/ 开头，否则使用默认路径
             let attachmentFolder = this.settings.attachmentFolder;
             if (!attachmentFolder.startsWith('assets/')) {
-                attachmentFolder = 'assets/笔记同步助手/attachments';
+                attachmentFolder = DEFAULT_SETTINGS.attachmentFolder;
                 logger.warn(`[附件下载] 路径未以 assets/ 开头，使用默认路径: ${attachmentFolder}`);
             }
 
@@ -1410,7 +1444,12 @@ export class FileHandler {
 
             // 验证路径必须以 assets/ 开头，否则使用默认路径
             if (!imageFolder.startsWith('assets/')) {
-                imageFolder = `assets/笔记同步助手/images/${today}`;
+                // 使用默认图片路径模板并替换日期变量
+                imageFolder = DEFAULT_SETTINGS.imageAttachmentFolder
+                    .replace(/\{\{\{date\}\}\}/g, today)
+                    .replace(/\{\{\{year\}\}\}/g, year)
+                    .replace(/\{\{\{month\}\}\}/g, month)
+                    .replace(/\{\{\{day\}\}\}/g, day);
                 logger.warn(`[图片下载] 路径未以 assets/ 开头，使用默认路径: ${imageFolder}`);
             }
             logger.info(`[图片下载] 上传目录: ${imageFolder}`);
@@ -1464,5 +1503,40 @@ export class FileHandler {
             // URL 解析失败
         }
         return null;
+    }
+
+    /**
+     * 判断 URL 是否指向可下载的文件附件
+     * 通过 URL 路径的扩展名判断，排除普通网页链接
+     */
+    private isDownloadableFileUrl(url: string): boolean {
+        const ext = this.getExtensionFromUrl(url);
+        if (!ext) {
+            return false;
+        }
+        return DOWNLOADABLE_FILE_EXTENSIONS.has(ext);
+    }
+
+    /**
+     * 判断 URL 是否来自服务端域名
+     * 这些域名的资源需要无条件本地化
+     */
+    private isServiceDomain(url: string): boolean {
+        try {
+            const hostname = new URL(url).hostname;
+            return SERVICE_DOMAINS.some(domain =>
+                hostname === domain || hostname.endsWith('.' + domain)
+            );
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * 判断 URL 是否需要本地化
+     * 服务端域名的链接无条件本地化，其他链接通过扩展名判断
+     */
+    private shouldLocalizeUrl(url: string): boolean {
+        return this.isServiceDomain(url) || this.isDownloadableFileUrl(url);
     }
 }

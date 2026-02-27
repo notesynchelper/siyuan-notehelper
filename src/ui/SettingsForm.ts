@@ -666,7 +666,7 @@ export class SettingsForm {
         const imageAttachmentFolderInput = container.querySelector('#imageAttachmentFolder') as HTMLInputElement;
         if (resetImageFolderBtn && imageAttachmentFolderInput) {
             resetImageFolderBtn.addEventListener('click', () => {
-                imageAttachmentFolderInput.value = 'assets/笔记同步助手/images/{{{date}}}';
+                imageAttachmentFolderInput.value = DEFAULT_SETTINGS.imageAttachmentFolder;
             });
         }
 
@@ -674,7 +674,7 @@ export class SettingsForm {
         const attachmentFolderInput = container.querySelector('#attachmentFolder') as HTMLInputElement;
         if (resetAttachmentFolderBtn && attachmentFolderInput) {
             resetAttachmentFolderBtn.addEventListener('click', () => {
-                attachmentFolderInput.value = 'assets/笔记同步助手/attachments';
+                attachmentFolderInput.value = DEFAULT_SETTINGS.attachmentFolder;
             });
         }
     }

@@ -7,7 +7,7 @@ import { DateTime } from 'luxon';
 import { logger } from '../utils/logger';
 import { Article, Highlight, ImageMode } from '../utils/types';
 import { formatDate, isWeChatMessage } from '../utils/util';
-import { PluginSettings } from './index';
+import { PluginSettings, DEFAULT_SETTINGS } from './index';
 
 // 图床代理URL
 const IMAGE_PROXY_URL = 'https://images.weserv.nl/?url=';
@@ -200,11 +200,11 @@ export function renderFilename(
             ...dateComponents,
         };
 
-        const template = settings.filename || '{{{title}}}';
+        const template = settings.filename || DEFAULT_SETTINGS.filename;
         let filename = Mustache.render(template, viewWithDate);
 
-        // 清理文件名中的非法字符
-        filename = filename.replace(/[<>:"/\\|?*]/g, '-');
+        // 清理文件名中的非法字符（思源使用虚拟路径，只需排除路径分隔符和控制字符）
+        filename = filename.replace(/[<>:"\\/?*]/g, '-');
 
         // 确保文件名不为空
         if (!filename.trim()) {
@@ -236,11 +236,11 @@ export function renderFolderPath(
             ...dateComponents,
         };
 
-        const template = settings.folder || '笔记同步助手';
+        const template = settings.folder || DEFAULT_SETTINGS.folder;
         return Mustache.render(template, viewWithDate);
     } catch (error) {
         logger.error('Folder path rendering error:', error);
-        return '笔记同步助手';
+        return DEFAULT_SETTINGS.folder;
     }
 }
 
@@ -262,7 +262,7 @@ export function renderMergeFolderPath(
             ...dateComponents,
         };
 
-        const template = settings.mergeFolderTemplate || settings.mergeFolder || '笔记同步助手/微信消息/{{{date}}}';
+        const template = settings.mergeFolderTemplate || settings.mergeFolder || DEFAULT_SETTINGS.mergeFolderTemplate;
         let path = Mustache.render(template, viewWithDate);
 
         // 规范化路径：
@@ -278,7 +278,7 @@ export function renderMergeFolderPath(
         return path;
     } catch (error) {
         logger.error('Merge folder path rendering error:', error);
-        return '笔记同步助手/微信消息';
+        return DEFAULT_SETTINGS.mergeFolderTemplate;
     }
 }
 
@@ -292,7 +292,7 @@ export function renderSingleFilename(
     try {
         const formattedDate = formatDate(date, settings.singleFileDateFormat);
         const dateComponents = getDateComponents(date);
-        const template = settings.singleFileName || '同步助手_{{{date}}}';
+        const template = settings.singleFileName || DEFAULT_SETTINGS.singleFileName;
         let filename = Mustache.render(template, {
             date: formattedDate,
             ...dateComponents,
@@ -308,7 +308,7 @@ export function renderSingleFilename(
         return filename;
     } catch (error) {
         logger.error('Single filename rendering error:', error);
-        return '同步助手';
+        return DEFAULT_SETTINGS.singleFileName;
     }
 }
 
