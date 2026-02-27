@@ -448,22 +448,20 @@ export class SettingsForm {
                             </div>
                         </div>
                     </div>
-                </details>
 
-                <!-- 版本信息（已禁用）
-                <div class="fn__hr"></div>
-                <div class="b3-label" id="versionInfoContainer">
-                    <div class="fn__flex" style="align-items: center; gap: 8px;">
-                        <span style="font-size: 12px; color: var(--b3-theme-on-surface-light);">
-                            ${i18n.currentVersion || '当前版本'}: <span id="currentVersionDisplay">${settings.version || '1.0.0'}</span>
-                        </span>
-                        <button class="b3-button b3-button--outline" id="checkUpdateBtn" style="padding: 2px 8px; font-size: 11px;">
-                            ${i18n.checkUpdate || '检查更新'}
-                        </button>
-                        <span id="updateStatusDisplay" style="font-size: 11px; color: var(--b3-theme-on-surface-light);"></span>
-                    </div>
-                </div>
-                -->
+                        <div class="fn__hr"></div>
+                        <div class="b3-label" id="versionInfoContainer">
+                            <div class="fn__flex" style="align-items: center; gap: 8px;">
+                                <span style="font-size: 12px; color: var(--b3-theme-on-surface-light);">
+                                    ${i18n.currentVersion || '当前版本'}: <span id="currentVersionDisplay">${settings.version || '1.0.0'}</span>
+                                </span>
+                                <button class="b3-button b3-button--outline" id="checkUpdateBtn" style="padding: 2px 8px; font-size: 11px;">
+                                    ${i18n.checkUpdate || '检查更新'}
+                                </button>
+                                <span id="updateStatusDisplay" style="font-size: 11px; color: var(--b3-theme-on-surface-light);"></span>
+                            </div>
+                        </div>
+                </details>
             </div>
         `;
     }
@@ -603,13 +601,13 @@ export class SettingsForm {
             });
         }
 
-        // 检查更新（已禁用）
-        // const checkUpdateBtn = container.querySelector('#checkUpdateBtn') as HTMLButtonElement;
-        // if (checkUpdateBtn && callbacks.onCheckUpdate) {
-        //     checkUpdateBtn.addEventListener('click', () => {
-        //         callbacks.onCheckUpdate!();
-        //     });
-        // }
+        // 检查更新
+        const checkUpdateBtn = container.querySelector('#checkUpdateBtn') as HTMLButtonElement;
+        if (checkUpdateBtn && callbacks.onCheckUpdate) {
+            checkUpdateBtn.addEventListener('click', () => {
+                callbacks.onCheckUpdate!();
+            });
+        }
 
         // 重置模板按钮
         const resetTemplateBtn = container.querySelector('#resetTemplate') as HTMLButtonElement;

@@ -430,8 +430,7 @@ export default class NoteHelperPlugin extends Plugin {
                         ${SettingsForm.renderSettingsForm(this.settings, this.i18n.zh_CN, () => this.formatSyncTimeForInput())}
                     `;
 
-                    // 设置当前版本（已禁用）
-                    // SettingsForm.setCurrentVersion(settingsArea as HTMLElement, this.manifest?.version || '1.0.0');
+                    SettingsForm.setCurrentVersion(settingsArea as HTMLElement, this.manifest?.version || '1.0.0');
 
                     // 绑定动态交互事件
                     SettingsForm.bindEvents(settingsArea as HTMLElement, {
@@ -444,9 +443,9 @@ export default class NoteHelperPlugin extends Plugin {
                         onClearAllArticles: async () => {
                             await this.handleClearAllArticles(settingsArea as HTMLElement);
                         },
-                        // onCheckUpdate: async () => {  // 检查更新已禁用
-                        //     await this.checkForUpdates(settingsArea as HTMLElement);
-                        // },
+                        onCheckUpdate: async () => {
+                            await this.checkForUpdates(settingsArea as HTMLElement);
+                        },
                         onResetTemplate: (type) => {
                             this.resetTemplate(settingsArea as HTMLElement, type);
                         }
