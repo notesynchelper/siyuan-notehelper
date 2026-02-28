@@ -90,6 +90,9 @@ export interface PluginSettings {
     jpegQuality: number;  // JPEG 质量
     imageDownloadRetries: number;  // 图片下载重试次数
 
+    // 多设备同步
+    deviceSyncCursors: Record<string, string>;  // 设备级同步游标 { deviceId: syncAt }
+
     // 其他
     version: string;  // 插件版本
     logLevel: string;  // 日志级别（DEBUG, INFO, WARN, ERROR）
@@ -156,6 +159,9 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     enablePngToJpeg: false,
     jpegQuality: 85,
     imageDownloadRetries: 3,
+
+    // 多设备同步
+    deviceSyncCursors: {},
 
     // 其他
     version: '0.1.0',

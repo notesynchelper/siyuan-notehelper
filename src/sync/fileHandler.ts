@@ -27,6 +27,7 @@ import {
     joinPath,
 } from '../utils/util';
 import { DateTime } from 'luxon';
+import { IdIndex } from './idIndex';
 
 // 星期映射（用于图片路径变量替换）
 const WEEKDAY_MAP: Record<number, string> = {
@@ -66,11 +67,19 @@ export class FileHandler {
     private plugin: any;  // SiYuan Plugin instance
     private settings: PluginSettings;
     private documentCache: Map<string, string>;  // 缓存文档路径到ID的映射
+    private idIndex: IdIndex | null = null;  // 全局 ID 索引（跨设备去重）
 
     constructor(plugin: any, settings: PluginSettings) {
         this.plugin = plugin;
         this.settings = settings;
         this.documentCache = new Map();
+    }
+
+    /**
+     * 设置全局 ID 索引（每次同步开始时由 SyncManager 调用）
+     */
+    public setIdIndex(index: IdIndex): void {
+        this.idIndex = index;
     }
 
     /**
@@ -131,6 +140,15 @@ export class FileHandler {
      * @returns 返回 { docId: string, skipped: boolean }
      */
     private async createSeparateFile(article: Article, notebookId: string): Promise<{ docId: string, skipped: boolean }> {
+        // 0. 全局 ID 索引去重（跨设备去重，最快路径）
+        if (this.idIndex) {
+            const existingBlockId = this.idIndex.findBlockId(article.id);
+            if (existingBlockId) {
+                logger.debug(`[createSeparateFile] ID 索引命中: ${article.id} -> ${existingBlockId}, skipping`);
+                return { docId: existingBlockId, skipped: true };
+            }
+        }
+
         // 1. 先生成路径（提前计算，用于路径去重）
         const folderPath = renderFolderPath(article, this.settings);
         const filename = sanitizeFileName(renderFilename(article, this.settings));
@@ -191,6 +209,15 @@ export class FileHandler {
     private async mergeArticleToFile(article: Article, notebookId: string): Promise<{ docId: string, skipped: boolean }> {
         logger.debug('=== mergeArticleToFile START ===');
         logger.debug(`Article title: ${article.title}`);
+
+        // 全局 ID 索引去重（跨设备去重）
+        if (this.idIndex) {
+            const existingBlockId = this.idIndex.findBlockId(article.id);
+            if (existingBlockId) {
+                logger.debug(`[mergeArticleToFile] ID 索引命中: ${article.id} -> ${existingBlockId}, skipping`);
+                return { docId: existingBlockId, skipped: true };
+            }
+        }
 
         // 确定合并文件的名称
         const mergeDate = isWeChatMessage(article.title)

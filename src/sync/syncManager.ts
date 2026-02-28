@@ -8,6 +8,7 @@ import { Article, SyncResult } from '../utils/types';
 import { PluginSettings } from '../settings';
 import { getItems } from '../api';
 import { FileHandler } from './fileHandler';
+import { IdIndex } from './idIndex';
 import { templateNeedsContent } from '../settings/template';
 import { checkAndUpdate } from '../updater';
 
@@ -51,6 +52,11 @@ export class SyncManager {
             // 清除文档缓存，确保每次同步都是新的开始
             this.fileHandler.clearDocumentCache();
 
+            // 构建全局 ID 索引（用于跨设备去重）
+            const idIndex = new IdIndex();
+            await idIndex.build();
+            this.fileHandler.setIdIndex(idIndex);
+
             // 检查 API 密钥
             if (!this.settings.apiKey) {
                 throw new Error('API key is not configured');
@@ -70,6 +76,12 @@ export class SyncManager {
             // 确定是否需要获取文章内容
             const includeContent = templateNeedsContent(this.settings.template);
 
+            // 获取当前设备的同步游标（优先设备级，回退全局）
+            const deviceId = this.getDeviceId();
+            const rawSyncAt = this.settings.deviceSyncCursors?.[deviceId]
+                || this.settings.syncAt
+                || '';
+
             // 分批获取文章
             const allArticles: Article[] = [];
             const batchSize = 15;
@@ -81,16 +93,16 @@ export class SyncManager {
 
                 // 计算有效的同步时间（应用时间回溯）
                 let effectiveSyncAt: string | undefined = undefined;
-                if (this.settings.syncAt) {
-                    const syncDate = new Date(this.settings.syncAt);
+                if (rawSyncAt) {
+                    const syncDate = new Date(rawSyncAt);
                     const offsetHours = this.settings.syncTimeOffset || 0;
                     if (offsetHours > 0) {
                         // 往前回溯指定小时数
                         syncDate.setHours(syncDate.getHours() - offsetHours);
                         effectiveSyncAt = syncDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
-                        logger.debug(`应用时间回溯: ${this.settings.syncAt} -> ${effectiveSyncAt} (回溯 ${offsetHours} 小时)`);
+                        logger.debug(`应用时间回溯: ${rawSyncAt} -> ${effectiveSyncAt} (回溯 ${offsetHours} 小时)`);
                     } else {
-                        effectiveSyncAt = this.settings.syncAt;
+                        effectiveSyncAt = rawSyncAt;
                     }
                 }
 
@@ -139,7 +151,20 @@ export class SyncManager {
 
             // 更新同步时间（去掉毫秒以匹配服务端格式）
             const now = new Date();
-            this.settings.syncAt = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
+            const nowStr = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
+
+            // 更新全局游标（向后兼容）
+            this.settings.syncAt = nowStr;
+
+            // 更新设备级游标
+            if (!this.settings.deviceSyncCursors) {
+                this.settings.deviceSyncCursors = {};
+            }
+            this.settings.deviceSyncCursors[deviceId] = nowStr;
+
+            // 清理过期的设备游标
+            this.cleanStaleDeviceCursors();
+
             await this.plugin.saveSettings();
 
             // 刷新文件树，确保新笔记立即显示
@@ -167,12 +192,64 @@ export class SyncManager {
     }
 
     /**
-     * 重置同步时间
+     * 重置同步时间（同时重置当前设备游标）
      */
     async resetSyncTime(): Promise<void> {
         this.settings.syncAt = '';
+
+        const deviceId = this.getDeviceId();
+        if (this.settings.deviceSyncCursors) {
+            this.settings.deviceSyncCursors[deviceId] = '';
+        }
+
         await this.plugin.saveSettings();
-        logger.debug('Sync time reset');
+        logger.debug('Sync time reset (including device cursor)');
+    }
+
+    /**
+     * 获取当前设备的唯一标识
+     * 使用 localStorage 持久化（不跨设备同步，每台设备独有）
+     */
+    private getDeviceId(): string {
+        const STORAGE_KEY = 'notehelper-device-id';
+        try {
+            let id = window.localStorage.getItem(STORAGE_KEY);
+            if (!id) {
+                const siyuanWindow = window as any;
+                const os = siyuanWindow.siyuan?.config?.system?.os;
+                const platform = (os === 'android' || os === 'ios') ? 'mobile' : 'desktop';
+                id = `${platform}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+                window.localStorage.setItem(STORAGE_KEY, id);
+                logger.info(`[SyncManager] 生成新设备ID: ${id}`);
+            }
+            return id;
+        } catch {
+            return `temp-${Math.random().toString(36).substring(2, 8)}`;
+        }
+    }
+
+    /**
+     * 清理超过 30 天未更新的设备游标
+     */
+    private cleanStaleDeviceCursors(): void {
+        const cursors = this.settings.deviceSyncCursors;
+        if (!cursors) return;
+
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        for (const [deviceId, cursor] of Object.entries(cursors)) {
+            if (!cursor) continue;
+            try {
+                const cursorTime = new Date(cursor);
+                if (!isNaN(cursorTime.getTime()) && cursorTime < thirtyDaysAgo) {
+                    delete cursors[deviceId];
+                    logger.debug(`[SyncManager] 清理过期设备游标: ${deviceId}`);
+                }
+            } catch {
+                delete cursors[deviceId];
+            }
+        }
     }
 
     /**
