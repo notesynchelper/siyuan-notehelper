@@ -13,7 +13,12 @@
       "Bash(dir /B)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git stash:*)",
+      "Bash(git show:*)",
+      "Bash(npm test:*)",
+      "Bash(gh auth:*)",
+      "Bash(git:*)"
     ],
     "deny": [],
     "ask": []
