@@ -2,8 +2,8 @@ name: Weekly Release
 
 on:
   schedule:
-    # Every Monday at UTC 12:00
-    - cron: "0 12 * * 1"
+    # Every Monday and Thursday at 17:00 Beijing Time (UTC 09:00)
+    - cron: "0 9 * * 1,4"
   workflow_dispatch:
 
 permissions:
