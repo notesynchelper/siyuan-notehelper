@@ -20,7 +20,7 @@ import { ImageLocalizer } from './imageLocalizer/imageLocalizer';
 import { getArticleCount, clearAllArticles, fetchVipStatus, getQrCodeUrl, VipStatus } from './api';
 import { formatDate } from './utils/util';
 import { SettingsForm } from './ui/SettingsForm';
-import { checkAndUpdate, getRemoteVersion, compareVersions, performUpdate } from './updater';
+import { checkAndUpdate, getRemoteVersion, getLocalVersion, compareVersions, performUpdate } from './updater';
 
 const SETTINGS_KEY = 'notehelper-settings';
 const DOCK_TYPE = 'notehelper_sync_dock';
@@ -384,7 +384,10 @@ export default class NoteHelperPlugin extends Plugin {
                         ${SettingsForm.renderSettingsForm(this.settings, this.i18n.zh_CN, () => this.formatSyncTimeForInput())}
                     `;
 
-                    SettingsForm.setCurrentVersion(settingsArea as HTMLElement, this.manifest?.version || '1.0.0');
+                    // 从磁盘读取实际版本号（而非内存 manifest，更新后无需重启即可显示新版本）
+                    getLocalVersion().then(v => {
+                        SettingsForm.setCurrentVersion(settingsArea as HTMLElement, v);
+                    });
 
                     // 绑定动态交互事件
                     SettingsForm.bindEvents(settingsArea as HTMLElement, {
@@ -920,7 +923,7 @@ export default class NoteHelperPlugin extends Plugin {
                 throw new Error('无法获取远程版本号');
             }
 
-            const currentVersion = this.manifest?.version || '1.0.0';
+            const currentVersion = await getLocalVersion();
 
             if (compareVersions(latestVersion, currentVersion)) {
                 SettingsForm.updateVersionStatus(container, `${this.i18n.zh_CN.newVersionAvailable}: ${latestVersion}`);
@@ -956,6 +959,9 @@ export default class NoteHelperPlugin extends Plugin {
 
         try {
             await performUpdate();
+            // 更新完成后刷新显示的版本号
+            const newVersion = await getLocalVersion();
+            SettingsForm.setCurrentVersion(container, newVersion);
             SettingsForm.updateVersionStatus(container, '更新完成，重启思源笔记后生效');
             showMessage('插件更新完成，重启思源笔记后生效。', 6000);
             if (updateBtn) {

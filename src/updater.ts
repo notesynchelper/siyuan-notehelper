@@ -35,7 +35,7 @@ export async function getRemoteVersion(): Promise<string | null> {
 /**
  * 获取本地版本号（从已安装的 plugin.json 读取）
  */
-async function getLocalVersion(): Promise<string> {
+export async function getLocalVersion(): Promise<string> {
     const response = await fetch('/api/file/getFile', {
         method: 'POST',
         body: JSON.stringify({ path: `${PLUGIN_PATH}/plugin.json` })
