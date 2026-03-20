@@ -1,7 +1,7 @@
 # 笔记同步助手
 
 需关注服务号使用，基础功能免费，进阶功能需付费订阅。
-首次配置稍麻烦，我们写了超详细的分步教程，配好之后转发消息剪藏就完事儿 [详细教程](https://mp.weixin.qq.com/s/c4k8gDslzWKcA5_9jod72w)
+首次配置稍麻烦，我们写了超详细的分步教程，配好之后转发消息剪藏就完事儿 [详细教程](https://mp.weixin.qq.com/s/c4k8gDslzWKcA5_9jod72w) | [更详细的图文教程](https://bijitongbu.feishu.cn/wiki/CKkSw0rREiE7pkk0mrwcvwfGn6e)
 
 
 ![preview](preview.png)
