@@ -11,6 +11,8 @@ import { FileHandler } from './fileHandler';
 import { IdIndex } from './idIndex';
 import { templateNeedsContent } from '../settings/template';
 import { checkAndUpdate } from '../updater';
+import { computeEffectiveSyncAt } from './syncCursorAdjust';
+import { SyncNoticeManager } from './SyncNoticeManager';
 
 /**
  * 同步管理器类
@@ -30,7 +32,7 @@ export class SyncManager {
     /**
      * 执行同步
      */
-    async sync(): Promise<SyncResult> {
+    async sync(isAutoSync: boolean = false): Promise<SyncResult> {
         // 检查插件更新（不阻塞同步流程）
         checkAndUpdate().catch(() => {});
 
@@ -45,9 +47,11 @@ export class SyncManager {
 
         this.isSyncing = true;
         this.settings.syncing = true;
+        const notice = new SyncNoticeManager();
 
         try {
             logger.debug('Starting sync...');
+            notice.startSync();
 
             // 清除文档缓存，确保每次同步都是新的开始
             this.fileHandler.clearDocumentCache();
@@ -82,29 +86,27 @@ export class SyncManager {
                 || this.settings.syncAt
                 || '';
 
-            // 分批获取文章
-            const allArticles: Article[] = [];
+            // 计算有效的同步时间（三重回退叠加）
+            const effectiveSyncAt = computeEffectiveSyncAt(rawSyncAt, {
+                syncTimeOffset: this.settings.syncTimeOffset,
+                initialSyncCompleted: this.settings.initialSyncCompleted,
+                frequency: this.settings.frequency,
+                isAutoSync,
+            });
+            if (effectiveSyncAt) {
+                logger.debug(`有效同步时间: ${rawSyncAt} -> ${effectiveSyncAt}`);
+            }
+
+            // 分批获取并处理文章
             const batchSize = 15;
             let hasMore = true;
             let offset = 0;
+            const errors: string[] = [];
+            let skippedCount = 0;
+            let createdCount = 0;
 
             while (hasMore) {
                 logger.debug(`Fetching batch ${offset / batchSize + 1}...`);
-
-                // 计算有效的同步时间（应用时间回溯）
-                let effectiveSyncAt: string | undefined = undefined;
-                if (rawSyncAt) {
-                    const syncDate = new Date(rawSyncAt);
-                    const offsetHours = this.settings.syncTimeOffset || 0;
-                    if (offsetHours > 0) {
-                        // 往前回溯指定小时数
-                        syncDate.setHours(syncDate.getHours() - offsetHours);
-                        effectiveSyncAt = syncDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
-                        logger.debug(`应用时间回溯: ${rawSyncAt} -> ${effectiveSyncAt} (回溯 ${offsetHours} 小时)`);
-                    } else {
-                        effectiveSyncAt = rawSyncAt;
-                    }
-                }
 
                 const [articles, hasNextPage] = await getItems(
                     this.settings.endpoint,
@@ -116,37 +118,34 @@ export class SyncManager {
                     includeContent
                 );
 
-                allArticles.push(...articles);
+                // 批量处理本页文章（合并类排序后写入）
+                const batchResult = await this.fileHandler.processArticleBatch(articles, notebookId);
+                createdCount += batchResult.created;
+                skippedCount += batchResult.skipped;
+                errors.push(...batchResult.errors);
+
+                notice.onBatchProcessed(articles.length, hasNextPage);
                 hasMore = hasNextPage;
                 offset += batchSize;
 
-                // 防止无限循环
                 if (offset > 1000) {
                     logger.warn('Reached maximum offset, stopping');
                     break;
                 }
             }
 
-            logger.debug(`Total articles to process: ${allArticles.length}`);
+            logger.debug(`Total processed. Created: ${createdCount}, Skipped: ${skippedCount}`);
 
-            // 处理每篇文章
-            const errors: string[] = [];
-            let skippedCount = 0;
-            let createdCount = 0;
+            if (createdCount === 0 && skippedCount === 0 && errors.length === 0) {
+                notice.showNoArticles();
+            } else {
+                notice.completeSync(createdCount);
+            }
 
-            for (const article of allArticles) {
-                try {
-                    const result = await this.fileHandler.processArticle(article, notebookId);
-                    if (result.skipped) {
-                        skippedCount++;
-                    } else {
-                        createdCount++;
-                    }
-                } catch (error) {
-                    const errorMsg = `Failed to process article ${article.id}: ${error}`;
-                    logger.error(errorMsg);
-                    errors.push(errorMsg);
-                }
+            // 标记首次同步已完成
+            if (!this.settings.initialSyncCompleted) {
+                this.settings.initialSyncCompleted = true;
+                logger.debug('首次同步已完成，标记 initialSyncCompleted = true');
             }
 
             // 更新同步时间（去掉毫秒以匹配服务端格式）
@@ -180,6 +179,7 @@ export class SyncManager {
             };
         } catch (error) {
             logger.error('Sync failed:', error);
+            notice.showError(error);
             return {
                 success: false,
                 count: 0,
@@ -201,6 +201,7 @@ export class SyncManager {
         if (this.settings.deviceSyncCursors) {
             this.settings.deviceSyncCursors[deviceId] = '';
         }
+        this.settings.initialSyncCompleted = false;
 
         await this.plugin.saveSettings();
         logger.debug('Sync time reset (including device cursor)');
@@ -302,7 +303,7 @@ export class SyncManager {
             const intervalMs = this.settings.frequency * 60 * 1000;
             this.settings.intervalId = window.setInterval(() => {
                 logger.debug('Running scheduled sync...');
-                this.sync();
+                this.sync(true);
             }, intervalMs) as unknown as number;
 
             logger.debug(`Scheduled sync started: every ${this.settings.frequency} minutes`);

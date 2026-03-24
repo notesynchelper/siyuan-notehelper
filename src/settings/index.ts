@@ -50,6 +50,8 @@ export interface PluginSettings {
     syncing: boolean;  // 同步中标志
     intervalId: number;  // 定时器 ID
     refreshIndexAfterSync: boolean;  // 同步后刷新索引
+    messageSortOrder: string;  // 消息排序：'ASC' | 'DESC'
+    initialSyncCompleted: boolean;  // 首次同步是否已完成
 
     // 笔记同步位置
     targetNotebook: string;  // 目标笔记本 ID
@@ -115,6 +117,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     syncing: false,
     intervalId: 0,
     refreshIndexAfterSync: true,  // 默认刷新索引
+    messageSortOrder: 'ASC',
+    initialSyncCompleted: false,
 
     // 笔记同步位置
     targetNotebook: '',  // 空字符串表示使用默认笔记本
