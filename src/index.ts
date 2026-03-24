@@ -21,6 +21,7 @@ import { getArticleCount, clearAllArticles, fetchVipStatus, getQrCodeUrl, VipSta
 import { formatDate } from './utils/util';
 import { SettingsForm } from './ui/SettingsForm';
 import { checkAndUpdate, getRemoteVersion, getLocalVersion, compareVersions, performUpdate } from './updater';
+import { validateTemplate, validateDateFormat, validateNumberRange } from './settings/validation';
 
 const SETTINGS_KEY = 'notehelper-settings';
 const DOCK_TYPE = 'notehelper_sync_dock';
@@ -419,21 +420,73 @@ export default class NoteHelperPlugin extends Plugin {
                     // 加载笔记本列表
                     this.loadNotebookOptions(settingsArea as HTMLElement);
 
-                    // 为所有输入框添加自动保存功能（使用防抖减少频繁保存）
+                    // 需要校验的字段映射
+                    const templateFields = new Set(['folder', 'filename', 'mergeFolder', 'singleFileName', 'mergeFolderTemplate', 'template', 'wechatMessageTemplate', 'mergeMessageTemplate']);
+                    const dateFormatFields = new Set(['folderDateFormat', 'filenameDateFormat', 'singleFileDateFormat', 'mergeFolderDateFormat', 'dateSavedFormat']);
+                    const numberFields: Record<string, { name: string; min: number; max: number; allowZero?: boolean }> = {
+                        frequency: { name: '同步频率（分钟）', min: 15, max: 1440, allowZero: true },
+                        jpegQuality: { name: 'JPEG 质量', min: 1, max: 100 },
+                        imageDownloadRetries: { name: '重试次数', min: 0, max: 10 },
+                    };
+
+                    const fieldNameMap: Record<string, string> = {
+                        folder: '文章文件夹', filename: '文件名', mergeFolder: '合并文件夹',
+                        singleFileName: '单文件名', mergeFolderTemplate: '合并路径模板',
+                        template: '内容模板', wechatMessageTemplate: '企微消息模板',
+                        mergeMessageTemplate: '合并消息模板',
+                        folderDateFormat: '文件夹日期格式', filenameDateFormat: '文件名日期格式',
+                        singleFileDateFormat: '单文件日期格式', mergeFolderDateFormat: '合并文件夹日期格式',
+                        dateSavedFormat: '保存日期格式',
+                    };
+
                     let saveTimeout: any = null;
                     const formInputs = settingsArea.querySelectorAll('input, select, textarea');
                     formInputs.forEach((input) => {
-                        input.addEventListener('change', async () => {
-                            // 清除之前的定时器
-                            if (saveTimeout) {
-                                clearTimeout(saveTimeout);
-                            }
+                        const el = input as HTMLInputElement;
+                        const fieldId = el.id;
 
-                            // 设置新的定时器，延迟500ms保存
+                        // 缓存原始值用于校验失败时恢复
+                        el.addEventListener('focus', () => {
+                            el.dataset.prevValue = el.value;
+                        });
+
+                        // 需要校验的字段用 blur 事件
+                        if (templateFields.has(fieldId) || dateFormatFields.has(fieldId) || numberFields[fieldId]) {
+                            el.addEventListener('blur', () => {
+                                let valid = true;
+                                if (templateFields.has(fieldId)) {
+                                    valid = validateTemplate(el.value, fieldNameMap[fieldId] || fieldId);
+                                } else if (dateFormatFields.has(fieldId)) {
+                                    valid = validateDateFormat(el.value, fieldNameMap[fieldId] || fieldId);
+                                } else if (numberFields[fieldId]) {
+                                    const cfg = numberFields[fieldId];
+                                    valid = validateNumberRange(el.value, cfg.name, cfg.min, cfg.max, cfg.allowZero);
+                                }
+
+                                if (!valid) {
+                                    el.value = el.dataset.prevValue || '';
+                                    return;
+                                }
+
+                                if (saveTimeout) clearTimeout(saveTimeout);
+                                saveTimeout = setTimeout(async () => {
+                                    await this.saveSettingsFromContainer(dock.element);
+                                    this.syncManager.stopScheduledSync();
+                                    if (this.settings.frequency > 0) {
+                                        this.syncManager.startScheduledSync();
+                                    }
+                                }, 500);
+                            });
+                        }
+
+                        // 不需要校验的字段保持 change 事件
+                        el.addEventListener('change', async () => {
+                            if (templateFields.has(fieldId) || dateFormatFields.has(fieldId) || numberFields[fieldId]) {
+                                return; // 已由 blur 处理
+                            }
+                            if (saveTimeout) clearTimeout(saveTimeout);
                             saveTimeout = setTimeout(async () => {
                                 await this.saveSettingsFromContainer(dock.element);
-
-                                // 重启定时同步
                                 this.syncManager.stopScheduledSync();
                                 if (this.settings.frequency > 0) {
                                     this.syncManager.startScheduledSync();
