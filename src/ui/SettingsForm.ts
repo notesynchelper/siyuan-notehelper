@@ -155,6 +155,19 @@ export class SettingsForm {
                     </div>
                 </div>
 
+                <div class="b3-label" id="messageSortOrderGroup" style="display: ${settings.mergeMode !== 'none' ? 'block' : 'none'};">
+                    <div class="fn__flex">
+                        <span class="fn__flex-1">${i18n.messageSortOrder || '消息排序'}</span>
+                    </div>
+                    <div class="fn__flex">
+                        <select class="b3-select fn__flex-1" id="messageSortOrder">
+                            <option value="ASC" ${settings.messageSortOrder === 'ASC' ? 'selected' : ''}>${i18n.messageSortOrderAsc || '正序（旧消息在前）'}</option>
+                            <option value="DESC" ${settings.messageSortOrder !== 'ASC' ? 'selected' : ''}>${i18n.messageSortOrderDesc2 || '倒序（新消息在前）'}</option>
+                        </select>
+                    </div>
+                    <div class="b3-label__text">${i18n.messageSortOrderDesc || '合并文件中消息的排序方式'}</div>
+                </div>
+
                 <div class="b3-label">
                     <label class="fn__flex">
                         <input type="checkbox" id="refreshIndexAfterSync" ${settings.refreshIndexAfterSync ? 'checked' : ''} />
@@ -481,6 +494,7 @@ export class SettingsForm {
         const syncOnStartInput = container.querySelector('#syncOnStart') as HTMLInputElement;
         const refreshIndexAfterSyncInput = container.querySelector('#refreshIndexAfterSync') as HTMLInputElement;
         const mergeModeSelect = container.querySelector('#mergeMode') as HTMLSelectElement;
+        const messageSortOrderSelect = container.querySelector('#messageSortOrder') as HTMLSelectElement;
         const targetNotebookSelect = container.querySelector('#targetNotebook') as HTMLSelectElement;
         const folderInput = container.querySelector('#folder') as HTMLInputElement;
         const filenameInput = container.querySelector('#filename') as HTMLInputElement;
@@ -535,6 +549,7 @@ export class SettingsForm {
         if (syncOnStartInput) values.syncOnStart = syncOnStartInput.checked;
         if (refreshIndexAfterSyncInput) values.refreshIndexAfterSync = refreshIndexAfterSyncInput.checked;
         if (mergeModeSelect) values.mergeMode = mergeModeSelect.value as any;
+        if (messageSortOrderSelect) values.messageSortOrder = messageSortOrderSelect.value as any;
         if (targetNotebookSelect) values.targetNotebook = targetNotebookSelect.value;
         if (folderInput) values.folder = folderInput.value;
         if (filenameInput) values.filename = filenameInput.value;
@@ -581,6 +596,15 @@ export class SettingsForm {
             onResetTemplate?: (type: 'template' | 'wechatMessageTemplate' | 'frontMatterTemplate') => void;
         }
     ): void {
+        // mergeMode 切换时，控制消息排序下拉框的显示/隐藏
+        const mergeModeSelect = container.querySelector('#mergeMode') as HTMLSelectElement;
+        const sortOrderGroup = container.querySelector('#messageSortOrderGroup') as HTMLElement;
+        if (mergeModeSelect && sortOrderGroup) {
+            mergeModeSelect.addEventListener('change', () => {
+                sortOrderGroup.style.display = mergeModeSelect.value !== 'none' ? 'block' : 'none';
+            });
+        }
+
         // API密钥变化时更新VIP状态
         const apiKeyInput = container.querySelector('#apiKey') as HTMLInputElement;
         if (apiKeyInput && callbacks.onApiKeyChange) {

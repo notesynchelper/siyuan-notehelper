@@ -69,6 +69,10 @@ const zhCN = {
     mergeModeNone: "不合并（每篇文章独立文件）",
     mergeModeMessages: "仅合并企微消息",
     mergeModeAll: "合并所有文章到单个文件",
+    messageSortOrder: "消息排序",
+    messageSortOrderDesc: "合并文件中消息的排序方式",
+    messageSortOrderAsc: "正序（旧消息在前）",
+    messageSortOrderDesc2: "倒序（新消息在前）",
 
     folderSettings: "笔记同步位置",
     targetNotebook: "目标笔记本",
