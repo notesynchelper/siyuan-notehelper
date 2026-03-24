@@ -247,7 +247,7 @@ export default class NoteHelperPlugin extends Plugin {
         // 启动时同步 - 延长延迟时间，减少启动时的资源占用
         if (this.settings.syncOnStart) {
             setTimeout(() => {
-                this.performSync();
+                this.performSync(true);
             }, 10000); // 延长到10秒，让思源笔记先完成启动
         }
 
@@ -563,51 +563,24 @@ export default class NoteHelperPlugin extends Plugin {
     /**
      * 执行同步
      */
-    private async performSync() {
+    private async performSync(isAutoSync: boolean = false) {
         if (this.syncManager.isCurrentlySyncing()) {
             showMessage(this.i18n.zh_CN.errors?.syncInProgress || 'Sync in progress', 3000, 'info');
             return;
         }
-
         if (!this.settings.apiKey) {
             showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
             return;
         }
-
         try {
             this.updateDockStatus();
-
-            // 检查是否设置了目标笔记本
             if (!this.settings.targetNotebook) {
                 showMessage('请在设置中选择目标笔记本，当前使用默认笔记本', 5000, 'info');
             }
-
-            showMessage(this.i18n.zh_CN.syncing, 3000, 'info');
-
-            const result = await this.syncManager.sync();
-
-            if (result.success) {
-                let message = (this.i18n.zh_CN.success?.syncCompleted || 'Sync completed, processed {count} articles')
-                    .replace('{count}', String(result.count));
-
-                // 添加跳过数量信息
-                if (result.skipped && result.skipped > 0) {
-                    message += `，跳过 ${result.skipped} 个重复`;
-                }
-
-                showMessage(message, 5000, 'info');
-            } else {
-                showMessage(
-                    this.i18n.zh_CN.syncFailed + ': ' + (result.errors?.join(', ') || ''),
-                    5000,
-                    'error'
-                );
-            }
+            await this.syncManager.sync(isAutoSync);
         } catch (error) {
             logger.error('Sync error:', error);
-            showMessage(this.i18n.zh_CN.syncFailed + ': ' + error, 5000, 'error');
         } finally {
-            // 确保状态重置并更新UI
             this.settings.syncing = false;
             this.updateDockStatus();
         }

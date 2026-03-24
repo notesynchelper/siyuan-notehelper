@@ -12,6 +12,7 @@ import { IdIndex } from './idIndex';
 import { templateNeedsContent } from '../settings/template';
 import { checkAndUpdate } from '../updater';
 import { computeEffectiveSyncAt } from './syncCursorAdjust';
+import { SyncNoticeManager } from './SyncNoticeManager';
 
 /**
  * 同步管理器类
@@ -46,9 +47,11 @@ export class SyncManager {
 
         this.isSyncing = true;
         this.settings.syncing = true;
+        const notice = new SyncNoticeManager();
 
         try {
             logger.debug('Starting sync...');
+            notice.startSync();
 
             // 清除文档缓存，确保每次同步都是新的开始
             this.fileHandler.clearDocumentCache();
@@ -131,6 +134,7 @@ export class SyncManager {
                     }
                 }
 
+                notice.onBatchProcessed(articles.length, hasNextPage);
                 hasMore = hasNextPage;
                 offset += batchSize;
 
@@ -141,6 +145,12 @@ export class SyncManager {
             }
 
             logger.debug(`Total processed. Created: ${createdCount}, Skipped: ${skippedCount}`);
+
+            if (createdCount === 0 && skippedCount === 0 && errors.length === 0) {
+                notice.showNoArticles();
+            } else {
+                notice.completeSync(createdCount);
+            }
 
             // 标记首次同步已完成
             if (!this.settings.initialSyncCompleted) {
@@ -179,6 +189,7 @@ export class SyncManager {
             };
         } catch (error) {
             logger.error('Sync failed:', error);
+            notice.showError(error);
             return {
                 success: false,
                 count: 0,
