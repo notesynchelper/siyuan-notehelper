@@ -28,6 +28,7 @@ import {
 } from '../utils/util';
 import { DateTime } from 'luxon';
 import { IdIndex } from './idIndex';
+import { sortArticlesByTime } from './batchSortHelper';
 
 // 星期映射（用于图片路径变量替换）
 const WEEKDAY_MAP: Record<number, string> = {
@@ -107,6 +108,72 @@ export class FileHandler {
             logger.error(`Failed to process article ${article.id}:`, error);
             throw error;
         }
+    }
+
+    /**
+     * 批量处理一页文章（合并类按目标文件分组、排序后写入）
+     */
+    async processArticleBatch(
+        articles: Article[],
+        notebookId: string
+    ): Promise<{ created: number; skipped: number; errors: string[] }> {
+        let created = 0;
+        let skipped = 0;
+        const errors: string[] = [];
+
+        // 分离：需要合并的 vs 不需要合并的
+        const toMerge: Article[] = [];
+        const toSeparate: Article[] = [];
+        for (const article of articles) {
+            if (this.shouldMergeArticle(article)) {
+                toMerge.push(article);
+            } else {
+                toSeparate.push(article);
+            }
+        }
+
+        // 1. 不合并的文章逐篇处理
+        for (const article of toSeparate) {
+            try {
+                const result = await this.createSeparateFile(article, notebookId);
+                if (result.skipped) skipped++; else created++;
+            } catch (error) {
+                errors.push(`Failed to process article ${article.id}: ${error}`);
+                logger.error(`[processArticleBatch] Error processing separate article ${article.id}:`, error);
+            }
+        }
+
+        // 2. 合并的文章按目标文件路径分组
+        const mergeGroups = new Map<string, Article[]>();
+        for (const article of toMerge) {
+            const mergeDate = isWeChatMessage(article.title)
+                ? extractDateFromWeChatTitle(article.title) || article.savedAt.split('T')[0]
+                : article.savedAt.split('T')[0];
+            const folderPath = renderMergeFolderPath(article, this.settings);
+            const filename = renderSingleFilename(mergeDate, this.settings);
+            const key = joinPath(folderPath, filename);
+
+            if (!mergeGroups.has(key)) {
+                mergeGroups.set(key, []);
+            }
+            mergeGroups.get(key)!.push(article);
+        }
+
+        // 3. 每组排序后写入
+        for (const [, groupArticles] of mergeGroups) {
+            const sorted = sortArticlesByTime(groupArticles, this.settings.messageSortOrder || 'ASC');
+            for (const article of sorted) {
+                try {
+                    const result = await this.mergeArticleToFile(article, notebookId);
+                    if (result.skipped) skipped++; else created++;
+                } catch (error) {
+                    errors.push(`Failed to merge article ${article.id}: ${error}`);
+                    logger.error(`[processArticleBatch] Error merging article ${article.id}:`, error);
+                }
+            }
+        }
+
+        return { created, skipped, errors };
     }
 
     /**

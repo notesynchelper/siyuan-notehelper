@@ -118,21 +118,11 @@ export class SyncManager {
                     includeContent
                 );
 
-                // 逐篇处理（批量处理在后续任务中实现）
-                for (const article of articles) {
-                    try {
-                        const result = await this.fileHandler.processArticle(article, notebookId);
-                        if (result.skipped) {
-                            skippedCount++;
-                        } else {
-                            createdCount++;
-                        }
-                    } catch (error) {
-                        const errorMsg = `Failed to process article ${article.id}: ${error}`;
-                        logger.error(errorMsg);
-                        errors.push(errorMsg);
-                    }
-                }
+                // 批量处理本页文章（合并类排序后写入）
+                const batchResult = await this.fileHandler.processArticleBatch(articles, notebookId);
+                createdCount += batchResult.created;
+                skippedCount += batchResult.skipped;
+                errors.push(...batchResult.errors);
 
                 notice.onBatchProcessed(articles.length, hasNextPage);
                 hasMore = hasNextPage;
