@@ -142,24 +142,35 @@ export class SyncManager {
                 notice.completeSync(createdCount);
             }
 
-            // 标记首次同步已完成
-            if (!this.settings.initialSyncCompleted) {
-                this.settings.initialSyncCompleted = true;
-                logger.debug('首次同步已完成，标记 initialSyncCompleted = true');
-            }
-
             // 更新同步时间（去掉毫秒以匹配服务端格式）
             const now = new Date();
             const nowStr = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
-            // 更新全局游标（向后兼容）
-            this.settings.syncAt = nowStr;
+            // ⚠️ 数据安全：仅当本次【没有任何错误】时才推进游标 + 标记首次同步完成。
+            // 若有文章处理失败（典型：表格片段追加失败已回滚删除半成品文档），保持游标
+            // 不前进，下次同步重新拉取同一窗口重试失败文章——否则游标越过失败文章 +
+            // 半成品已被回滚删除 = 永久丢失该文章（绝不丢数据）。已成功的文章下轮会被
+            // 去重跳过，冗余但不会重复/不会丢；新文章因窗口仍向后开放，照常拉取不被阻塞。
+            if (errors.length === 0) {
+                // 标记首次同步已完成——必须同样门控在「无错误」下。否则错误首跑就置位，
+                // 会丢掉 computeEffectiveSyncAt 给初始同步的 1 天重叠窗口，导致重试漏掉
+                // 只落在该重叠窗口里的失败文章。
+                if (!this.settings.initialSyncCompleted) {
+                    this.settings.initialSyncCompleted = true;
+                    logger.debug('首次同步已完成，标记 initialSyncCompleted = true');
+                }
 
-            // 更新设备级游标
-            if (!this.settings.deviceSyncCursors) {
-                this.settings.deviceSyncCursors = {};
+                // 更新全局游标（向后兼容）
+                this.settings.syncAt = nowStr;
+
+                // 更新设备级游标
+                if (!this.settings.deviceSyncCursors) {
+                    this.settings.deviceSyncCursors = {};
+                }
+                this.settings.deviceSyncCursors[deviceId] = nowStr;
+            } else {
+                logger.warn(`[Sync] 本次有 ${errors.length} 个错误，保持游标不前进、不标记首次同步完成，下次重试失败文章（避免越过 → 永久丢失）`);
             }
-            this.settings.deviceSyncCursors[deviceId] = nowStr;
 
             // 清理过期的设备游标
             this.cleanStaleDeviceCursors();
