@@ -16,6 +16,8 @@ import {
     renderSingleFilename,
     renderFrontMatter,
     renderWeChatMessageSimple,
+    splitContentByTables,
+    ContentSegment,
 } from '../settings/template';
 import { MergeMode, ImageMode } from '../utils/types';
 import {
@@ -256,8 +258,26 @@ export class FileHandler {
 
         const fullContent = frontMatter + content;
 
-        // 6. 创建文档
-        const docId = await this.createDocument(notebookId, docPath, fullContent);
+        // 5.2 拆分内容：提取 HTML 表格
+        logger.info(`[createSeparateFile] 调用 splitContentByTables, fullContent 长度: ${fullContent.length}`);
+        const segments = splitContentByTables(fullContent);
+        const hasTableSegments = segments.some(s => s.type === 'html-table');
+        logger.info(`[createSeparateFile] splitContentByTables 结果: ${segments.length} 个片段, hasTable: ${hasTableSegments}`);
+
+        // 6. 创建文档（如果有表格，只用第一个 markdown 片段创建文档）
+        let docId: string;
+        if (hasTableSegments) {
+            const firstMarkdown = segments[0]?.type === 'markdown' ? segments[0].content : '';
+            logger.info(`[createSeparateFile] ★ 走表格分段路径, firstMarkdown 长度: ${firstMarkdown.length}`);
+            docId = await this.createDocument(notebookId, docPath, firstMarkdown || ' ');
+            // 追加剩余片段（从第一个非首片段开始）
+            const startIdx = firstMarkdown ? 1 : 0;
+            logger.info(`[createSeparateFile] 开始追加剩余 ${segments.length - startIdx} 个片段`);
+            await this.appendTableSegments(docId, segments, startIdx);
+        } else {
+            logger.info(`[createSeparateFile] 无表格，走常规路径`);
+            docId = await this.createDocument(notebookId, docPath, fullContent);
+        }
 
         // 7. 设置自定义属性，用于后续去重（关键属性，必须成功）
         await this.setBlockAttributes(docId, article.id);
@@ -391,16 +411,26 @@ export class FileHandler {
             newContentPart = await this.processAttachments(newContentPart);
             logger.debug(`[mergeToExistingDocument] processAttachments 完成`);
 
-            // 添加分隔符
-            const separator = existingContent.trim() ? '\n\n---\n\n' : '';
+            // 拆分内容：提取 HTML 表格
+            const segments = splitContentByTables(newContentPart);
+            const hasTableSegments = segments.some(s => s.type === 'html-table');
 
-            // 拼接完整内容（无Front Matter）
-            const newFullContent = `${existingContent}${separator}${newContentPart}`;
+            if (hasTableSegments) {
+                // 有表格：先追加分隔符，然后逐段追加
+                if (existingContent.trim()) {
+                    await this.appendMarkdownBlock(docId, '---');
+                }
+                await this.appendTableSegments(docId, segments, 0);
+            } else {
+                // 无表格：保持原有逻辑，整体更新文档
+                const separator = existingContent.trim() ? '\n\n---\n\n' : '';
+                const newFullContent = `${existingContent}${separator}${newContentPart}`;
 
-            logger.debug(`[mergeToExistingDocument] New content length: ${newFullContent.length}`);
+                logger.debug(`[mergeToExistingDocument] New content length: ${newFullContent.length}`);
 
-            // 更新文档
-            await this.updateDocument(docId, newFullContent);
+                // 更新文档
+                await this.updateDocument(docId, newFullContent);
+            }
 
             // 添加消息ID到块属性列表（重要：这必须在更新文档成功后执行）
             await this.addMergedId(docId, article.id);
@@ -460,14 +490,30 @@ export class FileHandler {
 
             logger.debug(`[createMergedDocument] Generated content length: ${contentPart.length}`);
 
+            // 拆分内容：提取 HTML 表格
+            const segments = splitContentByTables(contentPart);
+            const hasTableSegments = segments.some(s => s.type === 'html-table');
+
             // 创建文档（无Front Matter）
-            const docId = await this.createDocument(notebookId, docPath, contentPart);
+            let initialContent: string;
+            if (hasTableSegments) {
+                initialContent = segments[0]?.type === 'markdown' ? segments[0].content : ' ';
+            } else {
+                initialContent = contentPart;
+            }
+            const docId = await this.createDocument(notebookId, docPath, initialContent);
 
             if (!docId) {
                 throw new Error('Failed to create document: no docId returned');
             }
 
             logger.debug(`[createMergedDocument] Document created with ID: ${docId}`);
+
+            // 追加表格片段（如果有）
+            if (hasTableSegments) {
+                const startIdx = segments[0]?.type === 'markdown' ? 1 : 0;
+                await this.appendTableSegments(docId, segments, startIdx);
+            }
 
             // 将新创建的文档添加到缓存
             const normalizedPath = docPath
@@ -616,6 +662,107 @@ export class FileHandler {
         } catch (error) {
             logger.error('Failed to create document:', error);
             throw error;
+        }
+    }
+
+    /**
+     * 生成思源笔记 HTML 块的 markdown 文本。
+     *
+     * ⚠️ 关键：用 dataType=dom + <protyle-html data-content="..."> 追加时，内核的
+     * markdown/DOM 解析器（lute）不认 data-content（那是前端 protyle 编辑器的运行时
+     * 表示），会落成**空的** NodeHTMLBlock —— 表格内容被丢弃（实测 .sy 块无 Data）。
+     * 思源原生的 HTML 块 kramdown 形态是把原始 HTML 用顶层 <div> 包裹、以
+     * dataType=markdown 追加，内核才会把 HTML 当作块内容正确落库。
+     */
+    private buildHtmlBlockMarkdown(htmlContent: string): string {
+        // 原始 HTML 不转义，直接放进顶层 <div> 包裹（会被解析为 NodeHTMLBlock）
+        return `<div>\n${htmlContent}\n</div>`;
+    }
+
+    /**
+     * 向文档追加 HTML 块（用于插入带样式的 HTML 表格）
+     */
+    private async appendHtmlBlock(parentID: string, htmlContent: string): Promise<void> {
+        const markdown = this.buildHtmlBlockMarkdown(htmlContent);
+        logger.info(`[appendHtmlBlock] ★ Appending HTML block to parentID: ${parentID}`);
+        logger.info(`[appendHtmlBlock] 原始 HTML 长度: ${htmlContent.length}`);
+        logger.info(`[appendHtmlBlock] HTML 块 markdown 长度: ${markdown.length}`);
+        try {
+            const requestBody = {
+                dataType: 'markdown',
+                data: markdown,
+                parentID,
+            };
+            logger.info(`[appendHtmlBlock] 请求体前500字符: ${JSON.stringify(requestBody).substring(0, 500)}`);
+            const response = await fetch('/api/block/appendBlock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody),
+            });
+            const data = await response.json();
+            logger.info(`[appendHtmlBlock] API 响应: code=${data.code}, msg=${data.msg || 'none'}`);
+            if (data.data) {
+                logger.info(`[appendHtmlBlock] API 响应 data: ${JSON.stringify(data.data).substring(0, 500)}`);
+            }
+            if (data.code !== 0) {
+                throw new Error(`Failed to append HTML block: ${data.msg}`);
+            }
+            logger.info(`[appendHtmlBlock] ✓ Successfully appended HTML block`);
+        } catch (error) {
+            logger.error('[appendHtmlBlock] ✗ Failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 向文档追加 markdown 块
+     */
+    private async appendMarkdownBlock(parentID: string, markdown: string): Promise<void> {
+        const response = await fetch('/api/block/appendBlock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                dataType: 'markdown',
+                data: markdown,
+                parentID,
+            }),
+        });
+        const data = await response.json();
+        if (data.code !== 0) {
+            logger.error(`[appendMarkdownBlock] Failed: ${data.msg}`);
+        }
+    }
+
+    /**
+     * 处理内容中的 HTML 表格：先创建/追加 markdown 部分，再追加 HTML 块
+     * @param docId 文档 ID
+     * @param segments 内容片段列表（第一个 markdown 片段已包含在文档创建中）
+     * @param startIndex 从哪个片段开始追加（跳过已在文档创建中包含的部分）
+     */
+    private async appendTableSegments(docId: string, segments: ContentSegment[], startIndex: number = 0): Promise<void> {
+        logger.info(`[appendTableSegments] ★ 开始追加片段, docId: ${docId}, 总片段数: ${segments.length}, 起始: ${startIndex}`);
+        for (let i = startIndex; i < segments.length; i++) {
+            const seg = segments[i];
+            logger.info(`[appendTableSegments] 处理片段 ${i}: type=${seg.type}, 长度=${seg.content.length}`);
+            if (seg.type === 'html-table') {
+                logger.info(`[appendTableSegments] → 调用 appendHtmlBlock`);
+                await this.appendHtmlBlock(docId, seg.content);
+            } else {
+                // markdown 片段通过 appendBlock markdown 追加
+                const response = await fetch('/api/block/appendBlock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        dataType: 'markdown',
+                        data: seg.content,
+                        parentID: docId,
+                    }),
+                });
+                const data = await response.json();
+                if (data.code !== 0) {
+                    logger.error(`[appendTableSegments] Failed to append markdown block: ${data.msg}`);
+                }
+            }
         }
     }
 
