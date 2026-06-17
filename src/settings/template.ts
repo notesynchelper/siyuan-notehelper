@@ -424,6 +424,175 @@ export function processImageUrls(content: string, settings: PluginSettings): str
 }
 
 /**
+ * 内容片段类型：markdown 文本或 HTML 表格
+ */
+export interface ContentSegment {
+    type: 'markdown' | 'html-table';
+    content: string;
+}
+
+/**
+ * 找出内容里的"代码区"范围（围栏代码块 ``` / ~~~ 以及行内 code），
+ * 落在这些范围里的 <table> 是代码示例、不是真表格，拆分时必须忽略。
+ */
+function findCodeRanges(content: string): { start: number; end: number }[] {
+    const ranges: { start: number; end: number }[] = [];
+
+    // 1) 围栏代码块：``` 或 ~~~（>=3 个），按行扫描，闭合需同字符且长度 >= 开栏
+    const fenceRe = /^([ \t]*)(`{3,}|~{3,})([^\n]*)$/gm;
+    const fences: { index: number; char: string; len: number; info: string; lineEnd: number }[] = [];
+    let fm: RegExpExecArray | null;
+    while ((fm = fenceRe.exec(content)) !== null) {
+        fences.push({ index: fm.index, char: fm[2][0], len: fm[2].length, info: fm[3].trim(), lineEnd: fm.index + fm[0].length });
+    }
+    let i = 0;
+    while (i < fences.length) {
+        const open = fences[i];
+        let closeIdx = -1;
+        for (let j = i + 1; j < fences.length; j++) {
+            const f = fences[j];
+            if (f.char === open.char && f.len >= open.len && f.info === '') { closeIdx = j; break; }
+        }
+        if (closeIdx >= 0) {
+            ranges.push({ start: open.index, end: fences[closeIdx].lineEnd });
+            i = closeIdx + 1;
+        } else {
+            // 未闭合围栏：把剩余内容都当作代码
+            ranges.push({ start: open.index, end: content.length });
+            break;
+        }
+    }
+
+    // 2) 行内 code：反引号 run（同长闭合），只在围栏之外识别
+    const inFence = (idx: number) => ranges.some((r) => idx >= r.start && idx < r.end);
+    const inlineRe = /(`+)(?:(?!\1)[\s\S])*?\1/g;
+    let im: RegExpExecArray | null;
+    while ((im = inlineRe.exec(content)) !== null) {
+        if (!inFence(im.index)) ranges.push({ start: im.index, end: im.index + im[0].length });
+    }
+
+    return ranges;
+}
+
+/**
+ * 把 <table> 范围向外扩展，吃掉直接包裹它的块级元素（div / figure / …）。
+ * 处理 <div class="table-wrap"><table>…</table></div> 这类带包裹的表格——
+ * 否则只抽内层 table 会把包裹标签留成孤儿 markdown 块、丢失容器样式。
+ */
+function expandTableToWrapper(content: string, start: number, end: number): { start: number; end: number } {
+    const WRAPPERS = ['div', 'figure', 'center', 'section', 'span', 'p', 'article', 'aside'];
+    let expanded = true;
+    while (expanded) {
+        expanded = false;
+        const before = content.slice(0, start);
+        const after = content.slice(end);
+        // before 末尾紧贴的开标签（标签与 table 之间只允许空白）
+        const openM = before.match(/<([a-zA-Z][\w-]*)\b[^>]*>\s*$/);
+        if (!openM || openM.index === undefined) break;
+        const tag = openM[1].toLowerCase();
+        if (!WRAPPERS.includes(tag)) break;
+        // after 开头紧贴的对应闭标签
+        const closeM = after.match(new RegExp('^\\s*</' + tag + '\\s*>', 'i'));
+        if (!closeM) break;
+        start = openM.index;
+        end = end + closeM[0].length;
+        expanded = true;
+    }
+    return { start, end };
+}
+
+/**
+ * 将内容拆分为 markdown 片段和 HTML 表格片段
+ * 用于后续分别处理：markdown 通过 createDocWithMd 创建，表格通过 appendBlock DOM 创建为 HTML 块
+ */
+export function splitContentByTables(content: string): ContentSegment[] {
+    logger.info(`[splitContentByTables] 输入内容长度: ${content.length}`);
+    logger.info(`[splitContentByTables] 是否包含 <table: ${content.includes('<table')}`);
+
+    // 代码区（围栏/行内 code）里的 <table> 是代码示例，不当作真表格
+    const codeRanges = findCodeRanges(content);
+    const inCode = (idx: number) => codeRanges.some((r) => idx >= r.start && idx < r.end);
+
+    const openRegex = /<table[\s>]/gi;
+    const closeRegex = /<\/table\s*>/gi;
+
+    interface TagPos { index: number; isOpen: boolean; endOffset: number; }
+    const tags: TagPos[] = [];
+
+    let match: RegExpExecArray | null;
+    while ((match = openRegex.exec(content)) !== null) {
+        if (inCode(match.index)) continue;
+        tags.push({ index: match.index, isOpen: true, endOffset: 0 });
+        logger.info(`[splitContentByTables] 找到 <table 标签, 位置: ${match.index}`);
+    }
+    while ((match = closeRegex.exec(content)) !== null) {
+        if (inCode(match.index)) continue;
+        tags.push({ index: match.index, isOpen: false, endOffset: match.index + match[0].length });
+        logger.info(`[splitContentByTables] 找到 </table> 标签, 位置: ${match.index}`);
+    }
+
+    if (tags.length === 0) {
+        logger.info(`[splitContentByTables] 未找到任何 table 标签，返回整体 markdown`);
+        return [{ type: 'markdown', content }];
+    }
+
+    tags.sort((a, b) => a.index - b.index);
+
+    // 匹配顶层 table 的范围（处理嵌套）
+    const ranges: { start: number; end: number }[] = [];
+    let depth = 0;
+    let startIdx = -1;
+
+    for (const tag of tags) {
+        if (tag.isOpen) {
+            if (depth === 0) startIdx = tag.index;
+            depth++;
+        } else {
+            depth--;
+            if (depth === 0 && startIdx >= 0) {
+                ranges.push({ start: startIdx, end: tag.endOffset });
+                startIdx = -1;
+            }
+        }
+    }
+
+    logger.info(`[splitContentByTables] 找到 ${ranges.length} 个顶层 table 范围`);
+
+    if (ranges.length === 0) {
+        logger.info(`[splitContentByTables] 标签未配对，返回整体 markdown`);
+        return [{ type: 'markdown', content }];
+    }
+
+    // 把每个 table 范围向外扩展，吃掉直接包裹它的块级元素（div/figure/…）
+    const expandedRanges = ranges
+        .map((r) => expandTableToWrapper(content, r.start, r.end))
+        .sort((a, b) => a.start - b.start);
+
+    const segments: ContentSegment[] = [];
+    let lastEnd = 0;
+
+    for (const range of expandedRanges) {
+        if (range.start < lastEnd) continue; // 防御：扩展后若与上一片段重叠则跳过
+        const before = content.substring(lastEnd, range.start).trim();
+        if (before.length > 0) {
+            segments.push({ type: 'markdown', content: before });
+        }
+        const tableContent = content.substring(range.start, range.end);
+        segments.push({ type: 'html-table', content: tableContent });
+        logger.info(`[splitContentByTables] table 片段长度: ${tableContent.length}, 前100字符: ${tableContent.substring(0, 100)}`);
+        lastEnd = range.end;
+    }
+
+    const remaining = content.substring(lastEnd).trim();
+    if (remaining.length > 0) {
+        segments.push({ type: 'markdown', content: remaining });
+    }
+
+    logger.info(`[splitContentByTables] 最终拆分为 ${segments.length} 个片段: ${segments.map(s => `${s.type}(${s.content.length}字符)`).join(', ')}`);
+    return segments;
+}
+
+/**
  * 渲染企微消息简洁内容（用于合并模式）
  * 与 renderWeChatMessage 不同，这个函数专门用于合并文件中的追加内容
  * 使用简洁样式，不包含 Front Matter，只渲染核心内容
