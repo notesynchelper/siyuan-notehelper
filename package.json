@@ -8,7 +8,8 @@
     "dev": "webpack --mode development --watch",
     "build": "webpack --mode production",
     "test": "jest",
-    "test:api": "node scripts/test-api.js"
+    "test:api": "node scripts/test-api.js",
+    "test:e2e:siyuan": "node tests/real-siyuan/run-sync-smoke.js"
   },
   "keywords": [
     "siyuan",
