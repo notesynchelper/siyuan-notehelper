@@ -206,7 +206,17 @@ export class FileHandler {
             // 追加剩余片段（从第一个非首片段开始）
             const startIdx = firstMarkdown ? 1 : 0;
             logger.info(`[createSeparateFile] 开始追加剩余 ${segments.length - startIdx} 个片段`);
-            await this.appendTableSegments(docId, segments, startIdx);
+            try {
+                await this.appendTableSegments(docId, segments, startIdx);
+            } catch (error) {
+                // 安全回滚：本次新建的【独立文档】只含本文章的半成品内容，追加失败时
+                // 删掉它，避免留下半成品文档——否则下次同步会按路径命中这个残缺文档而
+                // 跳过，内容永久残缺。仅独立文档路径这样做；合并模式的文档可能含其它
+                // 文章内容，绝不在那里删（见 mergeArticleToFile，那里只上抛不回滚）。
+                logger.error(`[createSeparateFile] 追加片段失败，回滚删除半成品文档 ${docId}`, error);
+                await this.deleteDocumentById(docId);
+                throw error;
+            }
         } else {
             logger.info(`[createSeparateFile] 无表格，走常规路径`);
             docId = await this.createDocument(notebookId, docPath, fullContent);
@@ -445,7 +455,18 @@ export class FileHandler {
             // 追加表格片段（如果有）
             if (hasTableSegments) {
                 const startIdx = segments[0]?.type === 'markdown' ? 1 : 0;
-                await this.appendTableSegments(docId, segments, startIdx);
+                try {
+                    await this.appendTableSegments(docId, segments, startIdx);
+                } catch (error) {
+                    // 安全回滚：这是【本次新建】的合并文档（尚未 addMergedId、不含其它文章
+                    // 内容），追加失败时删掉它——否则下次同步按路径命中这个半成品文档、走
+                    // mergeToExistingDocument，而它的 mergedIds 为空 → 把同一文章重复追加。
+                    // 只回滚新建的合并文档；mergeToExistingDocument 那种已存在、含其它文章的
+                    // 文档绝不删（见 mergeToExistingDocument，只上抛不回滚）。
+                    logger.error(`[createMergedDocument] 追加片段失败，回滚删除新建合并文档 ${docId}`, error);
+                    await this.deleteDocumentById(docId);
+                    throw error;
+                }
             }
 
             // 将新创建的文档添加到缓存
@@ -569,6 +590,28 @@ export class FileHandler {
     /**
      * 创建文档
      */
+    /**
+     * 删除指定文档（用于追加片段失败时回滚本次新建的半成品独立文档）。
+     * 尽力而为：回滚删除自身失败不应掩盖原始追加错误，仅记录日志。
+     */
+    private async deleteDocumentById(docId: string): Promise<void> {
+        try {
+            const response = await fetch('/api/filetree/removeDocByID', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: docId }),
+            });
+            const data = await response.json();
+            if (data.code !== 0) {
+                logger.error(`[deleteDocumentById] 回滚删除文档失败 ${docId}: ${data.msg}`);
+            } else {
+                logger.info(`[deleteDocumentById] 已回滚删除半成品文档 ${docId}`);
+            }
+        } catch (error) {
+            logger.error(`[deleteDocumentById] 回滚删除文档异常 ${docId}:`, error);
+        }
+    }
+
     private async createDocument(
         notebookId: string,
         docPath: string,
@@ -693,7 +736,11 @@ export class FileHandler {
                 });
                 const data = await response.json();
                 if (data.code !== 0) {
+                    // 与 html-table 分支（appendHtmlBlock）一致：写入失败必须上抛，
+                    // 否则 processArticleBatch 会把这篇当作成功、设上 custom-source-id
+                    // 去重标记，造成"标记已同步但有文字段没写进去"的静默丢内容。
                     logger.error(`[appendTableSegments] Failed to append markdown block: ${data.msg}`);
+                    throw new Error(`Failed to append markdown block: ${data.msg}`);
                 }
             }
         }

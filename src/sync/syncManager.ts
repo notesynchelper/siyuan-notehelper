@@ -153,14 +153,23 @@ export class SyncManager {
             const now = new Date();
             const nowStr = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
-            // 更新全局游标（向后兼容）
-            this.settings.syncAt = nowStr;
+            // ⚠️ 数据安全：仅当本次【没有任何错误】时才推进游标。
+            // 若有文章处理失败（典型：表格片段追加失败已回滚删除半成品文档），保持游标
+            // 不前进，下次同步重新拉取同一窗口重试失败文章——否则游标越过失败文章 +
+            // 半成品已被回滚删除 = 永久丢失该文章（绝不丢数据）。已成功的文章下轮会被
+            // 去重跳过，冗余但不会重复/不会丢；新文章因窗口仍向后开放，照常拉取不被阻塞。
+            if (errors.length === 0) {
+                // 更新全局游标（向后兼容）
+                this.settings.syncAt = nowStr;
 
-            // 更新设备级游标
-            if (!this.settings.deviceSyncCursors) {
-                this.settings.deviceSyncCursors = {};
+                // 更新设备级游标
+                if (!this.settings.deviceSyncCursors) {
+                    this.settings.deviceSyncCursors = {};
+                }
+                this.settings.deviceSyncCursors[deviceId] = nowStr;
+            } else {
+                logger.warn(`[Sync] 本次有 ${errors.length} 个错误，保持游标不前进，下次重试失败文章（避免越过 → 永久丢失）`);
             }
-            this.settings.deviceSyncCursors[deviceId] = nowStr;
 
             // 清理过期的设备游标
             this.cleanStaleDeviceCursors();
