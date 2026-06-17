@@ -8,7 +8,7 @@
  * TDD：本测试先红（当前裸 URL 原样保留为文本），实现 linkifyUrls 接入后转绿。
  */
 
-import { renderWeChatMessageSimple } from '../src/settings/template';
+import { renderWeChatMessageSimple, renderWeChatMessage } from '../src/settings/template';
 import { DEFAULT_SETTINGS, PluginSettings } from '../src/settings/index';
 import { Article } from '../src/utils/types';
 
@@ -143,6 +143,46 @@ describe('合并消息裸链接 → 超链接 (renderWeChatMessageSimple)', () =
     test('无链接的纯文本内容保持不变', () => {
         const article = createMockArticle({ content: '今天天气不错，没有任何链接。' });
         const result = renderWeChatMessageSimple(article, createSettings());
+
+        expect(result).toBe('今天天气不错，没有任何链接。');
+    });
+});
+
+describe('独立文件模式企微消息裸链接 → 超链接 (renderWeChatMessage)', () => {
+    // 独立文件模式走 wechatMessageTemplate，这里用最简模板隔离 content 区域
+    const sepSettings = (overrides: Partial<PluginSettings> = {}): PluginSettings =>
+        ({ ...DEFAULT_SETTINGS, wechatMessageTemplate: '{{{content}}}', ...overrides });
+
+    test('单个裸 URL 应被包成 markdown 超链接', () => {
+        const url = 'https://mp.weixin.qq.com/s/AbCdEf12345';
+        const article = createMockArticle({ content: url });
+        const result = renderWeChatMessage(article, sepSettings());
+
+        expect(result).toContain(`[${url}](${url})`);
+    });
+
+    test('裸 URL 紧贴中文文本时也应被识别', () => {
+        const url = 'https://mp.weixin.qq.com/s/AbCdEf12345';
+        const article = createMockArticle({ content: `详情见${url}点击查看` });
+        const result = renderWeChatMessage(article, sepSettings());
+
+        expect(result).toContain(`[${url}](${url})`);
+        expect(result).toContain('详情见');
+        expect(result).toContain('点击查看');
+    });
+
+    test('已是 markdown 超链接的 URL 不应被二次包裹', () => {
+        const url = 'https://example.com/page';
+        const article = createMockArticle({ content: `[原文链接](${url})` });
+        const result = renderWeChatMessage(article, sepSettings());
+
+        expect(result).toContain(`[原文链接](${url})`);
+        expect(result).not.toContain(`[${url}](${url})`);
+    });
+
+    test('无链接的纯文本内容保持不变', () => {
+        const article = createMockArticle({ content: '今天天气不错，没有任何链接。' });
+        const result = renderWeChatMessage(article, sepSettings());
 
         expect(result).toBe('今天天气不错，没有任何链接。');
     });

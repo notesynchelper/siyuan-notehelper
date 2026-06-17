@@ -177,6 +177,9 @@ export function renderWeChatMessage(
         // 处理图片URL
         content = processImageUrls(content, settings);
 
+        // 把企微消息里的裸 URL（文本形式链接）解析为可点击的 markdown 超链接
+        content = linkifyUrls(content);
+
         return content;
     } catch (error) {
         logger.error('WeChat message template rendering error:', error);
