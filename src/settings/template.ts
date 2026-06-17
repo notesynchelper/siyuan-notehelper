@@ -424,6 +424,100 @@ export function processImageUrls(content: string, settings: PluginSettings): str
 }
 
 /**
+ * 把内容里的"裸 URL"（文本形式的链接）解析为 markdown 超链接 [url](url)，
+ * 这样落到思源后是可点击的链接块，而不是纯文本。
+ *
+ * 已经是链接/图片/HTML 标签属性/代码区里的 URL 一律跳过，避免二次包裹或破坏代码示例：
+ * - markdown 链接 [text](url) / 图片 ![alt](url)
+ * - HTML 标签内（<a href="...">、<img src="..."> 等）
+ * - 围栏代码块 / 行内 code（复用 findCodeRanges）
+ */
+export function linkifyUrls(content: string): string {
+    if (!content) return content;
+
+    // 1) 收集"受保护区"——这些范围里的 URL 不再处理
+    const protectedRanges: { start: number; end: number }[] = [];
+
+    // 代码区（围栏 ``` / ~~~ + 行内 `code`）
+    for (const r of findCodeRanges(content)) protectedRanges.push(r);
+
+    // markdown 链接 / 图片：[text](url) 或 ![alt](url)（含可选 "title"）
+    const mdLinkRe = /!?\[[^\]]*\]\([^)]*\)/g;
+    let lm: RegExpExecArray | null;
+    while ((lm = mdLinkRe.exec(content)) !== null) {
+        protectedRanges.push({ start: lm.index, end: lm.index + lm[0].length });
+    }
+
+    // 整个 <a ...>...</a>：保护链接文本里的可见 URL（已经是可点击链接，别再包一层）
+    const anchorRe = /<a\b[^>]*>[\s\S]*?<\/a>/gi;
+    while ((lm = anchorRe.exec(content)) !== null) {
+        protectedRanges.push({ start: lm.index, end: lm.index + lm[0].length });
+    }
+
+    // 整个 <table>...</table>：后续 splitContentByTables 会把表格整体当 HTML 块落库，
+    // 那里不解析 markdown——若在此把表格里的裸 URL 包成 [url](url)，用户看到的是字面量。
+    const tableRe = /<table\b[^>]*>[\s\S]*?<\/table\s*>/gi;
+    while ((lm = tableRe.exec(content)) !== null) {
+        protectedRanges.push({ start: lm.index, end: lm.index + lm[0].length });
+    }
+
+    // 其余 HTML 标签：<...>（覆盖 <img src> 等属性里的 URL）
+    const tagRe = /<[^>]+>/g;
+    while ((lm = tagRe.exec(content)) !== null) {
+        protectedRanges.push({ start: lm.index, end: lm.index + lm[0].length });
+    }
+
+    const isProtected = (start: number, end: number) =>
+        protectedRanges.some((r) => start < r.end && end > r.start);
+
+    // 2) 扫描裸 URL，落在受保护区外的包成 markdown 链接
+    // 仅允许 URL 合法的 ASCII 字符（排除方括号/引号/尖括号/空白），因此遇到 CJK、
+    // 空格等天然停下，不会把后续中文吞进链接。
+    // 注意：不收 `*`，否则 **https://x** 这种粗体里的 URL 会把收尾的 ** 吞进链接。
+    // 收 `()` 以支持 Wikipedia 这类含括号的 URL，末尾不配对的 `)` 再单独剥掉。
+    const urlRe = /https?:\/\/[A-Za-z0-9\-._~:/?#@!$&+,;=%()]+/g;
+    let result = '';
+    let lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = urlRe.exec(content)) !== null) {
+        let url = m[0];
+        const start = m.index;
+        // 去掉 URL 末尾残留的 ASCII 标点（句号/逗号/分号等不应算进链接）
+        const trailing = url.match(/[.,;:!?]+$/);
+        if (trailing) url = url.slice(0, url.length - trailing[0].length);
+        // 剥掉末尾不配对的右括号（如 "(见 https://x)" 里收尾的 `)`）；
+        // 括号配对的（Wikipedia 式）则保留，[url](url) 的 markdown 仍合法。
+        url = trimUnbalancedTrailingParens(url);
+        if (url.length === 0) continue;
+
+        const end = start + url.length;
+        if (isProtected(start, end)) continue;
+
+        result += content.slice(lastIndex, start) + `[${url}](${url})`;
+        // 末尾被剥掉的标点/括号留给下一段 slice 补回（lastIndex 指向 URL 真实结尾）
+        lastIndex = end;
+    }
+    result += content.slice(lastIndex);
+
+    return result;
+}
+
+/**
+ * 剥掉 URL 末尾"不配对"的右括号。
+ * CommonMark 的 autolink 同款规则：括号配对时全保留（Wikipedia Foo_(bar)），
+ * 末尾 `)` 多于 `(` 时逐个剥掉，直到配平——这样 "(见 https://x)" 的收尾 `)` 不会被吞。
+ */
+function trimUnbalancedTrailingParens(url: string): string {
+    while (url.endsWith(')')) {
+        const opens = (url.match(/\(/g) || []).length;
+        const closes = (url.match(/\)/g) || []).length;
+        if (closes <= opens) break;
+        url = url.slice(0, -1);
+    }
+    return url;
+}
+
+/**
  * 内容片段类型：markdown 文本或 HTML 表格
  */
 export interface ContentSegment {
@@ -620,6 +714,9 @@ export function renderWeChatMessageSimple(
 
         // 处理图片URL
         content = processImageUrls(content, settings);
+
+        // 把合并消息里的裸 URL（文本形式链接）解析为可点击的 markdown 超链接
+        content = linkifyUrls(content);
 
         return content;
     } catch (error) {
