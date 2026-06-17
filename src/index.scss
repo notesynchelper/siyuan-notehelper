@@ -1,4 +1,2 @@
-// 增加笔记助手菜单宽度（原宽度约200px，增加一倍到400px）
-.b3-menu[data-name="noteHelperMenu"] {
-  min-width: 400px !important;
-}
+// 笔记同步助手样式占位文件。
+// 顶栏菜单（data-name="noteHelperMenu"）已随顶栏图标一并移除，原宽度覆盖样式不再需要。

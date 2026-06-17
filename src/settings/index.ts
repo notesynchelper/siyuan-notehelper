@@ -171,3 +171,18 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     version: '0.1.0',
     logLevel: 'INFO',  // 生产模式
 };
+
+/**
+ * 返回 DEFAULT_SETTINGS 的深拷贝。
+ *
+ * 必须深拷贝：DEFAULT_SETTINGS 含嵌套对象/数组（deviceSyncCursors / highlightColorMapping /
+ * frontMatterVariables）。若浅拷贝（`{ ...DEFAULT_SETTINGS }`）共享这些引用，运行时的原地写入
+ * （例如 syncManager 写 `this.settings.deviceSyncCursors[deviceId] = ...`）会污染模块级
+ * DEFAULT_SETTINGS，进而影响后续以默认值为基底的设置。
+ *
+ * DEFAULT_SETTINGS 所有字段均为 JSON 可序列化（字符串/数字/布尔/枚举/字符串数组/纯对象），
+ * 用 JSON 深拷贝最稳，且不会漏掉将来新增的嵌套字段。
+ */
+export function createDefaultSettings(): PluginSettings {
+    return JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+}

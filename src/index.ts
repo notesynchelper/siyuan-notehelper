@@ -8,13 +8,11 @@ import {
     showMessage,
     confirm,
     Dialog,
-    Menu,
-    Setting,
 } from 'siyuan';
 import './index.scss';
 
 import { logger, LogLevel } from './utils/logger';
-import { PluginSettings, DEFAULT_SETTINGS } from './settings';
+import { PluginSettings, DEFAULT_SETTINGS, createDefaultSettings } from './settings';
 import { SyncManager } from './sync/syncManager';
 import { ImageLocalizer } from './imageLocalizer/imageLocalizer';
 import { getArticleCount, clearAllArticles, fetchVipStatus, getQrCodeUrl, VipStatus } from './api';
@@ -212,10 +210,24 @@ const zhCN = {
 
 export default class NoteHelperPlugin extends Plugin {
 
-    private settings: PluginSettings;
+    // 同步种入默认值：onload 必须在第一个 await 之前就注册 dock（见 onload 注释），
+    // 那一刻 dock init 可能已经读 this.settings，所以这里保证它从一开始就是合法对象。
+    // 用 createDefaultSettings() 深拷贝（不是浅拷贝），避免共享 DEFAULT_SETTINGS 的嵌套对象被原地写污染。
+    // loadSettings() 之后用 Object.assign 原地更新，保持引用稳定（SyncManager/FileHandler 持有同一引用）。
+    private settings: PluginSettings = createDefaultSettings();
     private syncManager: SyncManager;
     private imageLocalizer: ImageLocalizer;
     private dockElement: HTMLElement;
+    // 幂等标记：确保本插件对同一实例只调用一次 addDock。
+    // 注意它只约束「本插件不会重复注册」；SiYuan 的侧栏 dock 区按 type 唯一，
+    // 同 type 重复注册会覆盖而非叠加（这也是 dock 不像顶栏那样会刷出一排重复图标的原因）。
+    private syncDockAdded = false;
+    // settings 是否已从磁盘加载完成。dock init 可能早于 onload 的 await loadSettings()
+    // 完成（SiYuan loader 不 await onload），此时绝不能用默认值渲染设置表单——否则用户
+    // 随后的任意改动会经 extractFormValues 把默认值整张存回、覆盖真实配置（数据丢失）。
+    private settingsLoaded = false;
+    // dock 设置表单是否已渲染绑定，幂等防止 init 与 onload 两条补渲染路径重复绑定。
+    private dockFormRendered = false;
 
     // 初始化 i18n - 在类定义时就设置，避免 SiYuan 访问时为 null
     public i18n = {
@@ -227,7 +239,15 @@ export default class NoteHelperPlugin extends Plugin {
         logger.setLevel(LogLevel.INFO);
         logger.debug('Loading Note Sync Helper plugin...');
 
-        // 注册自定义图标 - 使用"同"字
+        // ⚠️ 顺序要求：下面这一段（addIcons → 构造管理器 → addSyncDock）必须全部
+        // 跑在 onload 的【第一个 await 之前】，即同步阶段完成。
+        // 原因：SiYuan 启动 loadPlugins(init=true) 不 await onload，插件实例在
+        // `await plugin.onload()` 之前就被 push 进 app.plugins；随后布局阶段
+        // afterLoadPlugin() 会遍历 plugin.docks 调 genButton() 画侧栏按钮。
+        // 若把 addDock 放在 `await loadSettings()` 之后，冷启动时按钮生成可能先于
+        // dock 注册 → 「同」字图标缺失。所以这里在任何 await 之前同步注册。
+
+        // 注册自定义图标 - 使用"同"字（dock 引用 #iconNoteSync，需先于 addDock）
         this.addIcons(`
 <symbol id="iconNoteSync" viewBox="0 0 32 32">
   <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"
@@ -236,15 +256,31 @@ export default class NoteHelperPlugin extends Plugin {
 </symbol>
 `);
 
-        // 加载设置
+        // 同步构造管理器：this.settings 已 seed 默认值，管理器持有其稳定引用，
+        // dock init 里的 loadNotebookOptions() 会用到 this.syncManager，必须先就位。
+        this.syncManager = new SyncManager(this, this.settings);
+        this.imageLocalizer = new ImageLocalizer(this, this.settings);
+
+        // 注册左侧栏「同」字 dock —— 插件唯一入口图标，且是仅有的一个。
+        // 顶栏图标已彻底移除：addTopBar 每次调用都会向 #barPlugins 追加新 DOM、不去重，
+        // onLayoutReady/afterLoadPlugin 被重复触发时会叠加出一排重复图标（本次修复的 bug）。
+        this.addSyncDock();
+
+        // —— 以下为异步/可后置阶段 ——
+
+        // 加载设置（原地更新已 seed 的 this.settings）
         await this.loadSettings();
+        this.settingsLoaded = true;
+
+        // 冷启动竞态兜底：若 dock init 已先于 loadSettings 跑完（此时只渲染了「加载设置中」），
+        // 现在设置已就绪，补渲染设置表单 + 刷新状态。正常情况下 init 晚于此处、由 init 自己渲染。
+        if (this.dockElement) {
+            this.populateDockSettingsForm();
+            this.updateDockStatus();
+        }
 
         // 根据设置更新日志级别
         this.updateLogLevel();
-
-        // 初始化管理器
-        this.syncManager = new SyncManager(this, this.settings);
-        this.imageLocalizer = new ImageLocalizer(this, this.settings);
 
         // 注册命令
         this.registerCommands();
@@ -266,12 +302,7 @@ export default class NoteHelperPlugin extends Plugin {
 
     async onLayoutReady() {
         logger.debug('Layout ready');
-
-        // 添加顶栏图标
-        this.addTopBarIcon();
-
-        // 立即添加左侧栏同步dock
-        this.addSyncDock();
+        // dock 已在 onload 注册；此处不再注册任何图标，避免重复。
     }
 
     async onunload() {
@@ -295,31 +326,16 @@ export default class NoteHelperPlugin extends Plugin {
     }
 
     /**
-     * 添加顶栏图标
-     */
-    private addTopBarIcon() {
-        const topBarElement = this.addTopBar({
-            icon: 'iconRefresh',
-            title: this.i18n.zh_CN.sync,
-            position: 'right',
-            callback: () => {
-                let rect = topBarElement.getBoundingClientRect();
-                // 如果被隐藏，则使用更多按钮
-                if (rect.width === 0) {
-                    rect = document.querySelector('#barMore')?.getBoundingClientRect();
-                }
-                if (rect.width === 0) {
-                    rect = document.querySelector('#barPlugins')?.getBoundingClientRect();
-                }
-                this.showMenu(rect);
-            },
-        });
-    }
-
-    /**
-     * 添加左侧栏同步dock
+     * 添加左侧栏同步dock（插件唯一入口图标，"同"字）
+     * 在 onload 同步阶段调用；幂等标记确保单实例内只 addDock 一次。
      */
     private addSyncDock() {
+        if (this.syncDockAdded) {
+            logger.debug('Sync dock already registered, skip duplicate registration');
+            return;
+        }
+        this.syncDockAdded = true;
+
         this.addDock({
             config: {
                 position: "LeftTop",
@@ -379,127 +395,144 @@ export default class NoteHelperPlugin extends Plugin {
                 // 初始化状态显示
                 this.updateDockStatus();
 
-                // 立即加载设置表单
-                const settingsArea = dock.element.querySelector('#settingsFormArea');
-                if (settingsArea) {
-                    settingsArea.innerHTML = `
-                        <div style="margin-bottom: 8px; font-weight: bold; color: var(--b3-theme-on-surface);">
-                            ${this.i18n.zh_CN.settings}
-                        </div>
-                        ${SettingsForm.renderSettingsForm(this.settings, this.i18n.zh_CN, () => this.formatSyncTimeForInput())}
-                    `;
-
-                    // 从磁盘读取实际版本号（而非内存 manifest，更新后无需重启即可显示新版本）
-                    getLocalVersion().then(v => {
-                        SettingsForm.setCurrentVersion(settingsArea as HTMLElement, v);
-                    });
-
-                    // 绑定动态交互事件
-                    SettingsForm.bindEvents(settingsArea as HTMLElement, {
-                        onApiKeyChange: async (apiKey: string) => {
-                            await this.updateVipStatusDisplay(settingsArea as HTMLElement);
-                        },
-                        onRefreshArticleCount: async () => {
-                            await this.refreshArticleCount(settingsArea as HTMLElement);
-                        },
-                        onClearAllArticles: async () => {
-                            await this.handleClearAllArticles(settingsArea as HTMLElement);
-                        },
-                        onCheckUpdate: async () => {
-                            await this.checkForUpdates(settingsArea as HTMLElement);
-                        },
-                        onManualUpdate: async () => {
-                            await this.manualUpdate(settingsArea as HTMLElement);
-                        },
-                        onResetTemplate: (type) => {
-                            this.resetTemplate(settingsArea as HTMLElement, type);
-                        }
-                    });
-
-                    // 初始化VIP状态
-                    if (this.settings.apiKey) {
-                        this.updateVipStatusDisplay(settingsArea as HTMLElement);
-                    }
-
-                    // 加载笔记本列表
-                    this.loadNotebookOptions(settingsArea as HTMLElement);
-
-                    // 需要校验的字段映射
-                    const templateFields = new Set(['folder', 'filename', 'mergeFolder', 'singleFileName', 'mergeFolderTemplate', 'template', 'wechatMessageTemplate', 'mergeMessageTemplate']);
-                    const dateFormatFields = new Set(['folderDateFormat', 'filenameDateFormat', 'singleFileDateFormat', 'mergeFolderDateFormat', 'dateSavedFormat']);
-                    const numberFields: Record<string, { name: string; min: number; max: number; allowZero?: boolean }> = {
-                        frequency: { name: '同步频率（分钟）', min: 15, max: 1440, allowZero: true },
-                        jpegQuality: { name: 'JPEG 质量', min: 1, max: 100 },
-                        imageDownloadRetries: { name: '重试次数', min: 0, max: 10 },
-                    };
-
-                    const fieldNameMap: Record<string, string> = {
-                        folder: '文章文件夹', filename: '文件名', mergeFolder: '合并文件夹',
-                        singleFileName: '单文件名', mergeFolderTemplate: '合并路径模板',
-                        template: '内容模板', wechatMessageTemplate: '企微消息模板',
-                        mergeMessageTemplate: '合并消息模板',
-                        folderDateFormat: '文件夹日期格式', filenameDateFormat: '文件名日期格式',
-                        singleFileDateFormat: '单文件日期格式', mergeFolderDateFormat: '合并文件夹日期格式',
-                        dateSavedFormat: '保存日期格式',
-                    };
-
-                    let saveTimeout: any = null;
-                    const formInputs = settingsArea.querySelectorAll('input, select, textarea');
-                    formInputs.forEach((input) => {
-                        const el = input as HTMLInputElement;
-                        const fieldId = el.id;
-
-                        // 缓存原始值用于校验失败时恢复
-                        el.addEventListener('focus', () => {
-                            el.dataset.prevValue = el.value;
-                        });
-
-                        // 需要校验的字段用 blur 事件
-                        if (templateFields.has(fieldId) || dateFormatFields.has(fieldId) || numberFields[fieldId]) {
-                            el.addEventListener('blur', () => {
-                                let valid = true;
-                                if (templateFields.has(fieldId)) {
-                                    valid = validateTemplate(el.value, fieldNameMap[fieldId] || fieldId);
-                                } else if (dateFormatFields.has(fieldId)) {
-                                    valid = validateDateFormat(el.value, fieldNameMap[fieldId] || fieldId);
-                                } else if (numberFields[fieldId]) {
-                                    const cfg = numberFields[fieldId];
-                                    valid = validateNumberRange(el.value, cfg.name, cfg.min, cfg.max, cfg.allowZero);
-                                }
-
-                                if (!valid) {
-                                    el.value = el.dataset.prevValue || '';
-                                    return;
-                                }
-
-                                if (saveTimeout) clearTimeout(saveTimeout);
-                                saveTimeout = setTimeout(async () => {
-                                    await this.saveSettingsFromContainer(dock.element);
-                                    this.syncManager.stopScheduledSync();
-                                    if (this.settings.frequency > 0) {
-                                        this.syncManager.startScheduledSync();
-                                    }
-                                }, 500);
-                            });
-                        }
-
-                        // 不需要校验的字段保持 change 事件
-                        el.addEventListener('change', async () => {
-                            if (templateFields.has(fieldId) || dateFormatFields.has(fieldId) || numberFields[fieldId]) {
-                                return; // 已由 blur 处理
-                            }
-                            if (saveTimeout) clearTimeout(saveTimeout);
-                            saveTimeout = setTimeout(async () => {
-                                await this.saveSettingsFromContainer(dock.element);
-                                this.syncManager.stopScheduledSync();
-                                if (this.settings.frequency > 0) {
-                                    this.syncManager.startScheduledSync();
-                                }
-                            }, 500);
-                        });
-                    });
+                // 仅在设置已加载完成时才渲染设置表单；否则保持「加载设置中」，
+                // 等 onload 的 loadSettings() 完成后由 onload 补渲染（见 onload 末尾）。
+                // 绝不能在设置未加载时渲染表单 —— 默认值会被用户的后续改动整张存回、覆盖真实配置。
+                if (this.settingsLoaded) {
+                    this.populateDockSettingsForm();
                 }
             },
+        });
+    }
+
+    /**
+     * 渲染 dock 设置表单并绑定交互/自动保存事件。
+     * 必须在 this.settingsLoaded === true（设置已从磁盘加载）之后调用。
+     * 幂等：两条触发路径（dock init 时 settingsLoaded 已 true；或 onload loadSettings 完成后
+     * dock 已挂载）只会真正渲染一次。
+     */
+    private populateDockSettingsForm() {
+        if (this.dockFormRendered) return;
+        if (!this.dockElement) return;
+        const settingsArea = this.dockElement.querySelector('#settingsFormArea');
+        if (!settingsArea) return;
+        this.dockFormRendered = true;
+
+        settingsArea.innerHTML = `
+            <div style="margin-bottom: 8px; font-weight: bold; color: var(--b3-theme-on-surface);">
+                ${this.i18n.zh_CN.settings}
+            </div>
+            ${SettingsForm.renderSettingsForm(this.settings, this.i18n.zh_CN, () => this.formatSyncTimeForInput())}
+        `;
+
+        // 从磁盘读取实际版本号（而非内存 manifest，更新后无需重启即可显示新版本）
+        getLocalVersion().then(v => {
+            SettingsForm.setCurrentVersion(settingsArea as HTMLElement, v);
+        });
+
+        // 绑定动态交互事件
+        SettingsForm.bindEvents(settingsArea as HTMLElement, {
+            onApiKeyChange: async (apiKey: string) => {
+                await this.updateVipStatusDisplay(settingsArea as HTMLElement);
+            },
+            onRefreshArticleCount: async () => {
+                await this.refreshArticleCount(settingsArea as HTMLElement);
+            },
+            onClearAllArticles: async () => {
+                await this.handleClearAllArticles(settingsArea as HTMLElement);
+            },
+            onCheckUpdate: async () => {
+                await this.checkForUpdates(settingsArea as HTMLElement);
+            },
+            onManualUpdate: async () => {
+                await this.manualUpdate(settingsArea as HTMLElement);
+            },
+            onResetTemplate: (type) => {
+                this.resetTemplate(settingsArea as HTMLElement, type);
+            }
+        });
+
+        // 初始化VIP状态
+        if (this.settings.apiKey) {
+            this.updateVipStatusDisplay(settingsArea as HTMLElement);
+        }
+
+        // 加载笔记本列表
+        this.loadNotebookOptions(settingsArea as HTMLElement);
+
+        // 需要校验的字段映射
+        const templateFields = new Set(['folder', 'filename', 'mergeFolder', 'singleFileName', 'mergeFolderTemplate', 'template', 'wechatMessageTemplate', 'mergeMessageTemplate']);
+        const dateFormatFields = new Set(['folderDateFormat', 'filenameDateFormat', 'singleFileDateFormat', 'mergeFolderDateFormat', 'dateSavedFormat']);
+        const numberFields: Record<string, { name: string; min: number; max: number; allowZero?: boolean }> = {
+            frequency: { name: '同步频率（分钟）', min: 15, max: 1440, allowZero: true },
+            jpegQuality: { name: 'JPEG 质量', min: 1, max: 100 },
+            imageDownloadRetries: { name: '重试次数', min: 0, max: 10 },
+        };
+
+        const fieldNameMap: Record<string, string> = {
+            folder: '文章文件夹', filename: '文件名', mergeFolder: '合并文件夹',
+            singleFileName: '单文件名', mergeFolderTemplate: '合并路径模板',
+            template: '内容模板', wechatMessageTemplate: '企微消息模板',
+            mergeMessageTemplate: '合并消息模板',
+            folderDateFormat: '文件夹日期格式', filenameDateFormat: '文件名日期格式',
+            singleFileDateFormat: '单文件日期格式', mergeFolderDateFormat: '合并文件夹日期格式',
+            dateSavedFormat: '保存日期格式',
+        };
+
+        let saveTimeout: any = null;
+        const formInputs = settingsArea.querySelectorAll('input, select, textarea');
+        formInputs.forEach((input) => {
+            const el = input as HTMLInputElement;
+            const fieldId = el.id;
+
+            // 缓存原始值用于校验失败时恢复
+            el.addEventListener('focus', () => {
+                el.dataset.prevValue = el.value;
+            });
+
+            // 需要校验的字段用 blur 事件
+            if (templateFields.has(fieldId) || dateFormatFields.has(fieldId) || numberFields[fieldId]) {
+                el.addEventListener('blur', () => {
+                    let valid = true;
+                    if (templateFields.has(fieldId)) {
+                        valid = validateTemplate(el.value, fieldNameMap[fieldId] || fieldId);
+                    } else if (dateFormatFields.has(fieldId)) {
+                        valid = validateDateFormat(el.value, fieldNameMap[fieldId] || fieldId);
+                    } else if (numberFields[fieldId]) {
+                        const cfg = numberFields[fieldId];
+                        valid = validateNumberRange(el.value, cfg.name, cfg.min, cfg.max, cfg.allowZero);
+                    }
+
+                    if (!valid) {
+                        el.value = el.dataset.prevValue || '';
+                        return;
+                    }
+
+                    if (saveTimeout) clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(async () => {
+                        await this.saveSettingsFromContainer(this.dockElement);
+                        this.syncManager.stopScheduledSync();
+                        if (this.settings.frequency > 0) {
+                            this.syncManager.startScheduledSync();
+                        }
+                    }, 500);
+                });
+            }
+
+            // 不需要校验的字段保持 change 事件
+            el.addEventListener('change', async () => {
+                if (templateFields.has(fieldId) || dateFormatFields.has(fieldId) || numberFields[fieldId]) {
+                    return; // 已由 blur 处理
+                }
+                if (saveTimeout) clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(async () => {
+                    await this.saveSettingsFromContainer(this.dockElement);
+                    this.syncManager.stopScheduledSync();
+                    if (this.settings.frequency > 0) {
+                        this.syncManager.startScheduledSync();
+                    }
+                }, 500);
+            });
         });
     }
 
@@ -528,62 +561,6 @@ export default class NoteHelperPlugin extends Plugin {
         }
     }
 
-    /**
-     * 显示菜单
-     */
-    private showMenu(rect: DOMRect) {
-        const menu = new Menu('noteHelperMenu');
-
-        menu.addItem({
-            icon: 'iconRefresh',
-            label: this.i18n.zh_CN.syncNow,
-            click: () => {
-                this.performSync();
-            },
-        });
-
-        menu.addItem({
-            icon: 'iconUndo',
-            label: this.i18n.zh_CN.resetSync,
-            click: () => {
-                this.resetSyncTime();
-            },
-        });
-
-        menu.addSeparator();
-
-        menu.addItem({
-            icon: 'iconInfo',
-            label: this.i18n.zh_CN.viewArticleCount,
-            click: () => {
-                this.viewArticleCount();
-            },
-        });
-
-        menu.addItem({
-            icon: 'iconTrash',
-            label: this.i18n.zh_CN.clearAllArticles,
-            click: () => {
-                this.clearAllArticles();
-            },
-        });
-
-        menu.addSeparator();
-
-        menu.addItem({
-            icon: 'iconSettings',
-            label: this.i18n.zh_CN.settings,
-            click: () => {
-                this.openSettings();
-            },
-        });
-
-        menu.open({
-            x: rect.right,
-            y: rect.bottom,
-            isLeft: true,
-        });
-    }
 
     /**
      * 注册命令
@@ -663,55 +640,6 @@ export default class NoteHelperPlugin extends Plugin {
     }
 
     /**
-     * 查看文章数量
-     */
-    private async viewArticleCount() {
-        if (!this.settings.apiKey) {
-            showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
-            return;
-        }
-
-        try {
-            const count = await getArticleCount(
-                this.settings.endpoint,
-                this.settings.apiKey
-            );
-
-            const message = (this.i18n.zh_CN.articleCount || 'Total {count} articles in cloud')
-                .replace('{count}', String(count));
-            showMessage(message, 5000, 'info');
-        } catch (error) {
-            logger.error('Failed to get article count:', error);
-            showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
-        }
-    }
-
-    /**
-     * 清空所有文章
-     */
-    private clearAllArticles() {
-        confirm(
-            this.i18n.zh_CN.confirm,
-            this.i18n.zh_CN.clearAllArticlesConfirm,
-            () => {
-                if (!this.settings.apiKey) {
-                    showMessage(this.i18n.zh_CN.errors?.noApiKey || 'No API key configured', 5000, 'error');
-                    return;
-                }
-
-                clearAllArticles(this.settings.endpoint, this.settings.apiKey)
-                    .then(() => {
-                        showMessage(this.i18n.zh_CN.success?.articlesCleared || 'Articles cleared', 5000, 'info');
-                    })
-                    .catch((error) => {
-                        logger.error('Failed to clear articles:', error);
-                        showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
-                    });
-            }
-        );
-    }
-
-    /**
      * 格式化同步时间为datetime-local输入框格式
      */
     private formatSyncTimeForInput(): string {
@@ -786,10 +714,10 @@ export default class NoteHelperPlugin extends Plugin {
      */
     private async loadSettings() {
         const savedSettings = await this.loadData(SETTINGS_KEY);
-        this.settings = {
-            ...DEFAULT_SETTINGS,
-            ...savedSettings,
-        };
+        // 原地更新已 seed 的 this.settings，不要重新赋值——否则 onload 早期
+        // 构造的 SyncManager / FileHandler / 已挂载的 dock 会持有旧引用。
+        // 用 createDefaultSettings()（深拷贝）做基底，避免把 DEFAULT_SETTINGS 的嵌套对象引用 assign 进来被污染。
+        Object.assign(this.settings, createDefaultSettings(), savedSettings || {});
         logger.debug('Settings loaded');
     }
 
