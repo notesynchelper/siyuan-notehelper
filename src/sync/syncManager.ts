@@ -266,18 +266,13 @@ export class SyncManager {
 
     /**
      * 刷新文件树，确保新创建的笔记立即显示
-     *
-     * 注意：原先使用的 /api/filetree/refreshFiletree 已被思源官方标记为废弃
-     * （计划于 2026-06-30 后移除，见 siyuan-note/siyuan#15663），改用
-     * /api/system/rebuildDataIndex。两者在内核侧映射到同一处理函数
-     * (model.FullReindex(false))，行为一致，仅端点路径变更。
      */
     private async refreshFiletree(): Promise<void> {
         try {
             if (this.settings.refreshIndexAfterSync) {
-                // 方案2：强制重建数据索引（用户勾选了"同步后刷新索引"）
-                // 第一步：重建索引
-                await fetch('/api/system/rebuildDataIndex', {
+                // 方案2：强制刷新索引（用户勾选了"同步后刷新索引"）
+                // 第一次刷新文件树
+                await fetch('/api/filetree/refreshFiletree', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
@@ -293,19 +288,19 @@ export class SyncManager {
                     body: JSON.stringify({})
                 });
 
-                logger.debug('Data index rebuilt with reloadFiletree');
+                logger.debug('Filetree refreshed with reloadFiletree');
             } else {
-                // 方案1：默认只重建数据索引（不勾选）
-                await fetch('/api/system/rebuildDataIndex', {
+                // 方案1：默认只刷新文件树（不勾选）
+                await fetch('/api/filetree/refreshFiletree', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
                 });
 
-                logger.debug('Data index rebuilt');
+                logger.debug('Filetree refreshed');
             }
         } catch (error) {
-            logger.warn('Failed to rebuild data index:', error);
+            logger.warn('Failed to refresh filetree:', error);
         }
     }
 

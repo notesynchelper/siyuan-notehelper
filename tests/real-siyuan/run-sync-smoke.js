@@ -11,11 +11,11 @@
  *   2. BOOT   a real headless SiYuan v3.6.5 kernel on a throwaway workspace+port.
  *   3. SYNC   instantiate the plugin's REAL SyncManager (compiled from src/ with
  *             the `siyuan` UI module stubbed) and call .sync() against the kernel.
- *             This exercises createDocWithMd + setBlockAttrs + the migrated
- *             /api/system/rebuildDataIndex + /api/ui/reloadFiletree.
+ *             This exercises createDocWithMd + setBlockAttrs +
+ *             /api/filetree/refreshFiletree + /api/ui/reloadFiletree.
  *   4. ASSERT via the kernel's /api/query/sql that the synced docs exist, and that
- *             the migrated rebuildDataIndex endpoint actually fired (and the old
- *             deprecated endpoint did NOT).
+ *             the /api/filetree/refreshFiletree endpoint actually fired (the
+ *             rebuildDataIndex migration was rolled back, so it must NOT fire).
  *   5. CLEAN  delete the seeded articles (by unique prefix) and stop the kernel.
  *
  * Run:  node tests/real-siyuan/run-sync-smoke.js
@@ -96,7 +96,7 @@ async function main() {
       syncTimeOffset: 0,
       initialSyncCompleted: true,
       frequency: 0,
-      refreshIndexAfterSync: true, // exercise the migrated rebuildDataIndex + reloadFiletree path
+      refreshIndexAfterSync: true, // exercise the refreshFiletree + reloadFiletree path
       customQuery: '',
       logLevel: process.env.SIYUAN_STUB_VERBOSE === '1' ? 'DEBUG' : 'WARN',
     };
@@ -120,14 +120,14 @@ async function main() {
     const problems = [];
     if (result.success === false) problems.push(`sync.success=false errors=${JSON.stringify(result.errors)}`);
     if (docBlocks.length < N) problems.push(`expected >=${N} synced documents, found ${docBlocks.length}`);
-    if (g.stats.rebuildDataIndex < 1) problems.push('migrated /api/system/rebuildDataIndex was never called');
-    if (g.stats.refreshFiletreeOld > 0) problems.push('deprecated /api/filetree/refreshFiletree was called');
+    if (g.stats.refreshFiletreeOld < 1) problems.push('/api/filetree/refreshFiletree was never called');
+    if (g.stats.rebuildDataIndex > 0) problems.push('/api/system/rebuildDataIndex was called (rebuildDataIndex migration should be rolled back)');
 
     if (problems.length) throw new Error('ASSERT FAILED:\n  - ' + problems.join('\n  - '));
 
     log(`✅ PASS — ${docBlocks.length} articles synced into real SiYuan as documents;`);
-    log(`         created=${result.count}, rebuildDataIndex calls=${g.stats.rebuildDataIndex}, ` +
-        `reloadFiletree calls=${g.stats.reloadFiletree}, deprecated-endpoint calls=${g.stats.refreshFiletreeOld}`);
+    log(`         created=${result.count}, refreshFiletree calls=${g.stats.refreshFiletreeOld}, ` +
+        `reloadFiletree calls=${g.stats.reloadFiletree}, rebuildDataIndex calls=${g.stats.rebuildDataIndex}`);
     exitCode = 0;
   } finally {
     // 5. CLEANUP — stop kernel, delete seeded articles by unique prefix.

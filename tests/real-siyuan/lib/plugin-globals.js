@@ -6,8 +6,9 @@
 //   * window — localStorage (device-id persistence), setInterval/clearInterval,
 //              and siyuan.config.system.os (platform detection).
 // Returns a handle whose .stats counts kernel/omniserver calls and, specifically,
-// the rebuildDataIndex / reloadFiletree hits so the harness can assert the
-// migrated endpoint actually fired.
+// the refreshFiletree / reloadFiletree / rebuildDataIndex hits so the harness can
+// assert that the plugin uses /api/filetree/refreshFiletree (the rebuildDataIndex
+// migration was rolled back).
 function installPluginGlobals() {
   const stats = { kernel: 0, omni: 0, rebuildDataIndex: 0, reloadFiletree: 0, refreshFiletreeOld: 0 };
   const handle = { kernel: null, stats };

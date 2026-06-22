@@ -17,9 +17,9 @@ with esbuild, aliasing the `siyuan` UI module to a headless stub, and
 the live kernel.
 
 This means the harness exercises the **exact production code path**, including
-`SyncManager.refreshFiletree()` → the migrated `/api/system/rebuildDataIndex` +
-`/api/ui/reloadFiletree` (and asserts the deprecated `/api/filetree/refreshFiletree`
-is never called).
+`SyncManager.refreshFiletree()` → `/api/filetree/refreshFiletree` +
+`/api/ui/reloadFiletree` (and asserts the `/api/system/rebuildDataIndex` migration,
+which was rolled back, is never called).
 
 ## Prerequisites
 
@@ -47,7 +47,7 @@ Expected tail:
 
 ```
 [e2e] ✅ PASS — 2 articles synced into real SiYuan as documents;
-[e2e]          created=2, rebuildDataIndex calls=1, reloadFiletree calls=1, deprecated-endpoint calls=0
+[e2e]          created=2, refreshFiletree calls=1, reloadFiletree calls=1, rebuildDataIndex calls=0
 ```
 
 ### Env vars
