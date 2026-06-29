@@ -20,6 +20,7 @@ import { formatDate } from './utils/util';
 import { SettingsForm } from './ui/SettingsForm';
 import { checkAndUpdate, getRemoteVersion, getLocalVersion, compareVersions, performUpdate } from './updater';
 import { validateTemplate, validateDateFormat, validateNumberRange } from './settings/validation';
+import { shouldRunSyncOnStart } from './sync/syncOnStartGate';
 
 const SETTINGS_KEY = 'notehelper-settings';
 const DOCK_TYPE = 'notehelper_sync_dock';
@@ -286,7 +287,13 @@ export default class NoteHelperPlugin extends Plugin {
         this.registerCommands();
 
         // 启动时同步 - 延长延迟时间，减少启动时的资源占用
-        if (this.settings.syncOnStart) {
+        // ⚠️ 手机端（尤其安卓）从后台切回前台会重载 webview → 重跑 onload，等于把
+        // 「启动时同步」变成「每次回前台都同步」。用跨重载冷却闸去抖：距上次自动同步
+        // 不足冷却期就跳过本次 syncOnStart，频繁切前后台不再反复同步。
+        // 冷却时间戳由 syncManager.sync 在同步【真正开跑】时写入（不是在这里调度时写），
+        // 这样若用户开 App 后 10s 内就切后台导致定时器被取消、同步从未发生，下次回前台
+        // 不会因为一个「没跑成的同步」而被误判跳过——避免丢掉启动同步。
+        if (this.settings.syncOnStart && shouldRunSyncOnStart()) {
             setTimeout(() => {
                 this.performSync(true);
             }, 10000); // 延长到10秒，让思源笔记先完成启动

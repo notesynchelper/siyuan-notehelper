@@ -9,7 +9,14 @@
 const verbose = process.env.SIYUAN_STUB_VERBOSE === '1';
 const noop = () => {};
 
-function showMessage(text, _timeout, type) {
+// Record every toast the plugin would have shown so the harness can assert on
+// notice behavior (auto-sync must be silent; manual sync must give feedback).
+// Lives on globalThis so the harness (which requires this via the esbuild bundle)
+// can read/clear it: globalThis.__siyuanNotices = [{text, timeout, type, id}].
+function showMessage(text, timeout, type, id) {
+  (globalThis.__siyuanNotices || (globalThis.__siyuanNotices = [])).push({
+    text, timeout, type: type || 'info', id,
+  });
   if (verbose) console.log(`[siyuan.showMessage:${type || 'info'}]`, text);
 }
 

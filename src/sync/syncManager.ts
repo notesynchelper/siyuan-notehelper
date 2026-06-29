@@ -13,6 +13,7 @@ import { templateNeedsContent } from '../settings/template';
 import { checkAndUpdate } from '../updater';
 import { computeEffectiveSyncAt } from './syncCursorAdjust';
 import { SyncNoticeManager } from './SyncNoticeManager';
+import { markAutoSyncStarted } from './syncOnStartGate';
 
 /**
  * 同步管理器类
@@ -47,7 +48,18 @@ export class SyncManager {
 
         this.isSyncing = true;
         this.settings.syncing = true;
-        const notice = new SyncNoticeManager();
+
+        // 自动同步（syncOnStart 触发 + 定时同步）刷新冷却时间戳，供下次 onload 的
+        // shouldRunSyncOnStart 判定：手机端回前台重载若距此不足冷却期则跳过 syncOnStart，
+        // 避免「每次切到前台都同步」。放在开头：即便本次同步中途失败，冷却也已生效，
+        // 不会让失败的自动同步在每次回前台时反复重试刷屏。
+        if (isAutoSync) {
+            markAutoSyncStarted();
+        }
+
+        // 自动同步走静默模式：只在真有新笔记 / 抛错时提示，不再每周期弹进度条和
+        // 「没有新文章需要同步」（v1.7.36 起的刷屏回归）。手动同步保留完整反馈。
+        const notice = new SyncNoticeManager(isAutoSync);
 
         try {
             logger.debug('Starting sync...');
@@ -136,7 +148,11 @@ export class SyncManager {
 
             logger.debug(`Total processed. Created: ${createdCount}, Skipped: ${skippedCount}`);
 
-            if (createdCount === 0 && skippedCount === 0 && errors.length === 0) {
+            if (errors.length > 0) {
+                // 有文章处理失败：即使自动同步也提示（游标已保持不前进、下轮重试），
+                // 不被静默模式吞掉——失败的定时/启动同步若全程无声会让用户以为一切正常。
+                notice.showPartialFailure(createdCount, errors.length);
+            } else if (createdCount === 0 && skippedCount === 0) {
                 notice.showNoArticles();
             } else {
                 notice.completeSync(createdCount);
