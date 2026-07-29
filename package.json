@@ -10,7 +10,8 @@
     "test": "jest",
     "test:api": "node scripts/test-api.js",
     "test:e2e:siyuan": "node tests/real-siyuan/run-sync-smoke.js",
-    "test:e2e:autosync": "node tests/real-siyuan/run-autosync-silent-smoke.js"
+    "test:e2e:autosync": "node tests/real-siyuan/run-autosync-silent-smoke.js",
+    "test:e2e:ui": "node tests/real-siyuan/run-ui-shot-verify.js"
   },
   "keywords": [
     "siyuan",

@@ -330,7 +330,16 @@ export class SyncManager {
             const intervalMs = this.settings.frequency * 60 * 1000;
             this.settings.intervalId = window.setInterval(() => {
                 logger.debug('Running scheduled sync...');
-                this.sync(true);
+                // 定时同步不走 plugin.performSync（那条路会弹「请选择目标笔记本」之类的
+                // 提示，每个周期刷一次太吵），所以在这里显式通知插件刷新同步指示器，
+                // 否则 dock 徽标看不到定时同步：既不会进入「同步中」，跑完也不更新时间/失败态。
+                const promise = this.sync(true);
+                // sync() 在第一个 await 之前就同步置了 syncing=true，所以此刻刷新拿到的是「同步中」。
+                this.plugin.onSyncActivity?.();
+                promise.then(
+                    (result) => this.plugin.onSyncActivity?.(result),
+                    () => this.plugin.onSyncActivity?.({ success: false, count: 0 })
+                );
             }, intervalMs) as unknown as number;
 
             logger.debug(`Scheduled sync started: every ${this.settings.frequency} minutes`);

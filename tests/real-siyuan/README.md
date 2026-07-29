@@ -62,10 +62,35 @@ Expected tail:
 | `SIYUAN_RUNTIME` | `/home/work/siyuan-runtime` | where the extracted release lives |
 | `SIYUAN_STUB_VERBOSE` | — | `1` echoes plugin `showMessage` + DEBUG logs |
 
+## UI E2E（dock 徽标 / 官方设置入口）
+
+`run-sync-smoke.js` 那套是 Node 重驱动 `src/sync/*`，内核只当 `/api` 后端，**不加载插件**——
+验证不了任何 UI。要验证 UI 就得让插件真的在内核前端里跑起来：
+
+```bash
+npm run build && npm run test:e2e:ui      # 断言 + 截图，全自动
+```
+
+`run-ui-shot-verify.js` 会：把 `dist/` 真装进一个一次性 workspace（`petals.json` +
+`bazaar.trust`）→ 起内核 → 用系统 Chrome（playwright 借的隔壁 outsourcescrper 那份）
+打开真 UI → 逐条断言 + 截图到 `.runs/shots/` → 关掉内核。当前覆盖 18 条断言：
+
+- dock 按钮上挂出徽标、只有一个、状态/提示/颜色正确
+- **徽标不能盖住 dock 按钮中心**（按钮实测只有 27x26px，做大了会抢掉「开面板」这个主操作）
+- 点徽标触发同步且**不冒泡**去开合面板；点按钮本体照常开面板
+- 「设置 → 已下载插件」的齿轮判据成立（`__proto__.hasOwnProperty("openSetting")`）
+- 齿轮弹出完整设置表单；**全局只有一份活表单**（dock 那份让位）；关窗后 dock 表单复位
+
+只想人工看看的话：`node tests/real-siyuan/run-ui-shot.js`（装好插件把内核留着）。
+⚠️ 内核在没有 UI 连上来时会自己退出（`kernel.log` 里 `no active UI proc` → `exited kernel`），
+所以要尽快打开它打印的 URL。
+
 ## Layout
 
 ```
 run-sync-smoke.js        orchestrator: seed → boot → sync → assert → cleanup
+run-ui-shot.js           boot a kernel with the real plugin installed (bootWithPlugin)
+run-ui-shot-verify.js    UI E2E: real Chrome → assert dock badge + settings entry → screenshots
 lib/
   kernel.js              launch/stop a headless kernel, poll boot, REST helper
   compile-sync.js        esbuild-bundle the real src/sync modules (siyuan stubbed)

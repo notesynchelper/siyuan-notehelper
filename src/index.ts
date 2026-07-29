@@ -18,12 +18,59 @@ import { ImageLocalizer } from './imageLocalizer/imageLocalizer';
 import { getArticleCount, clearAllArticles, fetchVipStatus, getQrCodeUrl, VipStatus } from './api';
 import { formatDate } from './utils/util';
 import { SettingsForm } from './ui/SettingsForm';
+import { DockSyncBadge } from './ui/syncBadge';
 import { checkAndUpdate, getRemoteVersion, getLocalVersion, compareVersions, performUpdate } from './updater';
 import { validateTemplate, validateDateFormat, validateNumberRange } from './settings/validation';
 import { shouldRunSyncOnStart } from './sync/syncOnStartGate';
 
 const SETTINGS_KEY = 'notehelper-settings';
 const DOCK_TYPE = 'notehelper_sync_dock';
+
+// 需要在保存前校验的表单字段。放模块作用域是因为两处都要用：字段的 blur 处理器，
+// 以及「拆表单时强制落地」那条路径（那时 blur 根本没机会触发，见 validateField）。
+const TEMPLATE_FIELDS = new Set(['folder', 'filename', 'messageFolder', 'mergeFolder', 'singleFileName', 'mergeFolderTemplate', 'template', 'wechatMessageTemplate', 'mergeMessageTemplate']);
+const DATE_FORMAT_FIELDS = new Set(['folderDateFormat', 'filenameDateFormat', 'messageFolderDateFormat', 'singleFileDateFormat', 'mergeFolderDateFormat', 'dateSavedFormat']);
+const NUMBER_FIELDS: Record<string, { name: string; min: number; max: number; allowZero?: boolean }> = {
+    frequency: { name: '同步频率（分钟）', min: 15, max: 1440, allowZero: true },
+    jpegQuality: { name: 'JPEG 质量', min: 1, max: 100 },
+    imageDownloadRetries: { name: '重试次数', min: 0, max: 10 },
+};
+const FIELD_NAME_MAP: Record<string, string> = {
+    folder: '文章文件夹', filename: '文件名', messageFolder: '消息文件夹', mergeFolder: '合并文件夹',
+    singleFileName: '单文件名', mergeFolderTemplate: '合并路径模板',
+    template: '内容模板', wechatMessageTemplate: '企微消息模板',
+    mergeMessageTemplate: '合并消息模板',
+    folderDateFormat: '文件夹日期格式', filenameDateFormat: '文件名日期格式', messageFolderDateFormat: '消息文件夹日期格式',
+    singleFileDateFormat: '单文件日期格式', mergeFolderDateFormat: '合并文件夹日期格式',
+    dateSavedFormat: '保存日期格式',
+};
+
+/** 该字段是否需要走校验。 */
+function needsValidation(fieldId: string): boolean {
+    return TEMPLATE_FIELDS.has(fieldId) || DATE_FORMAT_FIELDS.has(fieldId) || !!NUMBER_FIELDS[fieldId];
+}
+
+/**
+ * 校验单个字段；不合法时把它还原成聚焦前的值（`dataset.prevValue`）并返回 false。
+ * 校验函数自身会向用户弹提示。
+ */
+function validateField(el: HTMLInputElement): boolean {
+    const fieldId = el.id;
+    const label = FIELD_NAME_MAP[fieldId] || fieldId;
+    let valid = true;
+    if (TEMPLATE_FIELDS.has(fieldId)) {
+        valid = validateTemplate(el.value, label);
+    } else if (DATE_FORMAT_FIELDS.has(fieldId)) {
+        valid = validateDateFormat(el.value, label);
+    } else if (NUMBER_FIELDS[fieldId]) {
+        const cfg = NUMBER_FIELDS[fieldId];
+        valid = validateNumberRange(el.value, cfg.name, cfg.min, cfg.max, cfg.allowZero);
+    }
+    if (!valid) {
+        el.value = el.dataset.prevValue || '';
+    }
+    return valid;
+}
 
 // 中文文本定义（替代i18n）
 const zhCN = {
@@ -233,6 +280,26 @@ export default class NoteHelperPlugin extends Plugin {
     private settingsLoaded = false;
     // dock 设置表单是否已渲染绑定，幂等防止 init 与 onload 两条补渲染路径重复绑定。
     private dockFormRendered = false;
+    // dock 按钮上的状态徽标（同时是手动同步入口）。
+    private syncBadge: DockSyncBadge | null = null;
+    // 上一次同步是否失败。不持久化——它描述的是「本次会话里最近一次同步的结果」，
+    // 存盘反而会让重启后仍顶着一个红点，而那次失败早已无从重试。
+    private lastSyncFailed = false;
+    // 官方设置入口打开的弹窗。同一时刻只允许存在一个设置表单（见 openSetting）。
+    private settingsDialog: Dialog | null = null;
+    // 当前那份活的设置表单所在的容器（dock 里的 #settingsFormArea 或弹窗里的 div）。
+    private activeSettingsContainer: HTMLElement | null = null;
+    // 表单改动的防抖保存定时器。提到实例上是为了能在【表单被换掉之前】强制落地——
+    // 否则「改一个字段 → 500ms 内打开设置弹窗」会让 dock 表单先被清空，定时器再去
+    // 一个空容器里提字段，提出来是空的，这次改动就被静默丢掉了。
+    private settingsSaveTimer: ReturnType<typeof setTimeout> | null = null;
+    // 最后聚焦过的设置字段。表单被强拆时（Esc 关弹窗 / 卸载插件）容器已经脱离文档，
+    // document.activeElement 找不回它了，但那次编辑仍需要校验，所以自己记一份。
+    private lastFocusedSettingsField: HTMLInputElement | null = null;
+    // 插件是否已卸载。所有异步回调（保存完成后的重排定时同步、弹窗延迟触发的
+    // destroyCallback）都要看它——它们可能在 onunload 之后才跑，那时再去重排定时器，
+    // 等于让一个已停用的旧实例继续在后台同步（还可能和新实例并行）。
+    private unloaded = false;
 
     // 初始化 i18n - 在类定义时就设置，避免 SiYuan 访问时为 null
     public i18n = {
@@ -275,14 +342,22 @@ export default class NoteHelperPlugin extends Plugin {
 
         // 加载设置（原地更新已 seed 的 this.settings）
         await this.loadSettings();
+        // `syncing` 是运行期瞬时标志，不该从磁盘恢复。而它确实会被存进去：
+        // syncManager.sync() 在 finally 复位【之前】就调了 saveSettings()，所以每次
+        // 同步成功落盘的都是 syncing:true。不在这里清掉，重启后状态文字会一直卡在
+        // 「同步中...」、dock 徽标也会一直脉冲。
+        this.settings.syncing = false;
         this.settingsLoaded = true;
 
         // 冷启动竞态兜底：若 dock init 已先于 loadSettings 跑完（此时只渲染了「加载设置中」），
-        // 现在设置已就绪，补渲染设置表单 + 刷新状态。正常情况下 init 晚于此处、由 init 自己渲染。
+        // 现在设置已就绪，补渲染设置表单。正常情况下 init 晚于此处、由 init 自己渲染。
         if (this.dockElement) {
             this.populateDockSettingsForm();
-            this.updateDockStatus();
         }
+        // 状态刷新【不能】放进上面的 if：徽标挂在 dock 按钮上、面板没展开时也在，
+        // 而 onLayoutReady 可能早于这里跑完，那时徽标是用默认设置画的。
+        // 不在这里无条件刷一次，没打开过面板的用户会一直看到「未配置」的黄点。
+        this.updateDockStatus();
 
         // 根据设置更新日志级别
         this.updateLogLevel();
@@ -314,13 +389,80 @@ export default class NoteHelperPlugin extends Plugin {
     async onLayoutReady() {
         logger.debug('Layout ready');
         // dock 已在 onload 注册；此处不再注册任何图标，避免重复。
+        // 侧栏按钮由 afterLoadPlugin 生成，到这里通常已经在 DOM 里；DockSyncBadge
+        // 自带有界重试，晚到也能挂上。它只往按钮里塞一个 span，不动 SiYuan 的结构。
+        this.mountSyncBadge();
     }
 
     async onunload() {
         logger.debug('Unloading Note Sync Helper plugin...');
 
+        // 必须最先置位：下面 destroy 弹窗触发的 destroyCallback 是延迟执行的，
+        // 而此前可能还有一次保存正在途中；它们的回调都要能看到「已卸载」。
+        this.unloaded = true;
+
         // 停止定时同步
         this.syncManager.stopScheduledSync();
+
+        // 卸载前把还没落地的表单改动收掉，别让用户最后那次输入随插件一起消失。
+        // reschedule:false —— 别让保存回调把刚停掉的定时同步又种回来。
+        this.flushPendingSettingsSave({ force: true, reschedule: false });
+
+        // 设置弹窗挂在 document.body 上、不随 dock 一起消失：不显式销毁的话，插件被
+        // 停用/重载后会留下一个仍绑着旧实例回调的僵尸弹窗。
+        this.settingsDialog?.destroy();
+        this.settingsDialog = null;
+        this.activeSettingsContainer = null;
+
+        // 摘掉 dock 按钮上的徽标 —— 它挂在 SiYuan 自己的 DOM 上，插件卸载后不清理
+        // 会留下一个点不动的死圆点。
+        this.syncBadge?.destroy();
+        this.syncBadge = null;
+    }
+
+    /**
+     * 挂载 dock 按钮上的同步状态徽标（点它 = 手动同步）。
+     * 幂等：重复调用只会有一个徽标实例。
+     */
+    private mountSyncBadge() {
+        if (this.syncBadge) {
+            this.updateSyncBadge();
+            return;
+        }
+        this.syncBadge = new DockSyncBadge({
+            // SiYuan 的 addDock 会把 type 前缀成 `${plugin.name}${type}`，侧栏按钮上的
+            // data-type 是前缀后的值；裸 type 作为兜底候选一起传，防止哪天上游改了拼法。
+            dockTypes: [`${this.name}${DOCK_TYPE}`, DOCK_TYPE],
+            onSync: () => this.performSync(),
+        });
+        this.syncBadge.start();
+        this.updateSyncBadge();
+    }
+
+    /**
+     * 同步活动通知。定时同步不经过 performSync，由 SyncManager 的定时器直接调这里，
+     * 让 dock 徽标/状态文字也能反映定时同步（开始、结束、成功与否）。
+     * @param result 传了就用它更新「上次是否失败」；不传表示「同步刚开始」，只刷 UI。
+     */
+    onSyncActivity(result?: { success: boolean }) {
+        if (result) {
+            this.lastSyncFailed = !result.success;
+        }
+        this.updateDockStatus();
+    }
+
+    /** 用当前设置刷新徽标状态。任何会改变同步状态的地方都应顺手调一次。 */
+    private updateSyncBadge() {
+        if (!this.syncBadge) return;
+        this.syncBadge.update(
+            {
+                apiKey: this.settings.apiKey,
+                syncAt: this.settings.syncAt,
+                syncing: this.settings.syncing,
+                lastSyncFailed: this.lastSyncFailed,
+            },
+            this.settings.syncAt ? formatDate(this.settings.syncAt, 'yyyy-MM-dd HH:mm') : undefined
+        );
     }
 
     /**
@@ -425,6 +567,11 @@ export default class NoteHelperPlugin extends Plugin {
     private populateDockSettingsForm() {
         if (this.dockFormRendered) return;
         if (!this.dockElement) return;
+        // 设置弹窗开着的时候不要在 dock 里再渲染一份表单：两份表单共用同一批 id，
+        // 而保存走的是「把整个容器的字段提取出来整张写回」——两份并存时，在其中一份
+        // 里改任何字段都会把另一份的陈旧值一起存回去，覆盖掉用户刚在那边的修改。
+        // 全局只允许存在一份活的设置表单（见 openSetting）。
+        if (this.settingsDialog) return;
         const settingsArea = this.dockElement.querySelector('#settingsFormArea');
         if (!settingsArea) return;
         this.dockFormRendered = true;
@@ -433,8 +580,23 @@ export default class NoteHelperPlugin extends Plugin {
             <div style="margin-bottom: 8px; font-weight: bold; color: var(--b3-theme-on-surface);">
                 ${this.i18n.zh_CN.settings}
             </div>
-            ${SettingsForm.renderSettingsForm(this.settings, this.i18n.zh_CN, () => this.formatSyncTimeForInput())}
         `;
+        this.mountSettingsForm(settingsArea as HTMLElement);
+    }
+
+    /**
+     * 把设置表单渲染进任意容器并绑定交互 / 自动保存。
+     * dock 面板和「设置 → 已下载插件 → 齿轮」弹窗共用这一条路径，避免两套表单逻辑漂移。
+     *
+     * ⚠️ 调用方要保证同一时刻文档里只有一份表单：表单字段用的是固定 id，
+     * saveSettingsFromContainer 又是整张提取写回，两份并存必然互相覆盖。
+     */
+    private mountSettingsForm(settingsArea: HTMLElement) {
+        this.activeSettingsContainer = settingsArea;
+        settingsArea.insertAdjacentHTML(
+            'beforeend',
+            SettingsForm.renderSettingsForm(this.settings, this.i18n.zh_CN, () => this.formatSyncTimeForInput())
+        );
 
         // 从磁盘读取实际版本号（而非内存 manifest，更新后无需重启即可显示新版本）
         getLocalVersion().then(v => {
@@ -471,26 +633,6 @@ export default class NoteHelperPlugin extends Plugin {
         // 加载笔记本列表
         this.loadNotebookOptions(settingsArea as HTMLElement);
 
-        // 需要校验的字段映射
-        const templateFields = new Set(['folder', 'filename', 'messageFolder', 'mergeFolder', 'singleFileName', 'mergeFolderTemplate', 'template', 'wechatMessageTemplate', 'mergeMessageTemplate']);
-        const dateFormatFields = new Set(['folderDateFormat', 'filenameDateFormat', 'messageFolderDateFormat', 'singleFileDateFormat', 'mergeFolderDateFormat', 'dateSavedFormat']);
-        const numberFields: Record<string, { name: string; min: number; max: number; allowZero?: boolean }> = {
-            frequency: { name: '同步频率（分钟）', min: 15, max: 1440, allowZero: true },
-            jpegQuality: { name: 'JPEG 质量', min: 1, max: 100 },
-            imageDownloadRetries: { name: '重试次数', min: 0, max: 10 },
-        };
-
-        const fieldNameMap: Record<string, string> = {
-            folder: '文章文件夹', filename: '文件名', messageFolder: '消息文件夹', mergeFolder: '合并文件夹',
-            singleFileName: '单文件名', mergeFolderTemplate: '合并路径模板',
-            template: '内容模板', wechatMessageTemplate: '企微消息模板',
-            mergeMessageTemplate: '合并消息模板',
-            folderDateFormat: '文件夹日期格式', filenameDateFormat: '文件名日期格式', messageFolderDateFormat: '消息文件夹日期格式',
-            singleFileDateFormat: '单文件日期格式', mergeFolderDateFormat: '合并文件夹日期格式',
-            dateSavedFormat: '保存日期格式',
-        };
-
-        let saveTimeout: any = null;
         const formInputs = settingsArea.querySelectorAll('input, select, textarea');
         formInputs.forEach((input) => {
             const el = input as HTMLInputElement;
@@ -499,58 +641,126 @@ export default class NoteHelperPlugin extends Plugin {
             // 缓存原始值用于校验失败时恢复
             el.addEventListener('focus', () => {
                 el.dataset.prevValue = el.value;
+                // 记住最后聚焦的字段：弹窗被 Esc 关掉时容器已经脱离文档，
+                // 那时 document.activeElement 已经找不回它了，但强制落地仍要校验它。
+                this.lastFocusedSettingsField = el;
             });
 
+            // 同步游标框：标记「用户动过」，让后台同步的刷新绕开它（见 updateDockStatus）。
+            // 保存成功后由 saveSettingsFromContainer 清掉这个标记。
+            if (fieldId === 'syncAt') {
+                el.addEventListener('input', () => {
+                    el.dataset.dirty = '1';
+                });
+            }
+
             // 需要校验的字段用 blur 事件
-            if (templateFields.has(fieldId) || dateFormatFields.has(fieldId) || numberFields[fieldId]) {
+            if (needsValidation(fieldId)) {
                 el.addEventListener('blur', () => {
-                    let valid = true;
-                    if (templateFields.has(fieldId)) {
-                        valid = validateTemplate(el.value, fieldNameMap[fieldId] || fieldId);
-                    } else if (dateFormatFields.has(fieldId)) {
-                        valid = validateDateFormat(el.value, fieldNameMap[fieldId] || fieldId);
-                    } else if (numberFields[fieldId]) {
-                        const cfg = numberFields[fieldId];
-                        valid = validateNumberRange(el.value, cfg.name, cfg.min, cfg.max, cfg.allowZero);
-                    }
-
-                    if (!valid) {
-                        el.value = el.dataset.prevValue || '';
-                        return;
-                    }
-
-                    if (saveTimeout) clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(async () => {
-                        await this.saveSettingsFromContainer(this.dockElement);
-                        this.syncManager.stopScheduledSync();
-                        if (this.settings.frequency > 0) {
-                            this.syncManager.startScheduledSync();
-                        }
-                    }, 500);
+                    if (!validateField(el)) return;
+                    this.scheduleSettingsSave();
                 });
             }
 
             // 不需要校验的字段保持 change 事件
             el.addEventListener('change', async () => {
-                if (templateFields.has(fieldId) || dateFormatFields.has(fieldId) || numberFields[fieldId]) {
+                if (needsValidation(fieldId)) {
                     return; // 已由 blur 处理
                 }
-                if (saveTimeout) clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(async () => {
-                    await this.saveSettingsFromContainer(this.dockElement);
-                    this.syncManager.stopScheduledSync();
-                    if (this.settings.frequency > 0) {
-                        this.syncManager.startScheduledSync();
-                    }
-                }, 500);
+                this.scheduleSettingsSave();
             });
         });
+    }
+
+    /**
+     * 防抖保存当前活表单（500ms）。
+     */
+    private scheduleSettingsSave() {
+        if (this.settingsSaveTimer) clearTimeout(this.settingsSaveTimer);
+        this.settingsSaveTimer = setTimeout(() => {
+            this.settingsSaveTimer = null;
+            this.commitSettingsFromActiveForm();
+        }, 500);
+    }
+
+    /**
+     * 把表单上的改动立刻落地。
+     * 任何会【换掉或清空当前表单】的操作（打开/关闭设置弹窗、卸载插件）都必须先调它，
+     * 否则防抖定时器晚一步才跑，届时表单已经没了，用户那次改动就被静默丢掉。
+     *
+     * 提取（内存合并）是同步做完的——这一步决定数据不丢；落盘是异步的，失败只记日志。
+     *
+     * @param force 拆表单前必须传 true：**不能**以「有没有待触发的定时器」来判断要不要提取。
+     *   典型反例是「改了某个输入框、光标还停在里面就按 Esc 关窗」——SiYuan 直接销毁弹窗，
+     *   change/blur 都没来得及触发，压根不存在定时器，但输入框里确实有用户的新值。
+     *   这种情况只有无条件提取一次才救得回来。
+     */
+    private flushPendingSettingsSave(opts: { force?: boolean; reschedule?: boolean } = {}) {
+        if (this.settingsSaveTimer) {
+            clearTimeout(this.settingsSaveTimer);
+            this.settingsSaveTimer = null;
+        } else if (!opts.force) {
+            return;
+        }
+        if (opts.force) {
+            // 强制落地意味着表单马上要没了，而「还停在输入框里的那次编辑」从未过 blur、
+            // 也就从未校验。不补这一刀，非法模板 / 越界的同步频率会被直接存进设置
+            // （越界频率还会真的起一个不合理的定时器）。校验失败会还原成聚焦前的值。
+            const el = this.lastFocusedSettingsField;
+            if (el && needsValidation(el.id)) {
+                validateField(el);
+            }
+        }
+        this.commitSettingsFromActiveForm(opts.reschedule !== false);
+    }
+
+    /**
+     * 从当前活表单提取值并保存。
+     *
+     * ⚠️ 这里【不能】加「容器还在文档里」的守卫。SiYuan 的 `Dialog.destroy()` 是
+     * 先 `this.element.remove()`、再调 `destroyCallback()`（见其实现），所以关窗时
+     * 这个容器必然已经脱离文档 —— 加了守卫就等于把「关窗前 500ms 内的最后一次改动」
+     * 直接丢掉。脱离文档的节点里输入框和用户输入的值都还在，照常提取即可。
+     *
+     * 反向也安全：容器若已被 innerHTML 清空，extractFormValues 的每个字段都有
+     * `if (input)` 守卫，提出来是空对象，Object.assign 是无操作，不会写坏设置。
+     */
+    private commitSettingsFromActiveForm(reschedule = true) {
+        const container = this.activeSettingsContainer;
+        if (!container) return;
+        this.saveSettingsFromContainer(container)
+            .then(() => {
+                // ⚠️ 这个回调是异步的，可能在 onunload 之后才跑：那时再 start 一次
+                // 等于把刚停掉的定时器重新种回来，一个已停用的旧实例继续在后台同步。
+                // 所以除了显式的 reschedule=false，还要挡住「保存途中插件被卸载」这条路。
+                if (!reschedule || this.unloaded) return;
+                this.syncManager.stopScheduledSync();
+                if (this.settings.frequency > 0) {
+                    this.syncManager.startScheduledSync();
+                }
+            })
+            .catch((error) => logger.error('Failed to save settings:', error));
     }
 
     /**
      * 更新dock状态显示
      */
     private updateDockStatus() {
+        // 徽标挂在 dock【按钮】上，面板没展开时也在，所以刷新它不能被下面
+        // 「面板未挂载就 return」的守卫挡住。
+        this.updateSyncBadge();
+
+        // 同步游标要刷到【当前那份活表单】上，而不是写死 dock。设置弹窗开着时同步跑完，
+        // 若只刷 dock，弹窗里的 #syncAt 还停在旧值；用户在弹窗里再改任何字段，整张表单
+        // 会被提取写回 —— 那个旧游标就把刚推进的游标覆盖回去了。
+        const syncAtInput = this.activeSettingsContainer?.querySelector('#syncAt') as HTMLInputElement | null;
+        // 判据是「用户改过没有」（dirty），不是「有没有聚焦」。只看聚焦的话，
+        // 同步在光标停在框里时跑完 → 这次不刷新 → 框里留着旧游标；等焦点一走，
+        // 任何一次整表提取都会把这个旧值写回去，把刚推进的游标退回来。
+        if (syncAtInput && syncAtInput.dataset.dirty !== '1') {
+            syncAtInput.value = this.formatSyncTimeForInput();
+        }
+
         if (!this.dockElement) return;
 
         const statusElement = this.dockElement.querySelector('#dockSyncStatus');
@@ -563,12 +773,6 @@ export default class NoteHelperPlugin extends Plugin {
             statusElement.textContent = `${this.i18n.zh_CN.lastSyncAt}: ${lastSync}`;
         } else {
             statusElement.textContent = this.i18n.zh_CN.noSyncYet;
-        }
-
-        // 同时更新设置表单中的同步时间输入框
-        const syncAtInput = this.dockElement.querySelector('#syncAt') as HTMLInputElement;
-        if (syncAtInput) {
-            syncAtInput.value = this.formatSyncTimeForInput();
         }
     }
 
@@ -600,7 +804,7 @@ export default class NoteHelperPlugin extends Plugin {
             langKey: 'openSettings',
             hotkey: '',
             callback: () => {
-                this.openSettings();
+                this.openSetting();
             },
         });
     }
@@ -618,13 +822,20 @@ export default class NoteHelperPlugin extends Plugin {
             return;
         }
         try {
+            // 立刻置位再刷 UI，让状态文字和徽标马上进入「同步中」。
+            // （syncManager.sync 内部也会置位，但那是 await 之后的事，早于它刷新
+            // 就只能看到旧状态。finally 里统一复位。）
+            this.settings.syncing = true;
             this.updateDockStatus();
             if (!this.settings.targetNotebook) {
                 showMessage('请在设置中选择目标笔记本，当前使用默认笔记本', 5000, 'info');
             }
-            await this.syncManager.sync(isAutoSync);
+            const result = await this.syncManager.sync(isAutoSync);
+            // sync() 不抛异常，成功与否只体现在返回值里 —— 徽标的红点靠它。
+            this.lastSyncFailed = !result?.success;
         } catch (error) {
             logger.error('Sync error:', error);
+            this.lastSyncFailed = true;
         } finally {
             this.settings.syncing = false;
             this.updateDockStatus();
@@ -639,6 +850,17 @@ export default class NoteHelperPlugin extends Plugin {
             this.i18n.zh_CN.confirm,
             this.i18n.zh_CN.resetSyncConfirm,
             () => {
+                // 重置是显式意图，优先级高于表单里那次还没落地的游标编辑：
+                // 丢掉待保存的防抖任务并清掉 dirty 标记，否则它稍后会把用户输入的旧游标
+                // 提取写回，把这次重置又撤销掉；dirty 还会挡住下面把空游标刷进输入框。
+                if (this.settingsSaveTimer) {
+                    clearTimeout(this.settingsSaveTimer);
+                    this.settingsSaveTimer = null;
+                }
+                const syncAtInput = this.activeSettingsContainer?.querySelector('#syncAt') as HTMLInputElement | null;
+                if (syncAtInput) {
+                    delete syncAtInput.dataset.dirty;
+                }
                 this.syncManager.resetSyncTime().then(() => {
                     this.updateDockStatus();
                     showMessage(this.i18n.zh_CN.success?.settingsSaved || 'Settings saved', 3000, 'info');
@@ -673,24 +895,79 @@ export default class NoteHelperPlugin extends Plugin {
     }
 
     /**
-     * 打开设置
-     * 提示用户设置已移到dock面板
+     * 思源官方设置入口：「设置 → 集市/已下载 → 本插件 → 齿轮」以及顶栏插件菜单里的
+     * 齿轮项都会调到这里。
+     *
+     * SiYuan 决定要不要给插件显示那颗齿轮的判据是
+     * `plugin.setting || plugin.__proto__.hasOwnProperty("openSetting")`
+     * （见 SiYuan 前端 bundle），所以在类上覆写本方法就足以让齿轮出现，
+     * 不需要额外造一个 `this.setting` 实例。
+     *
+     * 内容与 dock 面板里的是同一张表单（共用 mountSettingsForm），只是换了个容器。
      */
-    private openSettings() {
-        showMessage(
-            '设置已移到左侧栏的「笔记同步助手」面板中，请点击左侧栏的"同"字图标打开。\n\nSettings have been moved to the "Note Sync Helper" panel in the left sidebar. Please click the "同" icon in the left sidebar to open it.',
-            7000,
-            'info'
-        );
+    openSetting() {
+        if (!this.settingsLoaded) {
+            // 设置还没从磁盘读出来就渲染表单，用户的任意改动都会把默认值整张存回、
+            // 覆盖真实配置（与 dock 那条路径同一个坑）。宁可让他稍等一下。
+            showMessage('设置正在加载，请稍后再试', 3000, 'info');
+            return;
+        }
+        if (this.settingsDialog) {
+            // 已经开着一个了，不要叠第二个（两份表单会互相覆盖，见 mountSettingsForm 注释）。
+            return;
+        }
+
+        // 让位：dock 里那份表单先撤掉，保证全局只有一份活表单。
+        this.teardownDockSettingsForm('设置已在弹窗中打开');
+
+        const dialog = new Dialog({
+            title: `${this.i18n.zh_CN.pluginName} · ${this.i18n.zh_CN.settings}`,
+            content: '<div class="notehelper-settings-dialog" style="padding: 16px; overflow-y: auto; height: 100%; box-sizing: border-box;"></div>',
+            width: '780px',
+            height: '75vh',
+            destroyCallback: () => {
+                // 关窗前把弹窗里还没落地的最后一次改动收掉，再让位给 dock 表单；
+                // 否则 dock 会用旧值重渲染，防抖定时器随后又在已销毁的容器上扑空。
+                this.flushPendingSettingsSave({ force: true, reschedule: !this.unloaded });
+                this.activeSettingsContainer = null;
+                this.settingsDialog = null;
+                // SiYuan 的 Dialog.destroy() 会延迟触发 destroyCallback，所以这里可能是
+                // onunload 之后才跑的。已卸载就到此为止：dock 早没了，别再往里渲染。
+                if (this.unloaded) return;
+                // 弹窗里的改动已经进了 this.settings，这里把 dock 那份表单用最新值渲染回来。
+                this.dockFormRendered = false;
+                this.populateDockSettingsForm();
+                this.updateDockStatus();
+            },
+        });
+        this.settingsDialog = dialog;
+
+        const container = dialog.element.querySelector('.notehelper-settings-dialog') as HTMLElement;
+        if (!container) {
+            logger.error('Settings dialog container missing');
+            return;
+        }
+        this.mountSettingsForm(container);
     }
 
     /**
-     * 创建设置面板（已废弃，保留用于兼容性）
-     * @deprecated 设置已移到dock面板
+     * 拆掉 dock 面板里的设置表单，换成一句占位提示。
+     * 用于「同一时刻只允许一份活表单」——弹窗打开时先把 dock 那份让出来。
      */
-    private createSettingsPanel(container: HTMLElement, dialog: Dialog) {
-        // 此方法已废弃，设置已移到dock面板
-        // 保留此方法只为向后兼容
+    private teardownDockSettingsForm(placeholder: string) {
+        // 先把还没落地的改动收掉，再动 DOM —— 顺序反了就会丢掉用户最后那次输入。
+        this.flushPendingSettingsSave({ force: true });
+        this.dockFormRendered = false;
+        const settingsArea = this.dockElement?.querySelector('#settingsFormArea');
+        if (!settingsArea) return;
+        if (this.activeSettingsContainer === settingsArea) {
+            this.activeSettingsContainer = null;
+        }
+        settingsArea.innerHTML = `
+            <div style="text-align: center; color: var(--b3-theme-on-surface-light);">
+                ${placeholder}
+            </div>
+        `;
     }
 
     /**
@@ -703,8 +980,21 @@ export default class NoteHelperPlugin extends Plugin {
         // 使用SettingsForm提取表单值
         const values = SettingsForm.extractFormValues(container);
 
+        // 同步正在跑的时候，游标可能已经被 sync() 推进并落盘，而表单里还是打开时的旧值。
+        // 用表单里的旧游标覆盖回去 = 把刚推进的进度退回来（下轮重复拉取同一批）。
+        // 同步期间一律不接受表单里的游标，以 sync() 写的为准。
+        if (this.settings.syncing) {
+            delete values.syncAt;
+        }
+
         // 更新设置对象
         Object.assign(this.settings, values);
+
+        // 用户对游标的编辑已经落进设置了，清掉 dirty 标记，后台同步可以恢复刷新这个框。
+        const syncAtInput = container.querySelector('#syncAt') as HTMLInputElement | null;
+        if (syncAtInput) {
+            delete syncAtInput.dataset.dirty;
+        }
 
         // 保存到存储
         await this.saveSettings();

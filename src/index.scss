@@ -1,2 +1,67 @@
 // 笔记同步助手样式占位文件。
 // 顶栏菜单（data-name="noteHelperMenu"）已随顶栏图标一并移除，原宽度覆盖样式不再需要。
+
+// —— 左侧栏 dock 按钮上的同步状态徽标 ——
+// 徽标既是状态灯也是同步入口（点它 = 手动同步，见 src/ui/syncBadge.ts）。
+// 挂在 SiYuan 自己的 .dock__item 上，所以这里只加一个定位上下文，不动它别的样式。
+.notehelper-dock-item {
+  position: relative;
+}
+
+.notehelper-dock-badge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  // ⚠️ 尺寸必须压住：SiYuan 的侧栏按钮实测只有 27x26px。徽标一旦大到盖住按钮中心，
+  // 用户照着图标正中点下去命中的就是徽标（= 触发同步），而不是打开面板 —— 真机 E2E
+  // 抓到过这个：16x16 时徽标矩形恰好把按钮中心包了进去。
+  // 12x12 贴在右下角，按钮中心露在外面：主操作（开面板）不受影响，徽标是次级入口。
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+
+  &::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-sizing: border-box;
+    // 描边用侧栏底色，保证压在图标上也能看清边界。
+    border: 1px solid var(--b3-theme-background);
+    background-color: var(--b3-theme-on-surface-light);
+  }
+
+  &--synced::before {
+    background-color: var(--b3-theme-success);
+  }
+
+  &--never::before,
+  &--unconfigured::before {
+    background-color: var(--b3-card-warning-color);
+  }
+
+  &--error::before {
+    background-color: var(--b3-theme-error);
+  }
+
+  &--syncing::before {
+    background-color: var(--b3-theme-primary);
+    animation: notehelper-badge-pulse 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes notehelper-badge-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.72);
+  }
+}

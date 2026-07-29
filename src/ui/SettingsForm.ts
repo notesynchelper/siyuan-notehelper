@@ -194,7 +194,7 @@ export class SettingsForm {
                     </div>
                     <div class="fn__flex">
                         <select class="b3-select fn__flex-1" id="targetNotebook">
-                            <option value="">加载中...</option>
+                            <option value="" data-placeholder="1">加载中...</option>
                         </select>
                     </div>
                     <div class="b3-label__text">${i18n.targetNotebookDesc || '选择同步内容保存到哪个笔记本'}</div>
@@ -572,7 +572,17 @@ export class SettingsForm {
         if (refreshIndexAfterSyncInput) values.refreshIndexAfterSync = refreshIndexAfterSyncInput.checked;
         if (mergeModeSelect) values.mergeMode = mergeModeSelect.value as any;
         if (messageSortOrderSelect) values.messageSortOrder = messageSortOrderSelect.value as any;
-        if (targetNotebookSelect) values.targetNotebook = targetNotebookSelect.value;
+        // 笔记本列表是异步拉取后才填进来的，在那之前 select 里只有一个
+        // `<option value="" data-placeholder="1">加载中...</option>`。此时【不能】把 ''
+        // 写回设置：用户只要在列表加载完（或加载失败）之前改了任何别的字段，整张表单
+        // 提取就会把已配置的目标笔记本静默清空，后续同步默默落到默认笔记本里。
+        // 列表填好后选项全是真实笔记本 id、没有空值项，所以这个判断不会误伤正常选择。
+        if (targetNotebookSelect) {
+            const selectedOption = targetNotebookSelect.options[targetNotebookSelect.selectedIndex];
+            if (selectedOption && selectedOption.dataset.placeholder !== '1') {
+                values.targetNotebook = targetNotebookSelect.value;
+            }
+        }
         if (folderInput) values.folder = folderInput.value;
         if (filenameInput) values.filename = filenameInput.value;
         if (messageFolderInput) values.messageFolder = messageFolderInput.value;
