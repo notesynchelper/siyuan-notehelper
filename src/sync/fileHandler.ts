@@ -32,6 +32,7 @@ import {
 import { DateTime } from 'luxon';
 import { IdIndex } from './idIndex';
 import { sortArticlesByTime } from './batchSortHelper';
+import { decideMergeAction, isMergedMessagePresent, MergedAnchors } from './mergedMessagePresence';
 
 // 星期映射（用于图片路径变量替换）
 const WEEKDAY_MAP: Record<number, string> = {
@@ -71,12 +72,19 @@ export class FileHandler {
     private plugin: any;  // SiYuan Plugin instance
     private settings: PluginSettings;
     private documentCache: Map<string, string>;  // 缓存文档路径到ID的映射
+    // 合并文档正文缓存（docId -> kramdown），只在一轮同步内有效。
+    // 「这条消息是否还在正文里」的对账要读正文，而一轮同步里同一个合并文档会被反复问到
+    // （默认 12 小时回溯窗口，当天已合并的消息每轮都会重新拉一遍）。不缓存的话每条已合并
+    // 消息都要整篇拉一次 kramdown，几百条消息的日文档能把本地请求量放大到几十 MB。
+    // 写入该文档后必须失效（见 invalidateDocumentContent）。
+    private documentContentCache: Map<string, string>;
     private idIndex: IdIndex | null = null;  // 全局 ID 索引（跨设备去重）
 
     constructor(plugin: any, settings: PluginSettings) {
         this.plugin = plugin;
         this.settings = settings;
         this.documentCache = new Map();
+        this.documentContentCache = new Map();
     }
 
     /**
@@ -91,6 +99,7 @@ export class FileHandler {
      */
     public clearDocumentCache(): void {
         this.documentCache.clear();
+        this.documentContentCache.clear();
         logger.debug('[FileHandler] Document cache cleared');
     }
 
@@ -118,7 +127,8 @@ export class FileHandler {
      */
     async processArticleBatch(
         articles: Article[],
-        notebookId: string
+        notebookId: string,
+        deferMergesTo?: Article[]
     ): Promise<{ created: number; skipped: number; errors: string[] }> {
         let created = 0;
         let skipped = 0;
@@ -135,6 +145,16 @@ export class FileHandler {
             }
         }
 
+        // 合并类文章：调用方给了收集器就先攒着，等整轮同步拉完再统一排序写入。
+        // 必须这样做——服务端按 updated_at DESC 分页（最新的在前），而合并写入永远是往
+        // 文档尾部追加；只在「本页 15 篇」内排序的话，跨页的消息会落成「段内升序、段间
+        // 倒序」的乱序（实测某天 8 条消息跨 3 页 → 18:19,22:21,15:28,10:28,11:04…）。
+        // 只推迟合并类：独立文件没有顺序要求，继续逐页流式写，不占内存也不拖慢反馈。
+        if (deferMergesTo) {
+            deferMergesTo.push(...toMerge);
+            toMerge.length = 0;
+        }
+
         // 1. 不合并的文章逐篇处理
         for (const article of toSeparate) {
             try {
@@ -146,9 +166,32 @@ export class FileHandler {
             }
         }
 
-        // 2. 合并的文章按目标文件路径分组
+        // 2. 合并的文章按目标文件分组、排序后写入
+        const mergeResult = await this.processMergedArticles(toMerge, notebookId);
+        created += mergeResult.created;
+        skipped += mergeResult.skipped;
+        errors.push(...mergeResult.errors);
+
+        return { created, skipped, errors };
+    }
+
+    /**
+     * 把一批合并类文章按目标文件分组、组内按时间排序后写入。
+     *
+     * 拆成独立方法是为了能在【整轮同步把所有分页都拉完之后】只调用一次——这样排序作用域
+     * 是「本轮全部消息」而不是「本页 15 篇」，跨页消息才能真正按时间排好。
+     */
+    async processMergedArticles(
+        articles: Article[],
+        notebookId: string
+    ): Promise<{ created: number; skipped: number; errors: string[] }> {
+        let created = 0;
+        let skipped = 0;
+        const errors: string[] = [];
+        if (articles.length === 0) return { created, skipped, errors };
+
         const mergeGroups = new Map<string, Article[]>();
-        for (const article of toMerge) {
+        for (const article of articles) {
             const mergeDate = isWeChatMessage(article.title)
                 ? extractDateFromWeChatTitle(article.title) || article.savedAt.split('T')[0]
                 : article.savedAt.split('T')[0];
@@ -162,7 +205,6 @@ export class FileHandler {
             mergeGroups.get(key)!.push(article);
         }
 
-        // 3. 每组排序后写入
         for (const [, groupArticles] of mergeGroups) {
             const sorted = sortArticlesByTime(groupArticles, this.settings.messageSortOrder || 'ASC');
             for (const article of sorted) {
@@ -171,7 +213,7 @@ export class FileHandler {
                     if (result.skipped) skipped++; else created++;
                 } catch (error) {
                     errors.push(`Failed to merge article ${article.id}: ${error}`);
-                    logger.error(`[processArticleBatch] Error merging article ${article.id}:`, error);
+                    logger.error(`[processMergedArticles] Error merging article ${article.id}:`, error);
                 }
             }
         }
@@ -310,12 +352,20 @@ export class FileHandler {
         logger.debug('=== mergeArticleToFile START ===');
         logger.debug(`Article title: ${article.title}`);
 
-        // 全局 ID 索引去重（跨设备去重）
+        // 全局 ID 索引去重（跨设备去重）。
+        // ⚠️ 命中不能直接 skip：索引是从 `custom-merged-ids` 建的，而那个列表从不与正文
+        // 对账——用户在合并文档里删掉某条消息后 id 还留在列表里，直接 skip 会让这条消息
+        // 永远回不来（实测重置同步时间全量重拉仍 53 篇全 skip）。这里先确认正文里确实
+        // 还有它，找不到才放行去重新追加。
         if (this.idIndex) {
             const existingBlockId = this.idIndex.findBlockId(article.id);
             if (existingBlockId) {
-                logger.debug(`[mergeArticleToFile] ID 索引命中: ${article.id} -> ${existingBlockId}, skipping`);
-                return { docId: existingBlockId, skipped: true };
+                const stillThere = await this.isMergedMessageStillInDocument(existingBlockId, article.id);
+                if (stillThere) {
+                    logger.debug(`[mergeArticleToFile] ID 索引命中: ${article.id} -> ${existingBlockId}, skipping`);
+                    return { docId: existingBlockId, skipped: true };
+                }
+                logger.info(`[mergeArticleToFile] ID 索引命中但正文里已无该消息（用户删除过），重新追加: ${article.id}`);
             }
         }
 
@@ -375,6 +425,121 @@ export class FileHandler {
     }
 
     /**
+     * 合并消息在正文里的锚点：它自己渲染出来的那个时间戳文本。
+     * 与 renderWeChatMessageSimple/renderArticleContent 用的是同一个 dateSavedFormat，
+     * 所以正文里存在这条消息时必然包含这段文本。
+     */
+    private mergedMessageAnchor(article: Article): string {
+        try {
+            return formatDate(article.savedAt, this.settings.dateSavedFormat);
+        } catch {
+            return '';
+        }
+    }
+
+    /**
+     * 只有当锚点**确实会出现在这篇内容渲染结果里**时才拿它去对账，否则返回空串（= 不对账）。
+     *
+     * 这一步不能省：默认的文章模板（DEFAULT_TEMPLATE = 来源/原文链接/正文）里**没有**
+     * dateSaved，所以 MergeMode.ALL 下普通文章的正文里根本不含时间戳。若不校验就拿它对账，
+     * 每轮同步都会「正文里找不到锚点 → 判定被删 → 重新追加」，把同一篇文章无限追加下去 ——
+     * 那正是本次要修的重复问题本身。用户自定义 mergeMessageTemplate 去掉 dateSaved 时同理。
+     *
+     * 用「渲染结果里有没有这个锚点」自校验，比按消息类型硬编码更稳，也自动覆盖自定义模板。
+     */
+    private mergedMessageAnchorIfReliable(article: Article): string {
+        const anchor = this.mergedMessageAnchor(article);
+        if (!anchor) return '';
+        try {
+            const rendered = isWeChatMessage(article.title)
+                ? renderWeChatMessageSimple(article, this.settings)
+                : renderArticleContent(article, this.settings);
+            return rendered.includes(anchor) ? anchor : '';
+        } catch (error) {
+            logger.warn('[mergedMessageAnchorIfReliable] 渲染校验失败，放弃对账:', error);
+            return '';
+        }
+    }
+
+    /**
+     * 读正文用于对账。**必须把「读取失败」和「正文是空的」区分开**：
+     * 前者返回 null（不对账），后者返回 ''（正常对账 —— 用户可能把整篇文档清空了，
+     * 那种情况恰恰要能恢复）。getDocumentContent 出错时返回空串，所以这里单独探一次。
+     */
+    private async getDocumentContentForReconcile(docId: string): Promise<string | null> {
+        const cached = this.documentContentCache.get(docId);
+        if (cached !== undefined) return cached;
+        try {
+            const response = await fetch('/api/block/getBlockKramdown', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: docId }),
+            });
+            const data = await response.json();
+            if (data.code !== 0) return null;              // 读取失败 -> 不对账
+            const content = this.removeDocumentIAL(data.data?.kramdown || '');
+            this.documentContentCache.set(docId, content);
+            return content;
+        } catch (error) {
+            logger.warn('[getDocumentContentForReconcile] 读取正文失败，放弃对账:', error);
+            return null;
+        }
+    }
+
+    /** 读文档存下来的 id -> 锚点映射（本次修复之前的老文档没有这个属性，返回空对象）。 */
+    private async getMergedAnchors(docId: string): Promise<MergedAnchors> {
+        try {
+            const raw = await this.getBlockAttribute(docId, 'custom-merged-anchors');
+            if (!raw) return {};
+            const parsed = JSON.parse(raw);
+            return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+        } catch (error) {
+            logger.warn('[getMergedAnchors] 解析锚点失败，按无锚点处理:', error);
+            return {};
+        }
+    }
+
+    /**
+     * 记录某条消息写进正文时用的锚点。之后对账就拿这段**当初真的写进去的字**去找，
+     * 与用户后来怎么改 dateSavedFormat 无关。
+     */
+    private async recordMergedAnchor(docId: string, articleId: string, anchor: string): Promise<void> {
+        if (!anchor) return;
+        try {
+            const anchors = await this.getMergedAnchors(docId);
+            if (anchors[articleId] === anchor) return;
+            anchors[articleId] = anchor;
+            await this.setBlockAttrsWithRetry(docId, {
+                'custom-merged-anchors': JSON.stringify(anchors),
+            });
+        } catch (error) {
+            // 锚点存不上只是「以后这条不能对账」，绝不能因此让同步失败
+            logger.warn('[recordMergedAnchor] 记录锚点失败（不影响同步）:', error);
+        }
+    }
+
+    /** 文档被写过之后丢掉它的正文缓存，避免后续对账/拼接读到旧正文。 */
+    private invalidateDocumentContent(docId: string): void {
+        this.documentContentCache.delete(docId);
+    }
+
+    /**
+     * 某条已登记的合并消息是否还在目标文档正文里。读不到正文时返回 true（保守跳过）。
+     */
+    private async isMergedMessageStillInDocument(docId: string, articleId: string): Promise<boolean> {
+        try {
+            const [content, anchors] = await Promise.all([
+                this.getDocumentContentForReconcile(docId),
+                this.getMergedAnchors(docId),
+            ]);
+            return isMergedMessagePresent(content, anchors, articleId);
+        } catch (error) {
+            logger.warn('[isMergedMessageStillInDocument] 对账失败，保守视为仍存在:', error);
+            return true;
+        }
+    }
+
+    /**
      * 合并到已存在的文档（使用块属性去重）
      */
     private async mergeToExistingDocument(
@@ -396,19 +561,26 @@ export class FileHandler {
 
         logger.debug(`[mergeToExistingDocument] Found ${mergedIds.length} existing merged IDs`);
 
-        // 检查文章是否已存在
-        if (mergedIds.includes(article.id)) {
+        // 正文要先拿到——「已登记」不等于「还在」：`custom-merged-ids` 从不与正文对账，
+        // 用户删掉某条消息后 id 仍留在列表里。拿正文跟消息自己的时间戳锚点对一下，
+        // 确认被删了才重新追加；判定偏保守（拿不准一律当还在），宁可不恢复也不造重复。
+        const reconcileContent = await this.getDocumentContentForReconcile(docId);
+        const existingContent = reconcileContent ?? '';
+        const anchors = await this.getMergedAnchors(docId);
+        const action = decideMergeAction(mergedIds, article.id, reconcileContent, anchors);
+
+        if (action === 'skip') {
             logger.debug(`[mergeToExistingDocument] Article ${article.id} already exists in ${docPath}, skipping`);
             return { docId, skipped: true };
+        }
+        if (action === 'reappend') {
+            logger.info(`[mergeToExistingDocument] ${article.id} 在 merged-ids 里但正文已无（用户删除过），重新追加到 ${docPath}`);
         }
 
         // 新文章，追加内容
         logger.debug(`[mergeToExistingDocument] Adding new article ${article.id} to ${docPath}`);
 
         try {
-            // 获取现有文档内容
-            const existingContent = await this.getDocumentContent(docId);
-
             logger.debug(`[mergeToExistingDocument] Existing content length: ${existingContent.length}`);
 
             // 生成新内容（根据消息类型使用不同渲染）
@@ -428,25 +600,33 @@ export class FileHandler {
             const segments = splitContentByTables(newContentPart);
             const hasTableSegments = segments.some(s => s.type === 'html-table');
 
-            if (hasTableSegments) {
-                // 有表格：先追加分隔符，然后逐段追加
-                if (existingContent.trim()) {
-                    await this.appendMarkdownBlock(docId, '---');
+            // 缓存失效放 finally：表格路径要写好几次（分隔符 + 逐段），中途抛错时正文
+            // 已经变了，缓存却还停在写之前——后续对账和拼接就会基于旧正文，可能重复追加。
+            try {
+                if (hasTableSegments) {
+                    // 有表格：先追加分隔符，然后逐段追加
+                    if (existingContent.trim()) {
+                        await this.appendMarkdownBlock(docId, '---');
+                    }
+                    await this.appendTableSegments(docId, segments, 0);
+                } else {
+                    // 无表格：保持原有逻辑，整体更新文档
+                    const separator = existingContent.trim() ? '\n\n---\n\n' : '';
+                    const newFullContent = `${existingContent}${separator}${newContentPart}`;
+
+                    logger.debug(`[mergeToExistingDocument] New content length: ${newFullContent.length}`);
+
+                    // 更新文档
+                    await this.updateDocument(docId, newFullContent);
                 }
-                await this.appendTableSegments(docId, segments, 0);
-            } else {
-                // 无表格：保持原有逻辑，整体更新文档
-                const separator = existingContent.trim() ? '\n\n---\n\n' : '';
-                const newFullContent = `${existingContent}${separator}${newContentPart}`;
-
-                logger.debug(`[mergeToExistingDocument] New content length: ${newFullContent.length}`);
-
-                // 更新文档
-                await this.updateDocument(docId, newFullContent);
+            } finally {
+                this.invalidateDocumentContent(docId);
             }
 
             // 添加消息ID到块属性列表（重要：这必须在更新文档成功后执行）
             await this.addMergedId(docId, article.id);
+            // 记下这条消息写进正文时的锚点，供以后对账（存的是「当初真的写进去的那串字」）
+            await this.recordMergedAnchor(docId, article.id, this.mergedMessageAnchorIfReliable(article));
 
             // 检查并补充 custom-merge-date 属性（兼容手动创建的文档）
             const existingMergeDate = await this.getBlockAttribute(docId, 'custom-merge-date');
@@ -551,6 +731,8 @@ export class FileHandler {
             // 初始化块属性：添加第一个消息ID
             // 这非常重要，必须在文档创建后立即执行
             await this.addMergedId(docId, article.id);
+            // 同时记下锚点，新文档从第一条起就具备对账能力
+            await this.recordMergedAnchor(docId, article.id, this.mergedMessageAnchorIfReliable(article));
 
             // 生成思源格式的时间戳（YYYYMMDDHHmmss）
             const now = new Date();

@@ -22,6 +22,7 @@ import { DockSyncBadge } from './ui/syncBadge';
 import { checkAndUpdate, getRemoteVersion, getLocalVersion, compareVersions, performUpdate } from './updater';
 import { validateTemplate, validateDateFormat, validateNumberRange } from './settings/validation';
 import { shouldRunSyncOnStart } from './sync/syncOnStartGate';
+import { waitForSiyuanSyncSettled, SyncGateOutcome } from './sync/siyuanSyncGate';
 
 const SETTINGS_KEY = 'notehelper-settings';
 const DOCK_TYPE = 'notehelper_sync_dock';
@@ -300,6 +301,12 @@ export default class NoteHelperPlugin extends Plugin {
     // destroyCallback）都要看它——它们可能在 onunload 之后才跑，那时再去重排定时器，
     // 等于让一个已停用的旧实例继续在后台同步（还可能和新实例并行）。
     private unloaded = false;
+    // 「启动时同步」的等待定时器。存到实例上是为了能在 onunload 里清掉——否则插件被停用/
+    // 重载后，旧实例那个定时器仍会到点触发一次同步，和新实例撞在一起。
+    private syncOnStartTimer: ReturnType<typeof setTimeout> | null = null;
+    // 「等思源同步落地」那道闸的取消句柄。卸载时必须调，否则闸会攥着 eventBus 监听器
+    // 和定时器空等到超时（最长 5 分钟），而那时插件实例早就废了。
+    private syncOnStartGateCancel: (() => void) | null = null;
 
     // 初始化 i18n - 在类定义时就设置，避免 SiYuan 访问时为 null
     public i18n = {
@@ -373,9 +380,14 @@ export default class NoteHelperPlugin extends Plugin {
         // 这样若用户开 App 后 10s 内就切后台导致定时器被取消、同步从未发生，下次回前台
         // 不会因为一个「没跑成的同步」而被误判跳过——避免丢掉启动同步。
         if (this.settings.syncOnStart && shouldRunSyncOnStart()) {
-            setTimeout(() => {
-                this.performSync(true);
-            }, 10000); // 延长到10秒，让思源笔记先完成启动
+            // ⚠️ 闸必须【现在就挂监听】，不能等那 10 秒之后再挂：思源的感知同步/定时同步
+            // 完全可能在这 10 秒里就已经开跑，那时 sync-start 早发过了，晚挂的监听收不到，
+            // 闸就会在静默期结束后误判成「没有同步要等」而放行，照样跟同步撞车。
+            const gate = this.startSiyuanSyncGate();
+            this.syncOnStartTimer = setTimeout(() => {
+                this.syncOnStartTimer = null;
+                this.runSyncOnStart(gate);
+            }, 10000); // 10 秒让思源自己先启动完；云同步还要不要再等，由闸判定
         }
 
         // 启动定时同步
@@ -403,6 +415,15 @@ export default class NoteHelperPlugin extends Plugin {
 
         // 停止定时同步
         this.syncManager.stopScheduledSync();
+
+        // 启动同步还在等待中的话一并取消，别让已卸载的旧实例到点再同步一次。
+        if (this.syncOnStartTimer) {
+            clearTimeout(this.syncOnStartTimer);
+            this.syncOnStartTimer = null;
+        }
+        // 闸可能正挂着思源 eventBus 的监听器空等，立刻收摊。
+        this.syncOnStartGateCancel?.();
+        this.syncOnStartGateCancel = null;
 
         // 卸载前把还没落地的表单改动收掉，别让用户最后那次输入随插件一起消失。
         // reschedule:false —— 别让保存回调把刚停掉的定时同步又种回来。
@@ -812,6 +833,42 @@ export default class NoteHelperPlugin extends Plugin {
     /**
      * 执行同步
      */
+    /**
+     * 「启动时同步」的真正入口：先等思源自己的云同步落地，再开始拉。
+     *
+     * 不等的话会撞车——思源同步还没把别的设备同步过的文档下载下来，插件的去重层查本地
+     * 一无所获，就会把同一篇文章再造一份，等思源同步送达就成了两份（实测：不等 2 份，
+     * 等 1 份）。闸自带静默期和超时兜底，思源没开同步或事件拿不到时不会把同步卡住。
+     */
+    private startSiyuanSyncGate(): Promise<SyncGateOutcome> {
+        return waitForSiyuanSyncSettled({
+            isSyncEnabled: () => !!(window as any)?.siyuan?.config?.sync?.enabled,
+            on: (type, cb) => {
+                const handler = () => cb();
+                this.eventBus.on(type, handler);
+                return () => this.eventBus.off(type, handler);
+            },
+            registerCancel: (cancel) => { this.syncOnStartGateCancel = cancel; },
+        });
+    }
+
+    private async runSyncOnStart(gate: Promise<SyncGateOutcome>) {
+        if (this.unloaded) return;
+        try {
+            const outcome = await gate;
+            logger.info(`[syncOnStart] 思源同步闸: ${outcome}`);
+            // 闸是被卸载取消的，说明这个实例已经废了，别再同步
+            if (outcome === 'cancelled') return;
+        } catch (error) {
+            // 闸出任何问题都不能挡住同步本身
+            logger.warn('[syncOnStart] 思源同步闸异常，直接同步:', error);
+        } finally {
+            this.syncOnStartGateCancel = null;
+        }
+        if (this.unloaded) return;
+        this.performSync(true);
+    }
+
     private async performSync(isAutoSync: boolean = false) {
         if (this.syncManager.isCurrentlySyncing()) {
             showMessage(this.i18n.zh_CN.errors?.syncInProgress || 'Sync in progress', 3000, 'info');

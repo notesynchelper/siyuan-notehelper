@@ -23,24 +23,38 @@ which was rolled back, is never called).
 
 ## Prerequisites
 
-A SiYuan v3.6.5 Linux release extracted under `/home/work/siyuan-runtime` so that
-`/home/work/siyuan-runtime/siyuan-3.6.5-linux/resources/kernel/SiYuan-Kernel`
-exists. To (re)provision:
+One or more SiYuan Linux releases extracted under `/home/work/siyuan-runtime`, so
+that `siyuan-<version>-linux/resources/kernel/SiYuan-Kernel` exists. Provision with:
 
 ```bash
-mkdir -p /home/work/siyuan-runtime && cd /home/work/siyuan-runtime
-curl -L -o siyuan.tar.gz \
-  https://github.com/siyuan-note/siyuan/releases/download/v3.6.5/siyuan-3.6.5-linux.tar.gz
-tar xzf siyuan.tar.gz   # -> siyuan-3.6.5-linux/
+tests/real-siyuan/provision-runtime.sh 3.8.0     # download + extract (idempotent)
 ```
 
-Override the location with `SIYUAN_RUNTIME=/path/to/runtime`.
+Currently provisioned: **3.6.5** (default) and **3.8.0**. Override the location with
+`SIYUAN_RUNTIME=/path/to/runtime`.
+
+### Testing against a specific SiYuan version
+
+Every runner honours `SIYUAN_VERSION` (default `3.6.5`), so a bug report can be
+replayed on the version the user is actually running:
+
+```bash
+SIYUAN_VERSION=3.8.0 node tests/real-siyuan/run-sync-smoke.js
+```
+
+⚠️ **3.8.0 changed the kernel CLI.** Serving moved from bare flags
+(`SiYuan-Kernel --wd … --port …`, which 3.6.5 wants) to a cobra subcommand
+(`SiYuan-Kernel serve --wd … --port …`). Given the old form, 3.8.0 prints usage and
+exits, so the harness just hangs until the boot timeout. `lib/kernel.js` probes
+`--help` once per process and picks the right argv, so newly provisioned releases
+work without editing a version table.
 
 ## Run
 
 ```bash
 node tests/real-siyuan/run-sync-smoke.js
 # or: npm run test:e2e:siyuan
+# or against 3.8.0: SIYUAN_VERSION=3.8.0 node tests/real-siyuan/run-sync-smoke.js
 ```
 
 Expected tail:
@@ -59,7 +73,8 @@ Expected tail:
 | `N` | `2` | number of articles to seed |
 | `RUN_ID` | random hex | unique per-run prefix (`QA-SiYuan-<RUN_ID>`) |
 | `KEEP` | — | `KEEP=1` leaves the kernel + workspace up for inspection |
-| `SIYUAN_RUNTIME` | `/home/work/siyuan-runtime` | where the extracted release lives |
+| `SIYUAN_RUNTIME` | `/home/work/siyuan-runtime` | where the extracted releases live |
+| `SIYUAN_VERSION` | `3.6.5` | which extracted release to drive (`3.6.5`, `3.8.0`, …) |
 | `SIYUAN_STUB_VERBOSE` | — | `1` echoes plugin `showMessage` + DEBUG logs |
 
 ## UI E2E（dock 徽标 / 官方设置入口）
@@ -88,6 +103,7 @@ npm run build && npm run test:e2e:ui      # 断言 + 截图，全自动
 ## Layout
 
 ```
+provision-runtime.sh     download + extract a SiYuan release into SIYUAN_RUNTIME
 run-sync-smoke.js        orchestrator: seed → boot → sync → assert → cleanup
 run-ui-shot.js           boot a kernel with the real plugin installed (bootWithPlugin)
 run-ui-shot-verify.js    UI E2E: real Chrome → assert dock badge + settings entry → screenshots

@@ -116,6 +116,11 @@ export class SyncManager {
             const errors: string[] = [];
             let skippedCount = 0;
             let createdCount = 0;
+            // 合并类文章（微信/企微消息）先攒着，等所有分页拉完再统一排序写入。
+            // 服务端按 updated_at DESC 分页，而合并是往文档尾部追加，只在页内排序会让跨页
+            // 的同一天消息落成「段内升序、段间倒序」的乱序。攒的只有消息（体量小），
+            // 普通文章仍逐页流式写入。
+            const pendingMerges: Article[] = [];
 
             while (hasMore) {
                 logger.debug(`Fetching batch ${offset / batchSize + 1}...`);
@@ -130,8 +135,12 @@ export class SyncManager {
                     includeContent
                 );
 
-                // 批量处理本页文章（合并类排序后写入）
-                const batchResult = await this.fileHandler.processArticleBatch(articles, notebookId);
+                // 批量处理本页文章（合并类推迟到整轮拉完后统一排序写入）
+                const batchResult = await this.fileHandler.processArticleBatch(
+                    articles,
+                    notebookId,
+                    pendingMerges
+                );
                 createdCount += batchResult.created;
                 skippedCount += batchResult.skipped;
                 errors.push(...batchResult.errors);
@@ -144,6 +153,15 @@ export class SyncManager {
                     logger.warn('Reached maximum offset, stopping');
                     break;
                 }
+            }
+
+            // 所有分页拉完了，现在才写合并消息——排序作用域是「本轮全部消息」。
+            if (pendingMerges.length > 0) {
+                logger.debug(`[Sync] 统一写入 ${pendingMerges.length} 条合并消息（跨分页排序）`);
+                const mergeResult = await this.fileHandler.processMergedArticles(pendingMerges, notebookId);
+                createdCount += mergeResult.created;
+                skippedCount += mergeResult.skipped;
+                errors.push(...mergeResult.errors);
             }
 
             logger.debug(`Total processed. Created: ${createdCount}, Skipped: ${skippedCount}`);
