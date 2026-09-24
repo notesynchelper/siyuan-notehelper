@@ -34,8 +34,12 @@ export function markAutoSyncStarted(now: number = Date.now()): void {
  */
 export function shouldRunSyncOnStart(
     now: number = Date.now(),
-    cooldownMs: number = DEFAULT_COOLDOWN_MS
+    cooldownMs: number = DEFAULT_COOLDOWN_MS,
+    kernelLastSyncAt?: string | null
 ): boolean {
+    // 两个来源任一在冷却期内，等价于先取 max(local, kernel) 再判定。
+    const kernelLast = kernelLastSyncAt ? Date.parse(kernelLastSyncAt) : NaN;
+    if (Number.isFinite(kernelLast) && now - kernelLast < cooldownMs) return false;
     try {
         const raw = window.localStorage.getItem(LAST_AUTOSYNC_KEY);
         if (raw) {

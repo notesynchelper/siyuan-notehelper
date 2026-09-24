@@ -4,7 +4,6 @@ const webpack = require("webpack");
 const {EsbuildPlugin} = require("esbuild-loader");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
-const ZipPlugin = require("zip-webpack-plugin");
 
 module.exports = (env, argv) => {
     const isPro = argv.mode === "production";
@@ -33,14 +32,8 @@ module.exports = (env, argv) => {
                 {from: "plugin.json", to: "./dist/"},
             ],
         }));
-        plugins.push(new ZipPlugin({
-            filename: "package.zip",
-            algorithm: "gzip",
-            include: [/dist/],
-            pathMapper: (assetPath) => {
-                return assetPath.replace("dist/", "");
-            },
-        }));
+        // package.zip 由 scripts/package-zip.sh 在双入口构建完成后统一打包（曾因两个 webpack 配置
+        // 各自 ZipPlugin 互相覆盖，产出只含 kernel.js 的残缺包）
     } else {
         // 开发环境不需要额外的CopyPlugin
     }

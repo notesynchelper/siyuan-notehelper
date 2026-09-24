@@ -1,4 +1,8 @@
-import { showMessage } from 'siyuan';
+/**
+ * 通知函数注入（浏览器=siyuan showMessage；kernel=日志/广播，见 src/kernel/runtime.ts）。
+ * 不再静态 import 'siyuan'：kernel bundle 不能携带前端 SDK（见 scripts/check-kernel-bundle.js）。
+ */
+export type NoticeFn = (message: string, timeout?: number, type?: 'info' | 'error', id?: string) => void;
 
 const PROGRESS_ID = 'notehelper-sync-progress';
 
@@ -11,9 +15,16 @@ export class SyncNoticeManager {
     // 仅保留两类用户真正关心的提示：① 真有新笔记入库（completeSync count>0）；
     // ② 抛错（showError，网络/鉴权失败）。手动同步（silent=false）保留完整反馈。
     private readonly silent: boolean;
+    private readonly notify: NoticeFn | null;
 
-    constructor(silent: boolean = false) {
+    constructor(silent: boolean = false, notify: NoticeFn | null = null) {
         this.silent = silent;
+        this.notify = notify;
+    }
+
+    private showMessage(message: string, timeout: number, type: 'info' | 'error'): void {
+        if (!this.notify) return; // kernel 静默模式（无 UI）
+        this.notify(message, timeout, type, PROGRESS_ID);
     }
 
     startSync(): void {
@@ -47,14 +58,14 @@ export class SyncNoticeManager {
         if (this.silent && successCount <= 0) return;
         this.filledBlocks = this.totalBlocks;
         const filled = '■ '.repeat(this.filledBlocks).trim();
-        showMessage(`${filled}  同步完成！${successCount} 篇文章`, 5000, 'info', PROGRESS_ID);
+        this.showMessage(`${filled}  同步完成！${successCount} 篇文章`, 5000, 'info');
     }
 
     showNoArticles(): void {
         if (this.silent) return;
         // 复用 PROGRESS_ID + 有限超时，替换掉 startSync 留下的常驻（timeout=0）进度条，
         // 避免「拉取数据…」一直挂在角落不消失（手动同步路径上的旧 bug）。
-        showMessage('没有新文章需要同步', 3000, 'info', PROGRESS_ID);
+        this.showMessage('没有新文章需要同步', 3000, 'info');
     }
 
     /**
@@ -64,17 +75,17 @@ export class SyncNoticeManager {
      */
     showPartialFailure(successCount: number, errorCount: number): void {
         const prefix = successCount > 0 ? `已同步 ${successCount} 篇，` : '';
-        showMessage(`${prefix}${errorCount} 篇同步失败，将自动重试`, 5000, 'error', PROGRESS_ID);
+        this.showMessage(`${prefix}${errorCount} 篇同步失败，将自动重试`, 5000, 'error');
     }
 
     showError(error: unknown): void {
         const err = error as any;
         if (err?.status === 401) {
-            showMessage('API 密钥无效，请前往「笔记同步助手」公众号重新获取', 10000, 'error');
+            this.showMessage('API 密钥无效，请前往「笔记同步助手」公众号重新获取', 10000, 'error');
         } else if (error instanceof TypeError || !err?.status) {
-            showMessage('网络连接失败，请检查网络后重试', 5000, 'error');
+            this.showMessage('网络连接失败，请检查网络后重试', 5000, 'error');
         } else {
-            showMessage('同步失败，请稍后重试', 5000, 'error');
+            this.showMessage('同步失败，请稍后重试', 5000, 'error');
         }
     }
 
@@ -82,6 +93,6 @@ export class SyncNoticeManager {
         const filled = '■ '.repeat(this.filledBlocks).trim();
         const empty = '□ '.repeat(this.totalBlocks - this.filledBlocks).trim();
         const bar = [filled, empty].filter(Boolean).join(' ');
-        showMessage(`${bar}  ${label}`, 0, 'info', PROGRESS_ID);
+        this.showMessage(`${bar}  ${label}`, 0, 'info');
     }
 }

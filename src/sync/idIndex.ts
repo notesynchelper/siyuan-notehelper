@@ -7,6 +7,7 @@
  */
 
 import { logger } from '../utils/logger';
+import { getRuntime } from './runtimeAdapter';
 
 export class IdIndex {
     private index: Map<string, string> = new Map();
@@ -34,7 +35,7 @@ export class IdIndex {
     private async loadSourceIds(): Promise<void> {
         const sql = `SELECT block_id, value FROM attributes WHERE name='custom-source-id'`;
         try {
-            const response = await fetch('/api/query/sql', {
+            const response = await getRuntime().kernel('/api/query/sql', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ stmt: sql }),
@@ -59,7 +60,7 @@ export class IdIndex {
     private async loadMergedIds(): Promise<void> {
         const sql = `SELECT block_id, value FROM attributes WHERE name='custom-merged-ids'`;
         try {
-            const response = await fetch('/api/query/sql', {
+            const response = await getRuntime().kernel('/api/query/sql', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ stmt: sql }),

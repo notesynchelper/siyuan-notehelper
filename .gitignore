@@ -11,3 +11,4 @@ index.js
 # real-siyuan e2e harness artifacts
 tests/real-siyuan/.runs/
 tests/real-siyuan/.compiled/
+tests/

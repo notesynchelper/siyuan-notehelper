@@ -21,7 +21,14 @@ import { SettingsForm } from './ui/SettingsForm';
 import { DockSyncBadge } from './ui/syncBadge';
 import { checkAndUpdate, getRemoteVersion, getLocalVersion, compareVersions, performUpdate } from './updater';
 import { validateTemplate, validateDateFormat, validateNumberRange } from './settings/validation';
-import { shouldRunSyncOnStart } from './sync/syncOnStartGate';
+import { shouldRunSyncOnStart, markAutoSyncStarted } from './sync/syncOnStartGate';
+import { setRuntimeAdapter, getRuntime } from './sync/runtimeAdapter';
+import { createBrowserRuntime } from './sync/browserRuntime';
+import { createRuntimeStateAccess, SyncStateAccess } from './sync/syncState';
+import {
+    ScheduleMode, evaluateScheduleMode, rpcCall, fetchOwnPetal, PingResult,
+} from './sync/scheduleCoordinator';
+import { computeEffectiveFrequency, isBackgroundCapable } from './sync/background';
 import { waitForSiyuanSyncSettled, SyncGateOutcome } from './sync/siyuanSyncGate';
 
 const SETTINGS_KEY = 'notehelper-settings';
@@ -31,8 +38,9 @@ const DOCK_TYPE = 'notehelper_sync_dock';
 // 以及「拆表单时强制落地」那条路径（那时 blur 根本没机会触发，见 validateField）。
 const TEMPLATE_FIELDS = new Set(['folder', 'filename', 'messageFolder', 'mergeFolder', 'singleFileName', 'mergeFolderTemplate', 'template', 'wechatMessageTemplate', 'mergeMessageTemplate']);
 const DATE_FORMAT_FIELDS = new Set(['folderDateFormat', 'filenameDateFormat', 'messageFolderDateFormat', 'singleFileDateFormat', 'mergeFolderDateFormat', 'dateSavedFormat']);
-const NUMBER_FIELDS: Record<string, { name: string; min: number; max: number; allowZero?: boolean }> = {
-    frequency: { name: '同步频率（分钟）', min: 15, max: 1440, allowZero: true },
+const NUMBER_FIELDS: Record<string, { name: string; min: number | (() => number); max: number; allowZero?: boolean }> = {
+    // docker 且 >=3.7.0 允许 10 分钟起步（后台最低间隔）；其余端保持 15 分钟起步
+    frequency: { name: '同步频率（分钟）', min: () => (isBackgroundCapable((globalThis as any)?.siyuan?.config?.system) ? 10 : 15), max: 1440, allowZero: true },
     jpegQuality: { name: 'JPEG 质量', min: 1, max: 100 },
     imageDownloadRetries: { name: '重试次数', min: 0, max: 10 },
 };
@@ -65,7 +73,8 @@ function validateField(el: HTMLInputElement): boolean {
         valid = validateDateFormat(el.value, label);
     } else if (NUMBER_FIELDS[fieldId]) {
         const cfg = NUMBER_FIELDS[fieldId];
-        valid = validateNumberRange(el.value, cfg.name, cfg.min, cfg.max, cfg.allowZero);
+        const min = typeof cfg.min === 'function' ? cfg.min() : cfg.min;
+        valid = validateNumberRange(el.value, cfg.name, min, cfg.max, cfg.allowZero);
     }
     if (!valid) {
         el.value = el.dataset.prevValue || '';
@@ -304,6 +313,20 @@ export default class NoteHelperPlugin extends Plugin {
     // 「启动时同步」的等待定时器。存到实例上是为了能在 onunload 里清掉——否则插件被停用/
     // 重载后，旧实例那个定时器仍会到点触发一次同步，和新实例撞在一起。
     private syncOnStartTimer: ReturnType<typeof setTimeout> | null = null;
+    // 前端本地定时同步的 interval 句柄（kernel 模式下不启动，见 scheduleCoordinator）
+    private localSyncIntervalId: ReturnType<typeof setInterval> | null = null;
+    // 调度模式（四态，见 src/sync/scheduleCoordinator.ts）。null=尚未评估。
+    private scheduleMode: ScheduleMode | null = null;
+    private scheduleEvaluation = 0;
+    private effectiveFrequencyMinutes: number | null = null;
+    private kernelLastSyncAt: string | null = null;
+    private settingsApplyPending = false;
+    // 同步状态访问器（游标等在 notehelper-sync-state 文件，本地模式前端是写者）
+    private syncStateAccess: SyncStateAccess | null = null;
+    // kernel 模式下 dock 状态轮询句柄（打开浏览器期间刷 lastSyncAt 展示）
+    private kernelStatusTimer: ReturnType<typeof setInterval> | null = null;
+    // kernel-plugin-state-change 事件句柄（onunload 解绑用）
+    private scheduleStateHandler: (() => void) | null = null;
     // 「等思源同步落地」那道闸的取消句柄。卸载时必须调，否则闸会攥着 eventBus 监听器
     // 和定时器空等到超时（最长 5 分钟），而那时插件实例早就废了。
     private syncOnStartGateCancel: (() => void) | null = null;
@@ -317,6 +340,10 @@ export default class NoteHelperPlugin extends Plugin {
         // 先设置默认日志级别（生产环境使用INFO）
         logger.setLevel(LogLevel.INFO);
         logger.debug('Loading Note Sync Helper plugin...');
+
+        // ⚠️ 运行时适配器必须最先注入：同步核心（api/fileHandler/syncManager）
+        // 的一切网络与存储都经它（方案 §6），晚于此的任何同步代码都会拿不到 runtime。
+        setRuntimeAdapter(createBrowserRuntime(this));
 
         // ⚠️ 顺序要求：下面这一段（addIcons → 构造管理器 → addSyncDock）必须全部
         // 跑在 onload 的【第一个 await 之前】，即同步阶段完成。
@@ -337,7 +364,13 @@ export default class NoteHelperPlugin extends Plugin {
 
         // 同步构造管理器：this.settings 已 seed 默认值，管理器持有其稳定引用，
         // dock init 里的 loadNotebookOptions() 会用到 this.syncManager，必须先就位。
-        this.syncManager = new SyncManager(this, this.settings);
+        // deps：浏览器通知=siyuan showMessage；自动同步回调=刷新 syncOnStart 冷却戳
+        //（kernel 侧不带这两个，冷却戳留在前端 localStorage，桌面/手机行为不变）。
+        this.syncManager = new SyncManager(this, this.settings, {
+            notify: (message, timeout, type, id) => showMessage(message, timeout, type, id),
+            onAutoSyncStart: () => markAutoSyncStarted(),
+            canWriteState: () => this.ownsLocalState(),
+        });
         this.imageLocalizer = new ImageLocalizer(this, this.settings);
 
         // 注册左侧栏「同」字 dock —— 插件唯一入口图标，且是仅有的一个。
@@ -349,11 +382,12 @@ export default class NoteHelperPlugin extends Plugin {
 
         // 加载设置（原地更新已 seed 的 this.settings）
         await this.loadSettings();
-        // `syncing` 是运行期瞬时标志，不该从磁盘恢复。而它确实会被存进去：
-        // syncManager.sync() 在 finally 复位【之前】就调了 saveSettings()，所以每次
-        // 同步成功落盘的都是 syncing:true。不在这里清掉，重启后状态文字会一直卡在
-        // 「同步中...」、dock 徽标也会一直脉冲。
+
         this.settings.syncing = false;
+        this.settings.intervalId = null;
+        // 必须先判定所有权；kernel 模式下前端既不迁移，也不建立可写访问器。
+        await this.refreshScheduleMode('onload');
+        if (this.unloaded) return;
         this.settingsLoaded = true;
 
         // 冷启动竞态兜底：若 dock init 已先于 loadSettings 跑完（此时只渲染了「加载设置中」），
@@ -379,7 +413,7 @@ export default class NoteHelperPlugin extends Plugin {
         // 冷却时间戳由 syncManager.sync 在同步【真正开跑】时写入（不是在这里调度时写），
         // 这样若用户开 App 后 10s 内就切后台导致定时器被取消、同步从未发生，下次回前台
         // 不会因为一个「没跑成的同步」而被误判跳过——避免丢掉启动同步。
-        if (this.settings.syncOnStart && shouldRunSyncOnStart()) {
+        if (this.settings.syncOnStart && shouldRunSyncOnStart(Date.now(), undefined, this.kernelLastSyncAt)) {
             // ⚠️ 闸必须【现在就挂监听】，不能等那 10 秒之后再挂：思源的感知同步/定时同步
             // 完全可能在这 10 秒里就已经开跑，那时 sync-start 早发过了，晚挂的监听收不到，
             // 闸就会在静默期结束后误判成「没有同步要等」而放行，照样跟同步撞车。
@@ -390,9 +424,13 @@ export default class NoteHelperPlugin extends Plugin {
             }, 10000); // 10 秒让思源自己先启动完；云同步还要不要再等，由闸判定
         }
 
-        // 启动定时同步
-        if (this.settings.frequency > 0) {
-            this.syncManager.startScheduledSync();
+        // 内核插件启停/重载 → 重新评估调度所有权（如用户在集市里启用了本插件）
+        if (!this.scheduleStateHandler) {
+            this.scheduleStateHandler = () => {
+                this.refreshScheduleMode('kernel-state-change').catch(() => {});
+            };
+            // 事件存在于 >=3.7.0 前端；siyuan@1.1.3 类型声明滞后，用断言（旧版不触发、无副作用）
+            (this.eventBus as any).on('kernel-plugin-state-change', this.scheduleStateHandler);
         }
 
         logger.debug('Note Sync Helper plugin loaded successfully');
@@ -412,9 +450,14 @@ export default class NoteHelperPlugin extends Plugin {
         // 必须最先置位：下面 destroy 弹窗触发的 destroyCallback 是延迟执行的，
         // 而此前可能还有一次保存正在途中；它们的回调都要能看到「已卸载」。
         this.unloaded = true;
+        ++this.scheduleEvaluation;
 
-        // 停止定时同步
-        this.syncManager.stopScheduledSync();
+        // 停止定时同步与内核状态轮询
+        this.stopLocalScheduledSync();
+        this.stopKernelStatusPolling();
+        if (this.scheduleStateHandler) {
+            (this.eventBus as any).off('kernel-plugin-state-change', this.scheduleStateHandler);
+        }
 
         // 启动同步还在等待中的话一并取消，别让已卸载的旧实例到点再同步一次。
         if (this.syncOnStartTimer) {
@@ -461,13 +504,188 @@ export default class NoteHelperPlugin extends Plugin {
     }
 
     /**
-     * 同步活动通知。定时同步不经过 performSync，由 SyncManager 的定时器直接调这里，
+     * 同步设置区的 i18n 增补：后台能力提示（仅 docker 显示，桌面/手机不出现）与
+     * 频率下限说明。文案三态见方案 §2 表格。
+     */
+    private buildSyncSettingsI18n(): Record<string, unknown> {
+        const base: Record<string, unknown> = { ...this.i18n.zh_CN };
+        const system = (window as any)?.siyuan?.config?.system;
+        if (!isBackgroundCapable(system)) {
+            // 细分：docker 但版本低于 3.7.0 → 升级提示（需求点 1）；桌面/手机保持零提示
+            if (system?.container === 'docker') {
+                base.bgSyncHint = 'Docker 分支持后台自动同步，请升级思源至 3.7.0 及以上版本后使用';
+            }
+            return base;
+        }
+        // docker：频率允许 0 或 10-1440（非 docker 保持 0 或 15-1440）
+        base.frequencyMin = 10;
+        if (this.settings.frequency > 0) {
+            base.frequencyMinNote = '后台自动同步最低间隔 10 分钟；设置低于 10 分钟时按 10 分钟执行';
+        }
+        if (this.settingsApplyPending) {
+            base.bgSyncHint = '设置已保存，下轮内核生效';
+        } else if (this.scheduleMode === 'kernel-active' && this.settings.frequency > 0 && this.effectiveFrequencyMinutes > 0) {
+            base.bgSyncHint = `✅ 后台自动同步运行中：无需打开浏览器，每 ${this.effectiveFrequencyMinutes} 分钟自动同步`;
+        } else {
+            base.bgSyncHint = '当前版本支持后台自动同步：开启定时后，即使不打开浏览器也会自动运行';
+        }
+        return base;
+    }
+
+    /**
+     * 调度模式评估与执行（onload / 设置保存 / kernel 状态变化 / 不可达重试）。
+     * - unsupported / local：本地定时器按 frequency 启停（行为与改造前一致）
+     * - kernel-active：停本地定时器；通知 kernel 重读设置（applySettings）；
+     *   起一个轻量轮询把内核的 lastSyncAt 镜像到 UI
+     * - kernel-owned-unreachable：本地定时器保持停止（防双写），等重探测
+     */
+    private ownsLocalState(): boolean {
+        return !this.unloaded && (this.scheduleMode === 'local' || this.scheduleMode === 'unsupported');
+    }
+
+    private refreshScheduleHint(): void {
+        const labels = this.buildSyncSettingsI18n();
+        for (const id of ['bgSyncHint', 'frequencyMinNote']) {
+            const el = this.activeSettingsContainer?.querySelector<HTMLElement>(`#${id}`);
+            if (el) {
+                el.textContent = String(labels[id] || '');
+                el.hidden = !labels[id];
+            }
+        }
+    }
+
+    private async refreshScheduleMode(reason: string): Promise<void> {
+        if (this.unloaded) return;
+        const evaluation = ++this.scheduleEvaluation;
+        const current = () => !this.unloaded && evaluation === this.scheduleEvaluation;
+        const prev = this.scheduleMode;
+        // 查询期间撤销本地写权限；失败也不能把「未知」解释为「没有 kernel」。
+        const system = (window as any)?.siyuan?.config?.system;
+        this.scheduleMode = isBackgroundCapable(system) ? null : 'unsupported';
+        this.stopLocalScheduledSync();
+        this.stopKernelStatusPolling();
+        let mode: ScheduleMode;
+        try {
+            const petal = isBackgroundCapable(system) ? await fetchOwnPetal('siyuan-notehelper') : null;
+            mode = await evaluateScheduleMode({
+                system, petal,
+                ping: () => rpcCall<PingResult>('notehelperPing', [], 2000),
+            }, prev);
+        } catch (e) {
+            logger.warn('[schedule] ownership query failed:', e);
+            mode = 'kernel-owned-unreachable';
+        }
+        if (!current()) return;
+        this.scheduleMode = mode;
+        logger.info(`[schedule] mode=${mode} (prev=${prev}, reason=${reason})`);
+        this.effectiveFrequencyMinutes = null;
+        if (this.ownsLocalState()) {
+            this.settingsApplyPending = false;
+            this.kernelLastSyncAt = null;
+            if (!this.syncStateAccess || (prev !== 'local' && prev !== 'unsupported')) {
+                let initializing = true;
+                const access = await createRuntimeStateAccess(
+                    this.settings,
+                    (key) => getRuntime().readFile(key),
+                    (key, content) => {
+                        if ((initializing && !current()) || !this.ownsLocalState()) throw new Error('Local state ownership lost');
+                        return getRuntime().writeFile(key, content);
+                    },
+                );
+                if (!current()) return;
+                initializing = false;
+                // 后续 commit 只看实时所有权，不绑定本次评估序号。
+                this.syncStateAccess = access;
+                this.syncManager.setStateAccess(access);
+            }
+            this.onSyncActivity();
+            this.startLocalScheduledSync();
+        } else {
+            this.syncStateAccess = null;
+            this.syncManager.setStateAccess(null);
+            if (mode === 'kernel-active') {
+                if (reason === 'settings-saved' || prev !== 'kernel-active') {
+                    this.settingsApplyPending = true;
+                    for (let attempt = 0; attempt < 2; attempt++) {
+                        try {
+                            const applied = await rpcCall<{ running: boolean; effectiveFrequencyMinutes: number | null }>('notehelperApplySettings');
+                            if (!current()) return;
+                            const expected = computeEffectiveFrequency(this.settings.frequency);
+                            if (applied?.running !== (expected !== null) || applied?.effectiveFrequencyMinutes !== expected) {
+                                throw new Error('Kernel schedule acknowledgement mismatch');
+                            }
+                            this.settingsApplyPending = false;
+                            this.effectiveFrequencyMinutes = applied.effectiveFrequencyMinutes;
+                            break;
+                        } catch (e) {
+                            if (!current()) return;
+                            logger.warn('[schedule] applySettings failed:', e);
+                        }
+                    }
+                }
+                try { await this.mirrorKernelStatus(evaluation); } catch (e) {
+                    logger.warn('[schedule] getStatus failed:', e);
+                }
+                if (!current()) return;
+                this.startKernelStatusPolling();
+            } else if (reason === 'settings-saved') {
+                this.settingsApplyPending = true;
+            }
+        }
+        if (current()) this.refreshScheduleHint();
+    }
+
+    private async mirrorKernelStatus(evaluation = this.scheduleEvaluation): Promise<void> {
+        const st = await rpcCall<{
+            syncAt: string; initialSyncCompleted: boolean; lastSyncAt: string | null;
+            running: boolean; effectiveFrequencyMinutes: number | null; syncing: boolean; lastError?: string | null;
+        }>('notehelperGetStatus');
+        if (this.unloaded || evaluation !== this.scheduleEvaluation || this.scheduleMode !== 'kernel-active') return;
+        if (typeof st?.syncAt !== 'string' || typeof st?.initialSyncCompleted !== 'boolean') {
+            throw new Error('Kernel status missing authoritative cursor');
+        }
+        // lastSyncAt 是执行时间，syncAt 才是可推进/回退/重置的权威游标。
+        this.settings.syncAt = st.syncAt;
+        this.settings.initialSyncCompleted = st.initialSyncCompleted;
+        this.settings.syncing = st.syncing;
+        this.kernelLastSyncAt = st.lastSyncAt;
+        this.effectiveFrequencyMinutes = st.running ? st.effectiveFrequencyMinutes : null;
+        const expected = computeEffectiveFrequency(this.settings.frequency);
+        if (st.running === (expected !== null) && st.effectiveFrequencyMinutes === expected) this.settingsApplyPending = false;
+        this.lastSyncFailed = !!st.lastError;
+        this.updateDockStatus();
+        this.refreshScheduleHint();
+    }
+
+    private startKernelStatusPolling(): void {
+        this.stopKernelStatusPolling();
+        this.kernelStatusTimer = setInterval(() => {
+            if (this.unloaded || this.scheduleMode !== 'kernel-active') return;
+            this.mirrorKernelStatus().catch(() => {});
+        }, 60 * 1000);
+    }
+
+    private stopKernelStatusPolling(): void {
+        if (this.kernelStatusTimer) {
+            clearInterval(this.kernelStatusTimer);
+            this.kernelStatusTimer = null;
+        }
+    }
+
+    /**
+     * 同步活动通知。本地定时同步经 performSync 的静默分支调用这里，
      * 让 dock 徽标/状态文字也能反映定时同步（开始、结束、成功与否）。
      * @param result 传了就用它更新「上次是否失败」；不传表示「同步刚开始」，只刷 UI。
      */
     onSyncActivity(result?: { success: boolean }) {
         if (result) {
             this.lastSyncFailed = !result.success;
+        }
+        // 游标真身已在 state 文件，这里把最新值镜像给 UI 读取的 settings.syncAt
+        if (this.syncStateAccess) {
+            const st = this.syncStateAccess.get();
+            this.settings.syncAt = st.syncAt;
+            this.settings.initialSyncCompleted = st.initialSyncCompleted;
         }
         this.updateDockStatus();
     }
@@ -616,7 +834,7 @@ export default class NoteHelperPlugin extends Plugin {
         this.activeSettingsContainer = settingsArea;
         settingsArea.insertAdjacentHTML(
             'beforeend',
-            SettingsForm.renderSettingsForm(this.settings, this.i18n.zh_CN, () => this.formatSyncTimeForInput())
+            SettingsForm.renderSettingsForm(this.settings, this.buildSyncSettingsI18n(), () => this.formatSyncTimeForInput())
         );
 
         // 从磁盘读取实际版本号（而非内存 manifest，更新后无需重启即可显示新版本）
@@ -755,12 +973,12 @@ export default class NoteHelperPlugin extends Plugin {
                 // 等于把刚停掉的定时器重新种回来，一个已停用的旧实例继续在后台同步。
                 // 所以除了显式的 reschedule=false，还要挡住「保存途中插件被卸载」这条路。
                 if (!reschedule || this.unloaded) return;
-                this.syncManager.stopScheduledSync();
-                if (this.settings.frequency > 0) {
-                    this.syncManager.startScheduledSync();
-                }
+                this.refreshScheduleHint();
             })
-            .catch((error) => logger.error('Failed to save settings:', error));
+            .catch((error) => {
+                logger.error('Failed to save settings:', error);
+                showMessage(String(error), 5000, 'error');
+            });
     }
 
     /**
@@ -869,7 +1087,35 @@ export default class NoteHelperPlugin extends Plugin {
         this.performSync(true);
     }
 
-    private async performSync(isAutoSync: boolean = false) {
+    private async performSync(isAutoSync: boolean = false, reason: 'manual' | 'onstart' | 'scheduled' = isAutoSync ? 'onstart' : 'manual') {
+        if (this.unloaded) return;
+        if (this.scheduleMode === null || this.scheduleMode === 'local' || this.scheduleMode === 'kernel-owned-unreachable') {
+            await this.refreshScheduleMode('before-sync');
+        }
+        if (this.unloaded) return;
+        if (this.scheduleMode === 'kernel-active') {
+            try {
+                const result = await rpcCall<{ success: boolean; busy?: boolean }>('notehelperTriggerSync', [{ reason }], 30 * 60 * 1000);
+                if (isAutoSync && !result.busy) markAutoSyncStarted();
+                this.lastSyncFailed = !result.success;
+                await this.mirrorKernelStatus();
+            } catch (error) {
+                logger.error('Kernel sync failed:', error);
+                if (!isAutoSync) showMessage('内核同步不可达，请稍后重试', 5000, 'error');
+                await this.refreshScheduleMode('rpc-failed');
+            }
+            return;
+        }
+        if (!this.ownsLocalState()) {
+            if (!isAutoSync) showMessage('内核同步不可达，请稍后重试', 5000, 'error');
+            return;
+        }
+        if (reason === 'scheduled') {
+            const promise = this.syncManager.sync(true);
+            this.onSyncActivity();
+            try { this.onSyncActivity(await promise); } catch { this.onSyncActivity({ success: false }); }
+            return;
+        }
         if (this.syncManager.isCurrentlySyncing()) {
             showMessage(this.i18n.zh_CN.errors?.syncInProgress || 'Sync in progress', 3000, 'info');
             return;
@@ -884,6 +1130,9 @@ export default class NoteHelperPlugin extends Plugin {
             // 就只能看到旧状态。finally 里统一复位。）
             this.settings.syncing = true;
             this.updateDockStatus();
+            // 插件更新检查（不阻塞同步流程）——原在 SyncManager.sync 内，
+            // 属浏览器专属副作用，kernel 模式不执行（方案 §0.1#7）
+            checkAndUpdate().catch(() => {});
             if (!this.settings.targetNotebook) {
                 showMessage('请在设置中选择目标笔记本，当前使用默认笔记本', 5000, 'info');
             }
@@ -895,7 +1144,30 @@ export default class NoteHelperPlugin extends Plugin {
             this.lastSyncFailed = true;
         } finally {
             this.settings.syncing = false;
-            this.updateDockStatus();
+            this.onSyncActivity();
+        }
+    }
+
+    /**
+     * 启动前端本地定时同步（原 SyncManager.startScheduledSync 迁出，方案 §0.1#7）
+     */
+    private startLocalScheduledSync(): void {
+        this.stopLocalScheduledSync();
+        if (this.ownsLocalState() && this.settings.frequency > 0) {
+            const intervalMs = this.settings.frequency * 60 * 1000;
+            this.localSyncIntervalId = setInterval(() => {
+                if (!this.ownsLocalState()) return;
+                void this.performSync(true, 'scheduled');
+            }, intervalMs);
+            logger.debug(`Scheduled sync started: every ${this.settings.frequency} minutes`);
+        }
+    }
+
+    private stopLocalScheduledSync(): void {
+        if (this.localSyncIntervalId) {
+            clearInterval(this.localSyncIntervalId);
+            this.localSyncIntervalId = null;
+            logger.debug('Scheduled sync stopped');
         }
     }
 
@@ -918,10 +1190,39 @@ export default class NoteHelperPlugin extends Plugin {
                 if (syncAtInput) {
                     delete syncAtInput.dataset.dirty;
                 }
-                this.syncManager.resetSyncTime().then(() => {
+                const finishReset = () => {
+                    // 游标真身在 state 文件；重置后镜像空值给 UI
+                    if (this.ownsLocalState() && this.syncStateAccess) {
+                        const st = this.syncStateAccess.get();
+                        this.settings.syncAt = st.syncAt;
+                        this.settings.initialSyncCompleted = st.initialSyncCompleted;
+                    }
                     this.updateDockStatus();
                     showMessage(this.i18n.zh_CN.success?.settingsSaved || 'Settings saved', 3000, 'info');
-                }).catch((error) => {
+                };
+                if (this.scheduleMode === 'kernel-active') {
+                    // docker+kernel：游标所有者是内核，重置全部设备游标（方案 §4）
+                    rpcCall<{ reset: boolean; busy: boolean }>('notehelperResetSyncCursor', [])
+                        .then(async (r) => {
+                            if (r?.busy) {
+                                showMessage('后台同步正在进行，请稍后重试', 5000, 'error');
+                                return;
+                            }
+                            if (!r?.reset) throw new Error('Kernel reset failed');
+                            await this.mirrorKernelStatus();
+                            finishReset();
+                        })
+                        .catch((error) => {
+                            logger.error('Failed to reset sync time (kernel):', error);
+                            showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
+                        });
+                    return;
+                }
+                if (!this.ownsLocalState()) {
+                    showMessage('内核同步不可达，请稍后重试', 5000, 'error');
+                    return;
+                }
+                this.syncManager.resetSyncTime().then(finishReset).catch((error) => {
                     logger.error('Failed to reset sync time:', error);
                     showMessage(this.i18n.zh_CN.errors?.apiError || 'API call failed', 5000, 'error');
                 });
@@ -1044,7 +1345,21 @@ export default class NoteHelperPlugin extends Plugin {
             delete values.syncAt;
         }
 
-        // 更新设置对象
+        const editedCursor = container.querySelector<HTMLInputElement>('#syncAt');
+        const cursor = editedCursor?.dataset.dirty ? values.syncAt : undefined;
+        delete values.syncAt;
+        if (cursor !== undefined && cursor !== this.settings.syncAt) {
+            if (this.scheduleMode === 'kernel-active') {
+                const result = await rpcCall<{ updated: boolean; busy?: boolean }>('notehelperUpdateSyncCursor', [{ syncAt: cursor }]);
+                if (!result?.updated) throw new Error(result?.busy ? '后台同步正在进行，请稍后重试' : '游标更新失败');
+                await this.mirrorKernelStatus();
+            } else if (this.ownsLocalState()) {
+                await this.syncManager.updateSyncCursor(cursor);
+                this.onSyncActivity();
+            } else {
+                throw new Error('内核同步不可达，无法更新游标');
+            }
+        }
         Object.assign(this.settings, values);
 
         // 用户对游标的编辑已经落进设置了，清掉 dirty 标记，后台同步可以恢复刷新这个框。
@@ -1083,7 +1398,9 @@ export default class NoteHelperPlugin extends Plugin {
      * 保存设置
      */
     async saveSettings() {
-        await this.saveData(SETTINGS_KEY, this.settings);
+        const { syncing, intervalId, syncAt, deviceSyncCursors, initialSyncCompleted, ...config } = this.settings;
+        await this.saveData(SETTINGS_KEY, config);
+        if (!this.unloaded) await this.refreshScheduleMode('settings-saved');
         logger.debug('Settings saved');
         // 更新日志级别
         this.updateLogLevel();

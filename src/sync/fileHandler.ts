@@ -4,7 +4,7 @@
  */
 
 import { logger } from '../utils/logger';
-import { uploadAsset } from '../utils/assetUploader';
+import { getRuntime } from './runtimeAdapter';
 import { Article } from '../utils/types';
 import { PluginSettings, DEFAULT_SETTINGS } from '../settings';
 import {
@@ -470,7 +470,7 @@ export class FileHandler {
         const cached = this.documentContentCache.get(docId);
         if (cached !== undefined) return cached;
         try {
-            const response = await fetch('/api/block/getBlockKramdown', {
+            const response = await getRuntime().kernel('/api/block/getBlockKramdown', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: docId }),
@@ -806,7 +806,7 @@ export class FileHandler {
                 dataPreview: requestBody.data.substring(0, 200)
             });
 
-            const response = await fetch('/api/block/updateBlock', {
+            const response = await getRuntime().kernel('/api/block/updateBlock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody),
@@ -848,7 +848,7 @@ export class FileHandler {
      */
     private async deleteDocumentById(docId: string): Promise<void> {
         try {
-            const response = await fetch('/api/filetree/removeDocByID', {
+            const response = await getRuntime().kernel('/api/filetree/removeDocByID', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: docId }),
@@ -870,7 +870,7 @@ export class FileHandler {
         content: string
     ): Promise<string> {
         try {
-            const response = await fetch('/api/filetree/createDocWithMd', {
+            const response = await getRuntime().kernel('/api/filetree/createDocWithMd', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -922,7 +922,7 @@ export class FileHandler {
                 parentID,
             };
             logger.info(`[appendHtmlBlock] 请求体前500字符: ${JSON.stringify(requestBody).substring(0, 500)}`);
-            const response = await fetch('/api/block/appendBlock', {
+            const response = await getRuntime().kernel('/api/block/appendBlock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody),
@@ -946,7 +946,7 @@ export class FileHandler {
      * 向文档追加 markdown 块
      */
     private async appendMarkdownBlock(parentID: string, markdown: string): Promise<void> {
-        const response = await fetch('/api/block/appendBlock', {
+        const response = await getRuntime().kernel('/api/block/appendBlock', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -977,7 +977,7 @@ export class FileHandler {
                 await this.appendHtmlBlock(docId, seg.content);
             } else {
                 // markdown 片段通过 appendBlock markdown 追加
-                const response = await fetch('/api/block/appendBlock', {
+                const response = await getRuntime().kernel('/api/block/appendBlock', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1074,7 +1074,7 @@ export class FileHandler {
 
             logger.debug(`[getDocumentByPath] SQL query: ${sql}`);
 
-            const response = await fetch('/api/query/sql', {
+            const response = await getRuntime().kernel('/api/query/sql', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ stmt: sql }),
@@ -1097,7 +1097,7 @@ export class FileHandler {
                     normalizedPath = `${normalizedPath}.md`;
                 }
 
-                const apiResponse = await fetch('/api/filetree/getIDsByHPath', {
+                const apiResponse = await getRuntime().kernel('/api/filetree/getIDsByHPath', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1174,7 +1174,7 @@ export class FileHandler {
             const newFullContent = currentContent + separator + content;
 
             // 更新文档
-            const response = await fetch('/api/block/updateBlock', {
+            const response = await getRuntime().kernel('/api/block/updateBlock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1200,7 +1200,7 @@ export class FileHandler {
      */
     private async getDocumentContent(docId: string): Promise<string> {
         try {
-            const response = await fetch('/api/block/getBlockKramdown', {
+            const response = await getRuntime().kernel('/api/block/getBlockKramdown', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: docId }),
@@ -1302,7 +1302,7 @@ export class FileHandler {
 
             logger.debug(`[getDocumentByHPath] Checking path: ${normalizedPath}`);
 
-            const response = await fetch('/api/filetree/getIDsByHPath', {
+            const response = await getRuntime().kernel('/api/filetree/getIDsByHPath', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1342,7 +1342,7 @@ export class FileHandler {
     private async checkDocumentBySourceId(sourceId: string): Promise<string | null> {
         try {
             const sql = `SELECT block_id FROM attributes WHERE name='custom-source-id' AND value='${sourceId}' LIMIT 1`;
-            const response = await fetch('/api/query/sql', {
+            const response = await getRuntime().kernel('/api/query/sql', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ stmt: sql }),
@@ -1368,7 +1368,7 @@ export class FileHandler {
      */
     private async setNoteHelperAttributes(docId: string, type: '链接' | '消息'): Promise<void> {
         try {
-            const response = await fetch('/api/attr/setBlockAttrs', {
+            const response = await getRuntime().kernel('/api/attr/setBlockAttrs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1411,7 +1411,7 @@ export class FileHandler {
                 return;  // 没有要设置的属性
             }
 
-            const response = await fetch('/api/attr/setBlockAttrs', {
+            const response = await getRuntime().kernel('/api/attr/setBlockAttrs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1446,7 +1446,7 @@ export class FileHandler {
     ): Promise<void> {
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-                const response = await fetch('/api/attr/setBlockAttrs', {
+                const response = await getRuntime().kernel('/api/attr/setBlockAttrs', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: blockId, attrs }),
@@ -1492,7 +1492,7 @@ export class FileHandler {
      */
     private async getBlockAttribute(blockId: string, attrName: string): Promise<string | null> {
         try {
-            const response = await fetch('/api/attr/getBlockAttrs', {
+            const response = await getRuntime().kernel('/api/attr/getBlockAttrs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: blockId }),
@@ -1579,7 +1579,7 @@ export class FileHandler {
                 String(now.getSeconds()).padStart(2, '0');
 
             // 保存更新后的列表
-            const response = await fetch('/api/attr/setBlockAttrs', {
+            const response = await getRuntime().kernel('/api/attr/setBlockAttrs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1611,7 +1611,7 @@ export class FileHandler {
      */
     async getDefaultNotebook(): Promise<string> {
         try {
-            const response = await fetch('/api/notebook/lsNotebooks', {
+            const response = await getRuntime().kernel('/api/notebook/lsNotebooks', {
                 method: 'POST',
             });
 
@@ -1665,7 +1665,7 @@ export class FileHandler {
      */
     async getAllNotebooks(): Promise<Array<{id: string, name: string}>> {
         try {
-            const response = await fetch('/api/notebook/lsNotebooks', {
+            const response = await getRuntime().kernel('/api/notebook/lsNotebooks', {
                 method: 'POST',
             });
 
@@ -1811,14 +1811,8 @@ export class FileHandler {
         try {
             // 1. 下载文件
             logger.info(`[附件下载] 发起网络请求...`);
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            logger.info(`[附件下载] 网络请求成功，状态码: ${response.status}`);
-
-            const blob = await response.blob();
-            const arrayBuffer = await blob.arrayBuffer();
+            const download = await getRuntime().externalBinary(url);
+            const arrayBuffer = download.bytes;
             logger.info(`[附件下载] 文件大小: ${(arrayBuffer.byteLength / 1024).toFixed(2)} KB`);
 
             // 2. 使用 displayName 作为文件名（确保有扩展名）
@@ -1844,7 +1838,7 @@ export class FileHandler {
             logger.info(`[附件下载] 上传目录: ${attachmentFolder}`);
 
             // 使用三层降级上传策略
-            const uploadResult = await uploadAsset(arrayBuffer, filename, attachmentFolder);
+            const uploadResult = await getRuntime().uploadAsset(arrayBuffer, filename, attachmentFolder);
 
             if (!uploadResult.success) {
                 logger.error(`[附件下载] 上传失败: ${uploadResult.error}`);
@@ -1868,14 +1862,8 @@ export class FileHandler {
         try {
             // 1. 下载图片
             logger.info(`[图片下载] 发起网络请求...`);
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            logger.info(`[图片下载] 网络请求成功，状态码: ${response.status}`);
-
-            const blob = await response.blob();
-            const arrayBuffer = await blob.arrayBuffer();
+            const download = await getRuntime().externalBinary(url);
+            const arrayBuffer = download.bytes;
             logger.info(`[图片下载] 文件大小: ${(arrayBuffer.byteLength / 1024).toFixed(2)} KB`);
 
             // 2. 生成文件名（从 URL 提取或生成唯一名）
@@ -1930,7 +1918,7 @@ export class FileHandler {
             logger.info(`[图片下载] 上传目录: ${imageFolder}`);
 
             // 使用三层降级上传策略
-            const uploadResult = await uploadAsset(arrayBuffer, filename, imageFolder);
+            const uploadResult = await getRuntime().uploadAsset(arrayBuffer, filename, imageFolder);
 
             if (!uploadResult.success) {
                 logger.error(`[图片下载] 上传失败: ${uploadResult.error}`);

@@ -18,6 +18,7 @@ const FILES = [
     { remote: `${BASE_URL}/plugin.json`, local: `${PLUGIN_PATH}/plugin.json` },
     { remote: `${BASE_URL}/index.js`, local: `${PLUGIN_PATH}/index.js` },
     { remote: `${BASE_URL}/index.css`, local: `${PLUGIN_PATH}/index.css` },
+    { remote: `${BASE_URL}/kernel.js`, local: `${PLUGIN_PATH}/kernel.js` },
     { remote: `${BASE_URL}/i18n/zh_CN.json`, local: `${PLUGIN_PATH}/i18n/zh_CN.json` },
     { remote: `${BASE_URL}/i18n/en_US.json`, local: `${PLUGIN_PATH}/i18n/en_US.json` },
 ];

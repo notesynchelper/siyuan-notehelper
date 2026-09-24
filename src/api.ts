@@ -4,6 +4,7 @@
  */
 
 import { logger } from './utils/logger';
+import { getRuntime } from './sync/runtimeAdapter';
 import { Article } from './utils/types';
 
 // 备用 GraphQL 端点
@@ -69,7 +70,7 @@ async function doFetchGraphQL<T>(
     logger.debug(`API Key: ${maskApiKey(apiKey)}`);
 
     const startTime = Date.now();
-    const response = await fetch(endpoint, {
+    const response = await getRuntime().external(endpoint, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -385,7 +386,7 @@ export async function getArticleCount(
     };
 
     try {
-        const response = await fetch(statsUrl, {
+        const response = await getRuntime().external(statsUrl, {
             method: 'GET',
             headers,
         });
@@ -421,7 +422,7 @@ export async function clearAllArticles(
     };
 
     try {
-        const response = await fetch(clearUrl, {
+        const response = await getRuntime().external(clearUrl, {
             method: 'DELETE',
             headers,
         });
@@ -458,7 +459,7 @@ export async function fetchContentForItems(
     };
 
     try {
-        const response = await fetch(contentUrl, {
+        const response = await getRuntime().external(contentUrl, {
             method: 'POST',
             headers,
             body: JSON.stringify({ ids: articleIds }),
@@ -525,7 +526,7 @@ export async function fetchVipStatus(apiKey: string): Promise<VipStatus> {
         const apiUrl = 'https://siyuan.notebooksyncer.com/user-config';
         logger.debug(`VIP status request URL: ${apiUrl}`);
 
-        const response = await fetch(apiUrl, {
+        const response = await getRuntime().external(apiUrl, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

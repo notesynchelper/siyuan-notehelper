@@ -128,10 +128,13 @@ export class SettingsForm {
                         <span class="fn__flex-1">${i18n.frequency}</span>
                     </div>
                     <div class="fn__flex">
-                        <input class="b3-text-field fn__flex-1" type="number" id="frequency" value="${settings.frequency}" min="0" />
+                        <input class="b3-text-field fn__flex-1" type="number" id="frequency" value="${settings.frequency}" min="${i18n.frequencyMin ?? 0}" />
                     </div>
                     <div class="b3-label__text">${i18n.frequencyDesc}</div>
+                    <div id="frequencyMinNote" class="b3-label__text" ${i18n.frequencyMinNote ? '' : 'hidden'}>${i18n.frequencyMinNote || ''}</div>
                 </div>
+
+                ${i18n.bgSyncHint ? `<div class="b3-label" id="bgSyncHint" style="padding: 8px 12px; background: var(--b3-theme-surface); border-radius: 8px; margin-bottom: 8px;">${i18n.bgSyncHint}</div>` : ''}
 
                 <div class="b3-label">
                     <label class="fn__flex">

@@ -10,33 +10,71 @@ import { getItems } from '../api';
 import { FileHandler } from './fileHandler';
 import { IdIndex } from './idIndex';
 import { templateNeedsContent } from '../settings/template';
-import { checkAndUpdate } from '../updater';
 import { computeEffectiveSyncAt } from './syncCursorAdjust';
-import { SyncNoticeManager } from './SyncNoticeManager';
-import { markAutoSyncStarted } from './syncOnStartGate';
+import { SyncNoticeManager, NoticeFn } from './SyncNoticeManager';
+import { getRuntime } from './runtimeAdapter';
+import { SyncState, SyncStateAccess, createRuntimeStateAccess } from './syncState';
 
 /**
  * 同步管理器类
  */
+export interface SyncManagerDeps {
+    /** 浏览器=siyuan showMessage；kernel=注入日志版（null=全静默） */
+    notify?: NoticeFn | null;
+    /** 自动同步开跑回调（浏览器端用于刷新 syncOnStart 冷却戳） */
+    onAutoSyncStart?: () => void;
+    /** 同步状态访问器（游标等）；缺省时经 runtime adapter 现场建立 */
+    stateAccess?: SyncStateAccess;
+    canWriteState?: () => boolean;
+}
+
 export class SyncManager {
     private plugin: any;  // SiYuan Plugin instance
     private settings: PluginSettings;
     private fileHandler: FileHandler;
     private isSyncing: boolean = false;
+    private deps: SyncManagerDeps;
+    private stateAccess: SyncStateAccess | null = null;
 
-    constructor(plugin: any, settings: PluginSettings) {
+    constructor(plugin: any, settings: PluginSettings, deps: SyncManagerDeps = {}) {
         this.plugin = plugin;
         this.settings = settings;
+        this.deps = deps;
+        this.stateAccess = deps.stateAccess ?? null;
         this.fileHandler = new FileHandler(plugin, settings);
+    }
+
+    /** 入口在 onload 建好状态访问器后回填（避免首次 sync 才冷启动迁移） */
+    setStateAccess(access: SyncStateAccess | null): void {
+        this.stateAccess = access;
+    }
+
+    /** 惰性建状态访问器（constructor 期 runtime 可能尚未注入） */
+    private async getStateAccess(): Promise<SyncStateAccess> {
+        if (this.deps.canWriteState && !this.deps.canWriteState()) throw new Error('Local state ownership unavailable');
+        if (!this.stateAccess) {
+            const rt = getRuntime();
+            this.stateAccess = await createRuntimeStateAccess(
+                this.settings,
+                (key: string) => rt.readFile(key),
+                (key: string, content: string) => {
+                    if (this.deps.canWriteState && !this.deps.canWriteState()) throw new Error('Local state ownership unavailable');
+                    return rt.writeFile(key, content);
+                },
+            );
+        }
+        return this.stateAccess;
     }
 
     /**
      * 执行同步
      */
     async sync(isAutoSync: boolean = false): Promise<SyncResult> {
-        // 检查插件更新（不阻塞同步流程）
-        checkAndUpdate().catch(() => {});
+        // 插件更新检查已移至浏览器入口（performSync），kernel 无此副作用
 
+        if (this.deps.canWriteState && !this.deps.canWriteState()) {
+            return { success: false, count: 0, errors: ['Local state ownership unavailable'] };
+        }
         if (this.isSyncing) {
             logger.warn('Sync already in progress');
             return {
@@ -54,12 +92,12 @@ export class SyncManager {
         // 避免「每次切到前台都同步」。放在开头：即便本次同步中途失败，冷却也已生效，
         // 不会让失败的自动同步在每次回前台时反复重试刷屏。
         if (isAutoSync) {
-            markAutoSyncStarted();
+            this.deps.onAutoSyncStart?.();
         }
 
         // 自动同步走静默模式：只在真有新笔记 / 抛错时提示，不再每周期弹进度条和
         // 「没有新文章需要同步」（v1.7.36 起的刷屏回归）。手动同步保留完整反馈。
-        const notice = new SyncNoticeManager(isAutoSync);
+        const notice = new SyncNoticeManager(isAutoSync, this.deps.notify ?? null);
 
         try {
             logger.debug('Starting sync...');
@@ -92,16 +130,18 @@ export class SyncManager {
             // 确定是否需要获取文章内容
             const includeContent = templateNeedsContent(this.settings.template);
 
-            // 获取当前设备的同步游标（优先设备级，回退全局）
-            const deviceId = this.getDeviceId();
-            const rawSyncAt = this.settings.deviceSyncCursors?.[deviceId]
-                || this.settings.syncAt
+            // 获取当前设备的同步游标（优先设备级，回退全局）——游标在 state 文件（方案 §5）
+            const rt = getRuntime();
+            const deviceId = await rt.getDeviceId();
+            const syncState = await this.getStateAccess();
+            const rawSyncAt = syncState.get().deviceSyncCursors[deviceId]
+                || syncState.get().syncAt
                 || '';
 
             // 计算有效的同步时间（三重回退叠加）
             const effectiveSyncAt = computeEffectiveSyncAt(rawSyncAt, {
                 syncTimeOffset: this.settings.syncTimeOffset,
-                initialSyncCompleted: this.settings.initialSyncCompleted,
+                initialSyncCompleted: syncState.get().initialSyncCompleted,
                 frequency: this.settings.frequency,
                 isAutoSync,
             });
@@ -189,27 +229,21 @@ export class SyncManager {
                 // 标记首次同步已完成——必须同样门控在「无错误」下。否则错误首跑就置位，
                 // 会丢掉 computeEffectiveSyncAt 给初始同步的 1 天重叠窗口，导致重试漏掉
                 // 只落在该重叠窗口里的失败文章。
-                if (!this.settings.initialSyncCompleted) {
-                    this.settings.initialSyncCompleted = true;
+                if (!syncState.get().initialSyncCompleted) {
                     logger.debug('首次同步已完成，标记 initialSyncCompleted = true');
                 }
 
-                // 更新全局游标（向后兼容）
-                this.settings.syncAt = nowStr;
-
-                // 更新设备级游标
-                if (!this.settings.deviceSyncCursors) {
-                    this.settings.deviceSyncCursors = {};
-                }
-                this.settings.deviceSyncCursors[deviceId] = nowStr;
+                await syncState.commit((st: SyncState) => {
+                    st.initialSyncCompleted = true;
+                    // 全局游标 + 设备级游标（向后兼容字段）
+                    st.syncAt = nowStr;
+                    st.deviceSyncCursors[deviceId] = nowStr;
+                    // 清理超过 30 天未更新的设备游标
+                    this.cleanStaleDeviceCursorsInto(st);
+                });
             } else {
                 logger.warn(`[Sync] 本次有 ${errors.length} 个错误，保持游标不前进、不标记首次同步完成，下次重试失败文章（避免越过 → 永久丢失）`);
             }
-
-            // 清理过期的设备游标
-            this.cleanStaleDeviceCursors();
-
-            await this.plugin.saveSettings();
 
             // 刷新文件树，确保新笔记立即显示
             await this.refreshFiletree();
@@ -231,54 +265,51 @@ export class SyncManager {
                 errors: [String(error)],
             };
         } finally {
+            if (this.stateAccess) {
+                const st = this.stateAccess.get();
+                this.settings.syncAt = st.syncAt;
+                this.settings.initialSyncCompleted = st.initialSyncCompleted;
+            }
             this.isSyncing = false;
             this.settings.syncing = false;
         }
     }
 
     /**
-     * 重置同步时间（同时重置当前设备游标）
+     * 重置同步时间（同时重置当前设备游标）。
+     * docker+kernel 模式下由前端改调 notehelperResetSyncCursor RPC（重置全部设备游标）；
+     * 本地模式（桌面/手机）沿用「重置全局 + 当前设备」语义，落在 state 文件。
      */
     async resetSyncTime(): Promise<void> {
-        this.settings.syncAt = '';
-
-        const deviceId = this.getDeviceId();
-        if (this.settings.deviceSyncCursors) {
-            this.settings.deviceSyncCursors[deviceId] = '';
-        }
-        this.settings.initialSyncCompleted = false;
-
-        await this.plugin.saveSettings();
+        await this.updateSyncCursor('');
         logger.debug('Sync time reset (including device cursor)');
     }
 
-    /**
-     * 获取当前设备的唯一标识
-     * 使用 localStorage 持久化（不跨设备同步，每台设备独有）
-     */
-    private getDeviceId(): string {
-        const STORAGE_KEY = 'notehelper-device-id';
+    /** 手工编辑全局和当前设备游标，避免旧设备游标覆盖用户输入。 */
+    async updateSyncCursor(syncAt: string): Promise<void> {
+        if (this.isSyncing) throw new Error('Sync in progress');
+        if (syncAt && !Number.isFinite(Date.parse(syncAt))) throw new Error('Invalid sync cursor');
+        this.isSyncing = true;
         try {
-            let id = window.localStorage.getItem(STORAGE_KEY);
-            if (!id) {
-                const siyuanWindow = window as any;
-                const os = siyuanWindow.siyuan?.config?.system?.os;
-                const platform = (os === 'android' || os === 'ios') ? 'mobile' : 'desktop';
-                id = `${platform}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
-                window.localStorage.setItem(STORAGE_KEY, id);
-                logger.info(`[SyncManager] 生成新设备ID: ${id}`);
-            }
-            return id;
-        } catch {
-            return `temp-${Math.random().toString(36).substring(2, 8)}`;
+            const syncState = await this.getStateAccess();
+            const deviceId = await getRuntime().getDeviceId();
+            await syncState.commit((st: SyncState) => {
+                st.syncAt = syncAt;
+                st.deviceSyncCursors[deviceId] = syncAt;
+                if (!syncAt) st.initialSyncCompleted = false;
+            });
+            this.settings.syncAt = syncState.get().syncAt;
+            this.settings.initialSyncCompleted = syncState.get().initialSyncCompleted;
+        } finally {
+            this.isSyncing = false;
         }
     }
 
     /**
-     * 清理超过 30 天未更新的设备游标
+     * 清理超过 30 天未更新的设备游标（直接改入 state，调用方负责 commit）
      */
-    private cleanStaleDeviceCursors(): void {
-        const cursors = this.settings.deviceSyncCursors;
+    private cleanStaleDeviceCursorsInto(st: SyncState): void {
+        const cursors = st.deviceSyncCursors;
         if (!cursors) return;
 
         const thirtyDaysAgo = new Date();
@@ -306,9 +337,8 @@ export class SyncManager {
             if (this.settings.refreshIndexAfterSync) {
                 // 方案2：强制刷新索引（用户勾选了"同步后刷新索引"）
                 // 第一次刷新文件树
-                await fetch('/api/filetree/refreshFiletree', {
+                await getRuntime().kernel('/api/filetree/refreshFiletree', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
                 });
 
@@ -316,18 +346,16 @@ export class SyncManager {
                 await new Promise(resolve => setTimeout(resolve, 500));
 
                 // 重新加载文件树 UI
-                await fetch('/api/ui/reloadFiletree', {
+                await getRuntime().kernel('/api/ui/reloadFiletree', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
                 });
 
                 logger.debug('Filetree refreshed with reloadFiletree');
             } else {
                 // 方案1：默认只刷新文件树（不勾选）
-                await fetch('/api/filetree/refreshFiletree', {
+                await getRuntime().kernel('/api/filetree/refreshFiletree', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
                 });
 
@@ -338,42 +366,6 @@ export class SyncManager {
         }
     }
 
-    /**
-     * 启动定时同步
-     */
-    startScheduledSync(): void {
-        this.stopScheduledSync();
-
-        if (this.settings.frequency > 0) {
-            const intervalMs = this.settings.frequency * 60 * 1000;
-            this.settings.intervalId = window.setInterval(() => {
-                logger.debug('Running scheduled sync...');
-                // 定时同步不走 plugin.performSync（那条路会弹「请选择目标笔记本」之类的
-                // 提示，每个周期刷一次太吵），所以在这里显式通知插件刷新同步指示器，
-                // 否则 dock 徽标看不到定时同步：既不会进入「同步中」，跑完也不更新时间/失败态。
-                const promise = this.sync(true);
-                // sync() 在第一个 await 之前就同步置了 syncing=true，所以此刻刷新拿到的是「同步中」。
-                this.plugin.onSyncActivity?.();
-                promise.then(
-                    (result) => this.plugin.onSyncActivity?.(result),
-                    () => this.plugin.onSyncActivity?.({ success: false, count: 0 })
-                );
-            }, intervalMs) as unknown as number;
-
-            logger.debug(`Scheduled sync started: every ${this.settings.frequency} minutes`);
-        }
-    }
-
-    /**
-     * 停止定时同步
-     */
-    stopScheduledSync(): void {
-        if (this.settings.intervalId) {
-            window.clearInterval(this.settings.intervalId);
-            this.settings.intervalId = 0;
-            logger.debug('Scheduled sync stopped');
-        }
-    }
 
     /**
      * 是否正在同步
