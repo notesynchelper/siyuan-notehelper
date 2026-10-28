@@ -6,6 +6,7 @@
 
 import { RuntimeAdapter, NetResponse, ExternalRequestInit } from './runtimeAdapter';
 import { uploadAsset as browserUploadAsset } from '../utils/assetUploader';
+import { logger, sanitizeUrlForLog } from '../utils/logger';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function browserFetch(): typeof fetch {
@@ -36,16 +37,47 @@ export function createBrowserRuntime(plugin: {
         },
 
         async external(url: string, init?: ExternalRequestInit): Promise<NetResponse> {
-            return browserFetch()(url, {
-                method: init?.method,
-                headers: init?.headers,
-                body: init?.body,
-            });
+            const startedAt = Date.now();
+            try {
+                return await browserFetch()(url, {
+                    method: init?.method,
+                    headers: init?.headers,
+                    body: init?.body,
+                });
+            } catch (error) {
+                logger.error('Browser external request failed:', {
+                    url: sanitizeUrlForLog(url),
+                    method: init?.method || 'GET',
+                    transport: 'browser-direct',
+                    durationMs: Date.now() - startedAt,
+                    error,
+                });
+                throw error;
+            }
         },
 
         async externalBinary(url) {
-            const resp = await browserFetch()(url);
+            const startedAt = Date.now();
+            let resp;
+            try {
+                resp = await browserFetch()(url);
+            } catch (error) {
+                logger.error('Browser binary download failed:', {
+                    url: sanitizeUrlForLog(url),
+                    transport: 'browser-direct',
+                    durationMs: Date.now() - startedAt,
+                    error,
+                });
+                throw error;
+            }
             if (!resp.ok) {
+                logger.error('Browser binary download returned HTTP error:', {
+                    url: sanitizeUrlForLog(url),
+                    transport: 'browser-direct',
+                    status: resp.status,
+                    statusText: resp.statusText,
+                    durationMs: Date.now() - startedAt,
+                });
                 throw new Error(`HTTP ${resp.status}`);
             }
             const blob = await resp.blob();

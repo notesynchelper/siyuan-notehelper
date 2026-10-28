@@ -501,6 +501,14 @@ export class SettingsForm {
                             </div>
                         </div>
                 </details>
+
+                <div class="fn__hr"></div>
+                <div class="b3-label">
+                    <button class="b3-button b3-button--outline fn__block" id="copyErrorLogsBtn">
+                        ${i18n.copyErrorLogs || '复制控制台错误日志'}
+                    </button>
+                    <div class="b3-label__text" style="font-size: 11px;">${i18n.copyErrorLogsDesc || '复制本次会话中插件记录的 WARN/ERROR（最多 100 条，已脱敏），用于反馈网络问题'}</div>
+                </div>
             </div>
         `;
     }
@@ -630,6 +638,7 @@ export class SettingsForm {
             onClearAllArticles?: () => void;
             onCheckUpdate?: () => void;
             onManualUpdate?: () => void;
+            onCopyErrorLogs?: () => void;
             onResetTemplate?: (type: 'template' | 'wechatMessageTemplate' | 'frontMatterTemplate') => void;
         }
     ): void {
@@ -679,6 +688,14 @@ export class SettingsForm {
         if (manualUpdateBtn && callbacks.onManualUpdate) {
             manualUpdateBtn.addEventListener('click', () => {
                 callbacks.onManualUpdate!();
+            });
+        }
+
+        // 复制当前会话的插件错误日志
+        const copyErrorLogsBtn = container.querySelector('#copyErrorLogsBtn') as HTMLButtonElement;
+        if (copyErrorLogsBtn && callbacks.onCopyErrorLogs) {
+            copyErrorLogsBtn.addEventListener('click', () => {
+                callbacks.onCopyErrorLogs!();
             });
         }
 

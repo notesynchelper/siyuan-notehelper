@@ -859,6 +859,9 @@ export default class NoteHelperPlugin extends Plugin {
             onManualUpdate: async () => {
                 await this.manualUpdate(settingsArea as HTMLElement);
             },
+            onCopyErrorLogs: async () => {
+                await this.copyConsoleErrorLogs(settingsArea as HTMLElement);
+            },
             onResetTemplate: (type) => {
                 this.resetTemplate(settingsArea as HTMLElement, type);
             }
@@ -1606,6 +1609,69 @@ export default class NoteHelperPlugin extends Plugin {
             if (updateBtn) {
                 updateBtn.disabled = false;
                 updateBtn.textContent = '立即更新';
+            }
+        }
+    }
+
+    /**
+     * 复制当前会话中由插件 logger 捕获的 WARN/ERROR，附带必要的版本信息。
+     * 不接管全局 console，避免影响思源和其他插件。
+     */
+    private async copyConsoleErrorLogs(container: HTMLElement) {
+        const button = container.querySelector('#copyErrorLogsBtn') as HTMLButtonElement;
+        if (button) {
+            button.disabled = true;
+            button.textContent = '复制中...';
+        }
+        try {
+            const system = (globalThis as any).siyuan?.config?.system || {};
+            const pluginVersion = await getLocalVersion().catch(() => 'unknown');
+            const report = logger.getDiagnosticReport({
+                '插件版本': pluginVersion,
+                '思源版本': system.kernelVersion || system.version || 'unknown',
+                '运行平台': system.os || 'unknown',
+                '运行环境': getRuntime().isBrowser ? 'browser-direct' : 'kernel-forwardProxy',
+                '调度模式': this.scheduleMode || 'unknown',
+                'User-Agent': (globalThis as any).navigator?.userAgent || 'unknown',
+            });
+
+            const doc = container.ownerDocument;
+            const clipboard = doc.defaultView?.navigator?.clipboard;
+            let clipboardError: unknown = null;
+            if (clipboard?.writeText) {
+                try {
+                    await clipboard.writeText(report);
+                } catch (error) {
+                    clipboardError = error;
+                }
+            } else {
+                clipboardError = new Error('Clipboard API unavailable');
+            }
+
+            // 手机 WebView、非安全上下文等场景降级到隐藏 textarea。
+            if (clipboardError) {
+                const textarea = doc.createElement('textarea');
+                textarea.value = report;
+                textarea.readOnly = true;
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                textarea.style.opacity = '0';
+                container.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                const copied = doc.execCommand('copy');
+                textarea.remove();
+                if (!copied) throw clipboardError;
+            }
+
+            showMessage(`已复制诊断报告（${logger.getCapturedLogCount()} 条日志）`, 3000, 'info');
+        } catch (error) {
+            logger.error('Failed to copy diagnostic report:', error);
+            showMessage('复制失败，请打开控制台手动复制错误日志', 5000, 'error');
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.textContent = '复制控制台错误日志';
             }
         }
     }

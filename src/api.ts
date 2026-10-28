@@ -3,8 +3,8 @@
  * 负责与后端服务器通信
  */
 
-import { logger } from './utils/logger';
-import { getRuntime } from './sync/runtimeAdapter';
+import { logger, sanitizeUrlForLog } from './utils/logger';
+import { getRuntime, NetResponse } from './sync/runtimeAdapter';
 import { Article } from './utils/types';
 
 // 备用 GraphQL 端点
@@ -12,8 +12,10 @@ const FALLBACK_GRAPHQL_ENDPOINT = 'https://graph.bijitongbu.site/api/graphql';
 
 // GraphQL 响应接口
 interface GraphQLResponse<T> {
-    data: T;
+    data: T & { search?: T };
     errors?: Array<{ message: string }>;
+    edges?: SearchResponse['edges'];
+    pageInfo?: SearchResponse['pageInfo'];
 }
 
 // 搜索响应接口（Relay Cursor Pagination 格式）
@@ -52,7 +54,8 @@ async function doFetchGraphQL<T>(
     endpoint: string,
     query: string,
     variables: Record<string, any>,
-    apiKey?: string
+    apiKey?: string,
+    route: 'primary' | 'fallback' = 'primary'
 ): Promise<T> {
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -70,27 +73,49 @@ async function doFetchGraphQL<T>(
     logger.debug(`API Key: ${maskApiKey(apiKey)}`);
 
     const startTime = Date.now();
-    const response = await getRuntime().external(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-            query,
-            variables,
-        }),
-    });
+    const runtime = getRuntime();
+    const requestContext = {
+        endpoint: sanitizeUrlForLog(endpoint),
+        route,
+        transport: runtime.isBrowser ? 'browser-direct' : 'kernel-forwardProxy',
+        query: queryPreview,
+        variables,
+    };
+    let response: NetResponse;
+    try {
+        response = await runtime.external(endpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                query,
+                variables,
+            }),
+        });
+    } catch (error) {
+        logger.error('GraphQL network request failed:', {
+            ...requestContext,
+            durationMs: Date.now() - startTime,
+            error,
+        });
+        throw error;
+    }
 
     const responseTime = Date.now() - startTime;
     logger.debug(`Response received: ${response.status} ${response.statusText} (${responseTime}ms)`);
 
     if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unable to read response');
-        logger.error(`HTTP error details:`, {
+        logger.error('GraphQL HTTP error:', {
+            ...requestContext,
             status: response.status,
             statusText: response.statusText,
-            endpoint,
+            durationMs: responseTime,
             responseBody: errorText.substring(0, 500)
         });
-        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`);
+        const error = new Error(`HTTP error! status: ${response.status}, body: ${errorText.substring(0, 200)}`) as any;
+        error.status = response.status;
+        error.endpoint = sanitizeUrlForLog(endpoint);
+        throw error;
     }
 
     const responseText = await response.text();
@@ -100,7 +125,11 @@ async function doFetchGraphQL<T>(
     try {
         result = JSON.parse(responseText);
     } catch (parseError) {
-        logger.error('Failed to parse JSON response:', {
+        logger.error('Failed to parse GraphQL JSON response:', {
+            ...requestContext,
+            status: response.status,
+            durationMs: Date.now() - startTime,
+            responseBytes: responseText.length,
             error: parseError,
             responsePreview: responseText.substring(0, 500)
         });
@@ -109,9 +138,9 @@ async function doFetchGraphQL<T>(
 
     if (result.errors && result.errors.length > 0) {
         logger.error('GraphQL errors:', {
-            endpoint,
-            query: queryPreview,
-            variables,
+            ...requestContext,
+            status: response.status,
+            durationMs: Date.now() - startTime,
             errors: result.errors
         });
         throw new Error(result.errors.map(e => e.message).join(', '));
@@ -137,14 +166,13 @@ async function doFetchGraphQL<T>(
         logger.debug('Non-standard GraphQL response: server returns search content directly');
     } else {
         logger.error('Unexpected response structure:', {
-            endpoint,
-            query: queryPreview,
-            variables,
+            ...requestContext,
+            status: response.status,
+            durationMs: Date.now() - startTime,
             hasData: result.data !== undefined,
             hasEdges: result.edges !== undefined,
             hasPageInfo: result.pageInfo !== undefined,
-            responseKeys: Object.keys(result),
-            fullResponse: JSON.stringify(result).substring(0, 1000)
+            responseKeys: Object.keys(result)
         });
         throw new Error('Unexpected response structure');
     }
@@ -162,29 +190,43 @@ async function fetchGraphQL<T>(
     variables: Record<string, any>,
     apiKey?: string
 ): Promise<T> {
+    const primaryStart = Date.now();
     try {
-        return await doFetchGraphQL<T>(endpoint, query, variables, apiKey);
+        return await doFetchGraphQL<T>(endpoint, query, variables, apiKey, 'primary');
     } catch (error) {
         // 如果是 GraphQL 端点且主端点失败，尝试备用域名
         if (endpoint.includes('/api/graphql')) {
-            logger.info('主端点请求失败，尝试备用域名...');
-            logger.debug(`Primary endpoint failed: ${String(error)}`);
+            logger.warn('主端点请求失败，尝试备用域名:', {
+                endpoint: sanitizeUrlForLog(endpoint),
+                route: 'primary',
+                durationMs: Date.now() - primaryStart,
+                error,
+            });
+            const fallbackStart = Date.now();
             try {
-                return await doFetchGraphQL<T>(FALLBACK_GRAPHQL_ENDPOINT, query, variables, apiKey);
+                return await doFetchGraphQL<T>(FALLBACK_GRAPHQL_ENDPOINT, query, variables, apiKey, 'fallback');
             } catch (fallbackError) {
-                logger.error('备用域名请求也失败:', {
-                    endpoint: FALLBACK_GRAPHQL_ENDPOINT,
-                    error: String(fallbackError),
-                    apiKey: maskApiKey(apiKey)
+                logger.error('主备 GraphQL 线路均失败:', {
+                    primary: {
+                        endpoint: sanitizeUrlForLog(endpoint),
+                        durationMs: Date.now() - primaryStart,
+                        error,
+                    },
+                    fallback: {
+                        endpoint: FALLBACK_GRAPHQL_ENDPOINT,
+                        durationMs: Date.now() - fallbackStart,
+                        error: fallbackError,
+                    },
                 });
                 // 抛出原始错误，因为它更有可能是问题根源
                 throw error;
             }
         }
         logger.error('GraphQL request failed:', {
-            endpoint,
-            error: String(error),
-            apiKey: maskApiKey(apiKey)
+            endpoint: sanitizeUrlForLog(endpoint),
+            route: 'primary',
+            durationMs: Date.now() - primaryStart,
+            error,
         });
         throw error;
     }
@@ -296,8 +338,7 @@ export async function getItems(
         if (!data.edges) {
             logger.error('Invalid response structure: missing edges field', {
                 hasData: !!data,
-                dataKeys: Object.keys(data || {}),
-                fullData: JSON.stringify(data)
+                dataKeys: Object.keys(data || {})
             });
             throw new Error('Invalid response: edges field is missing');
         }
@@ -319,8 +360,8 @@ export async function getItems(
         return [items, hasNextPage];
     } catch (error) {
         logger.error('Failed to fetch items:', {
-            error: String(error),
-            endpoint,
+            error,
+            endpoint: sanitizeUrlForLog(endpoint),
             after,
             first,
             searchQuery

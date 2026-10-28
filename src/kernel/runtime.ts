@@ -13,6 +13,7 @@
 import {
     RuntimeAdapter, NetResponse, BinaryDownload, UploadAssetResult,
 } from '../sync/runtimeAdapter';
+import { logger, sanitizeUrlForLog } from '../utils/logger';
 
 /* ── goja 全局 siyuan 对象的最小类型面（运行时由内核注入） ─────────────── */
 
@@ -116,16 +117,59 @@ async function forwardProxy(body: {
     payload?: unknown;
     responseEncoding?: string;
 }): Promise<ForwardProxyData> {
-    const resp = await api().client.fetch('/api/network/forwardProxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-    const envelope = await resp.json();
+    const startedAt = Date.now();
+    let resp;
+    try {
+        resp = await api().client.fetch('/api/network/forwardProxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+    } catch (error) {
+        logger.error('forwardProxy transport failed:', {
+            url: sanitizeUrlForLog(body.url),
+            method: body.method,
+            timeoutMs: body.timeout,
+            durationMs: Date.now() - startedAt,
+            error,
+        });
+        throw error;
+    }
+
+    let envelope: any;
+    try {
+        envelope = await resp.json();
+    } catch (error) {
+        logger.error('forwardProxy returned invalid JSON:', {
+            url: sanitizeUrlForLog(body.url),
+            method: body.method,
+            outerStatus: resp.status,
+            durationMs: Date.now() - startedAt,
+            error,
+        });
+        throw error;
+    }
+
     if (!resp.ok || envelope.code !== 0) {
-        throw new Error(
-            `forwardProxy failed: HTTP ${resp.status}, code=${envelope.code}, msg=${envelope.msg}`,
-        );
+        logger.error('forwardProxy returned an error:', {
+            url: sanitizeUrlForLog(body.url),
+            method: body.method,
+            timeoutMs: body.timeout,
+            outerStatus: resp.status,
+            code: envelope.code,
+            msg: envelope.msg,
+            remoteStatus: envelope.data?.status,
+            remoteContentType: envelope.data?.contentType,
+            remoteBodyBytes: envelope.data?.body?.length,
+            remoteElapsedMs: envelope.data?.elapsed,
+            durationMs: Date.now() - startedAt,
+        });
+        const error = new Error(
+            `forwardProxy failed: HTTP ${resp.status}, code=${envelope.code}, msg=${envelope.msg}`
+        ) as any;
+        error.status = resp.status;
+        error.code = envelope.code;
+        throw error;
     }
     return envelope.data as ForwardProxyData;
 }
@@ -257,6 +301,13 @@ export function createKernelRuntime(): RuntimeAdapter {
                 responseEncoding: 'base64',
             });
             if (data.status < 200 || data.status >= 300) {
+                logger.error('Kernel binary download returned HTTP error:', {
+                    url: sanitizeUrlForLog(url),
+                    transport: 'kernel-forwardProxy',
+                    status: data.status,
+                    contentType: data.contentType,
+                    bodyBytes: data.body?.length,
+                });
                 throw new Error(`HTTP ${data.status}`);
             }
             return {
