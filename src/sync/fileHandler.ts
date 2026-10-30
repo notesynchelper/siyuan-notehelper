@@ -34,6 +34,9 @@ import { IdIndex } from './idIndex';
 import { sortArticlesByTime } from './batchSortHelper';
 import { decideMergeAction, isMergedMessagePresent, MergedAnchors } from './mergedMessagePresence';
 
+// 思源 3.8.9 createDocWithMd 遇到缺失父文档时返回的错误文案（见 createDocument 兜底）
+const MISSING_PARENT_ERROR = 'document metadata is not ready';
+
 // 星期映射（用于图片路径变量替换）
 const WEEKDAY_MAP: Record<number, string> = {
     1: '周一', 2: '周二', 3: '周三', 4: '周四',
@@ -870,27 +873,80 @@ export class FileHandler {
         content: string
     ): Promise<string> {
         try {
-            const response = await getRuntime().kernel('/api/filetree/createDocWithMd', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    notebook: notebookId,
-                    path: docPath,
-                    markdown: content,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.code !== 0) {
-                throw new Error(`Failed to create document: ${data.msg}`);
-            }
-
-            return data.data;  // 返回文档 ID
+            return await this.createDocWithMd(notebookId, docPath, content);
         } catch (error) {
+            // 思源 3.8.9 起 createDocWithMd 不再自动补建缺失的父文档：路径中任一层父文档
+            // 不存在就返回 "document metadata is not ready"（3.8.8 及以前会自动补建）。
+            // 默认文件夹按日期分（笔记同步助手/{{date}}），每天第一篇必然命中。
+            // 兜底：逐层补建缺失的父文档后重试一次；没补建任何父文档则原样上抛，
+            // 避免把真正的索引未就绪误当成缺父目录反复重试。
+            if (error instanceof Error && error.message.includes(MISSING_PARENT_ERROR)
+                && await this.createMissingParentDocs(notebookId, docPath)) {
+                logger.warn(`[createDocument] 已补建缺失的父文档，重试创建: ${docPath}`);
+                try {
+                    return await this.createDocWithMd(notebookId, docPath, content);
+                } catch (retryError) {
+                    logger.error('Failed to create document:', retryError);
+                    throw retryError;
+                }
+            }
             logger.error('Failed to create document:', error);
             throw error;
         }
+    }
+
+    private async createDocWithMd(notebookId: string, docPath: string, markdown: string): Promise<string> {
+        const response = await getRuntime().kernel('/api/filetree/createDocWithMd', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                notebook: notebookId,
+                path: docPath,
+                markdown,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.code !== 0) {
+            throw new Error(`Failed to create document: ${data.msg}`);
+        }
+
+        return data.data;  // 返回文档 ID
+    }
+
+    /**
+     * 自顶向下补建 docPath 上缺失的父文档（空文档，与思源旧版自动补建的结果一致）。
+     * @returns 是否补建了至少一层父文档；查询/创建失败返回 false，由调用方上抛原始错误
+     */
+    private async createMissingParentDocs(notebookId: string, docPath: string): Promise<boolean> {
+        const parts = docPath.replace(/\\/g, '/').split('/').map(s => s.trim()).filter(Boolean);
+        let created = 0;
+        try {
+            for (let i = 1; i < parts.length; i++) {
+                // getIDsByHPath 要求带前导 / 且不带 .md 后缀
+                const hpath = '/' + parts.slice(0, i).join('/');
+                const response = await getRuntime().kernel('/api/filetree/getIDsByHPath', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notebook: notebookId, path: hpath }),
+                });
+                const data = await response.json();
+                if (data.code !== 0) {
+                    throw new Error(`getIDsByHPath ${hpath}: ${data.msg}`);
+                }
+                if (Array.isArray(data.data) && data.data.length > 0) {
+                    continue;
+                }
+                const parentId = await this.createDocWithMd(notebookId, hpath, '');
+                logger.info(`[createMissingParentDocs] 补建父文档 ${hpath} -> ${parentId}`);
+                created++;
+            }
+        } catch (error) {
+            logger.warn(`[createMissingParentDocs] 补建父文档失败 (${docPath}):`, error);
+            return false;
+        }
+        return created > 0;
     }
 
     /**
