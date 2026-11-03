@@ -31,6 +31,7 @@ import {
 } from '../utils/util';
 import { DateTime } from 'luxon';
 import { IdIndex } from './idIndex';
+import { DocAddressing } from './docAddressing';
 import { sortArticlesByTime } from './batchSortHelper';
 import { decideMergeAction, isMergedMessagePresent, MergedAnchors } from './mergedMessagePresence';
 
@@ -82,6 +83,7 @@ export class FileHandler {
     // 写入该文档后必须失效（见 invalidateDocumentContent）。
     private documentContentCache: Map<string, string>;
     private idIndex: IdIndex | null = null;  // 全局 ID 索引（跨设备去重）
+    private docAddressing = new DocAddressing();  // 思源 3.8.9+ 结构化文档寻址
 
     constructor(plugin: any, settings: PluginSettings) {
         this.plugin = plugin;
@@ -103,6 +105,7 @@ export class FileHandler {
     public clearDocumentCache(): void {
         this.documentCache.clear();
         this.documentContentCache.clear();
+        this.docAddressing.resetPerSync();
         logger.debug('[FileHandler] Document cache cleared');
     }
 
@@ -872,6 +875,17 @@ export class FileHandler {
         docPath: string,
         content: string
     ): Promise<string> {
+        // 思源 3.8.9+：旧路径接口在父路径有同名文档 / 空标题 / 带斜杠标题时一律报
+        // "document path is ambiguous"（有意为之，上游 #20892），改走按标题段解析 +
+        // 按父 ID 创建的结构化接口；旧内核没有这组接口，继续走 createDocWithMd。
+        if (await this.docAddressing.isSupported(notebookId)) {
+            try {
+                return await this.docAddressing.createDocAtPath(notebookId, docPath, content);
+            } catch (error) {
+                logger.error('Failed to create document:', error);
+                throw error;
+            }
+        }
         try {
             return await this.createDocWithMd(notebookId, docPath, content);
         } catch (error) {
